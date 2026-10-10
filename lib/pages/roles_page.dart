@@ -67,10 +67,7 @@ class RolesPage extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                [
-                                  r.model,
-                                  if (r.description.isNotEmpty) r.description,
-                                ].join('\n'),
+                                r.model,
                                 style: Theme.of(context).textTheme.bodyMedium,
                               ),
                             ],

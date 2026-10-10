@@ -19,12 +19,7 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
   late final TabController tabs;
   final form = GlobalKey<FormState>();
   final controllers = <TextEditingController>[];
-  late final TextEditingController name,
-      description,
-      model,
-      identity,
-      soul,
-      memoryDocument;
+  late final TextEditingController name, model, identity, soul, memoryDocument;
   late String id;
   String? avatar, api;
   int tab = 0;
@@ -46,7 +41,6 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
     final r = widget.role;
     id = r?.id ?? widget.store.newId();
     name = text(r?.name ?? '');
-    description = text(r?.description ?? '');
     model = text(r?.model ?? 'gpt-4o');
     identity = text(r?.identity ?? '');
     soul = text(r?.soul ?? '');
@@ -178,11 +172,6 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
         validator: (v) => v == null || v.trim().isEmpty ? '请填写角色名称' : null,
       ),
       const SizedBox(height: 20),
-      TextField(
-        controller: description,
-        decoration: const InputDecoration(labelText: '简介（可选）'),
-      ),
-      const SizedBox(height: 20),
       AnchoredSelect<String>(
         label: 'API 配置（展示）',
         value: api ?? '',
@@ -234,30 +223,17 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
                     ),
                   ],
                 ),
+                const SizedBox(height: 8),
                 TextField(
                   controller: e.value.$1,
-                  decoration: const InputDecoration(
-                    labelText: '用户说',
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                  ),
+                  decoration: const InputDecoration(labelText: 'user'),
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: e.value.$2,
                   minLines: 1,
                   maxLines: 6,
-                  decoration: const InputDecoration(
-                    labelText: '角色回答',
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                  ),
+                  decoration: const InputDecoration(labelText: 'assistant'),
                 ),
               ],
             ),
@@ -326,7 +302,6 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
           color: const Color(0xffb8cfbb),
         );
     r.name = name.text.trim();
-    r.description = description.text;
     r.avatar = avatar;
     r.apiId = api;
     r.model = model.text;

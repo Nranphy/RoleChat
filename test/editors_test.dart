@@ -65,6 +65,10 @@ void main() {
       await tester.tap(find.widgetWithText(Tab, label));
       await tester.pumpAndSettle();
       expect(find.byType(Dialog), findsOneWidget);
+      if (label == '对话示例') {
+        expect(find.widgetWithText(TextField, 'user'), findsOneWidget);
+        expect(find.widgetWithText(TextField, 'assistant'), findsOneWidget);
+      }
       expect(tester.takeException(), isNull);
     }
     await tester.tap(find.text('保存'));

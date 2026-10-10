@@ -7,7 +7,6 @@ class RoleProfile {
     this.emoji = '',
     this.avatar,
     required this.color,
-    this.description = '',
     this.model = 'gpt-4o',
     this.apiId,
     this.identity = '',
@@ -16,7 +15,7 @@ class RoleProfile {
     List<Map<String, String>>? examples,
   }) : examples = examples ?? [];
   final String id;
-  String name, emoji, description, model, identity, soul, memory;
+  String name, emoji, model, identity, soul, memory;
   String? apiId, avatar;
   Color color;
   List<Map<String, String>> examples;
