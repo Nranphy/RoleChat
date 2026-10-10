@@ -26,13 +26,9 @@ class RoleCard extends StatelessWidget {
             RoleAvatar(r.name, imageData: r.avatar, size: 80),
             const SizedBox(width: 16),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(r.name, style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 4),
-                  Text(r.model, style: Theme.of(context).textTheme.bodyMedium),
-                ],
+              child: Text(
+                r.name,
+                style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
             Row(
