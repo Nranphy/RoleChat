@@ -1,7 +1,7 @@
+import 'widgets/conversation_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:rolechat/app/preview_store.dart';
 import 'package:rolechat/shared/widgets/common.dart';
-import 'package:rolechat/design/app_theme.dart';
 import 'package:rolechat/features/agents/agent_dialogs.dart';
 import 'package:rolechat/features/groups/group_dialogs.dart';
 
@@ -126,133 +126,28 @@ class _ConversationListState extends State<ConversationList> {
                   separatorBuilder: (_, i) => const SizedBox(height: 5),
                   itemBuilder: (context, i) {
                     final c = chats[i];
-                    return MouseRegion(
-                      onEnter: (_) => setState(() => hoveredId = c.id),
-                      onExit: (_) => setState(() {
-                        if (hoveredId == c.id) hoveredId = null;
+                    return ConversationTile(
+                      c: c,
+                      avatar: store.avatarFor(c),
+                      selected: c.id == store.selectedId,
+                      hovered: hoveredId == c.id,
+                      onHoverChanged: (v) => setState(() {
+                        if (v) {
+                          hoveredId = c.id;
+                        } else if (hoveredId == c.id) {
+                          hoveredId = null;
+                        }
                       }),
-                      child: TweenAnimationBuilder<Color?>(
-                        duration: Duration(
-                          milliseconds: c.id == store.selectedId ? 0 : 100,
-                        ),
-                        curve: Curves.easeOut,
-                        tween: ColorTween(
-                          end: c.id == store.selectedId
-                              ? scheme.secondaryContainer
-                              : hoveredId == c.id
-                              ? scheme.surfaceContainerHigh
-                              : scheme.surface,
-                        ),
-                        builder: (context, color, child) => Material(
-                          key: ValueKey(c.id),
-                          color: color,
-                          borderRadius: BorderRadius.circular(
-                            AppTheme.cornerRadius,
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: InkWell(
-                            onTap: () => store.select(c.id),
-                            excludeFromSemantics: true,
-                            overlayColor: const WidgetStatePropertyAll(
-                              Colors.transparent,
+                      onSelect: () => store.select(c.id),
+                      onEdit: () => c.group
+                          ? editGroup(context, store, group: c)
+                          : c.members.isEmpty
+                          ? null
+                          : editRole(
+                              context,
+                              store,
+                              role: store.role(c.members.first),
                             ),
-                            highlightColor: Colors.transparent,
-                            splashFactory: NoSplash.splashFactory,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 16,
-                              ),
-                              child: Row(
-                                children: [
-                                  Semantics(
-                                    button: true,
-                                    label: '编辑 ${c.name}',
-                                    child: GestureDetector(
-                                      onTap: () => c.group
-                                          ? editGroup(context, store, group: c)
-                                          : c.members.isEmpty
-                                          ? null
-                                          : editRole(
-                                              context,
-                                              store,
-                                              role: store.role(c.members.first),
-                                            ),
-                                      child: RoleAvatar(
-                                        c.name,
-                                        imageData: store.avatarFor(c),
-                                        size: 56,
-                                        icon: c.group
-                                            ? Icons.group_outlined
-                                            : Icons.person_outline,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: GestureDetector(
-                                      onTap: () => store.select(c.id),
-                                      behavior: HitTestBehavior.opaque,
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 4,
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: Text(
-                                                    c.name,
-                                                    maxLines: 1,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                    style: TextStyle(
-                                                      fontSize: 16,
-                                                      fontWeight: c.unread > 0
-                                                          ? FontWeight.w600
-                                                          : FontWeight.normal,
-                                                    ),
-                                                  ),
-                                                ),
-                                                Text(
-                                                  c.messages.isEmpty
-                                                      ? ''
-                                                      : c.messages.last.time,
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color:
-                                                        scheme.onSurfaceVariant,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              c.messages.isEmpty
-                                                  ? '暂无消息'
-                                                  : c.messages.last.text
-                                                        .replaceAll('\n', ' '),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                color: scheme.onSurfaceVariant,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
                     );
                   },
                 ),
