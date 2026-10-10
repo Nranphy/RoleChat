@@ -2,7 +2,6 @@ import 'sender_color.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:rolechat/models/preview_models.dart';
-import 'package:rolechat/shared/widgets/common.dart';
 import 'package:rolechat/design/app_theme.dart';
 import 'message_bubble.dart';
 
@@ -101,66 +100,60 @@ class ChatTimelineState extends State<ChatTimeline> {
     final scheme = Theme.of(context).colorScheme;
     return Container(
       color: scheme.surface,
-      child: widget.c.messages.isEmpty
-          ? const EmptyState(title: '暂无消息', subtitle: '发送消息开始聊天。')
-          : Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: AppTheme.timelineWidth,
-                ),
-                child: ListView.builder(
-                  controller: widget.scroll,
-                  padding: const EdgeInsets.fromLTRB(8, 16, 8, 16),
-                  itemCount: widget.c.messages.length + 1,
-                  itemBuilder: (context, i) {
-                    if (i == 0) {
-                      return Center(
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: Text(
-                            '今天 · 示例对话',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: scheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                      );
-                    }
-                    final m = widget.c.messages[i - 1];
-                    final role = widget.roles
-                        .where((r) => r.id == m.roleId)
-                        .firstOrNull;
-                    return MessageBubble(
-                      key: messageKeys.putIfAbsent(m.id, () => GlobalKey()),
-                      highlighted: highlightedId == m.id,
-                      message: m,
-                      showName: widget.c.group,
-                      previousSame:
-                          i > 1 && widget.c.messages[i - 2].roleId == m.roleId,
-                      nextSame:
-                          i < widget.c.messages.length &&
-                          widget.c.messages[i].roleId == m.roleId,
-                      nameColor: role == null
-                          ? null
-                          : senderNameColor(context, role.name),
-                      onReferenceTap: m.reply == null
-                          ? null
-                          : () => widget.onJumpToMessage(m.reply!.messageId),
-                      name: m.isUser ? '你' : role?.name ?? '已离开的角色',
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: AppTheme.timelineWidth),
+          child: ListView.builder(
+            controller: widget.scroll,
+            padding: const EdgeInsets.fromLTRB(8, 16, 8, 16),
+            itemCount: widget.c.messages.length + 1,
+            itemBuilder: (context, i) {
+              if (i == 0) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Text(
+                      widget.c.messages.isEmpty ? '暂无对话' : '今天 · 示例对话',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                );
+              }
+              final m = widget.c.messages[i - 1];
+              final role = widget.roles
+                  .where((r) => r.id == m.roleId)
+                  .firstOrNull;
+              return MessageBubble(
+                key: messageKeys.putIfAbsent(m.id, () => GlobalKey()),
+                highlighted: highlightedId == m.id,
+                message: m,
+                showName: widget.c.group,
+                previousSame:
+                    i > 1 && widget.c.messages[i - 2].roleId == m.roleId,
+                nextSame:
+                    i < widget.c.messages.length &&
+                    widget.c.messages[i].roleId == m.roleId,
+                nameColor: role == null
+                    ? null
+                    : senderNameColor(context, role.name),
+                onReferenceTap: m.reply == null
+                    ? null
+                    : () => widget.onJumpToMessage(m.reply!.messageId),
+                name: m.isUser ? '你' : role?.name ?? '已离开的角色',
 
-                      avatar: role?.avatar,
-                      onAvatarTap: role == null
-                          ? null
-                          : () => widget.onRoleTap(role),
-                      onReply: () => widget.onReply(m),
-                      onDelete: () => widget.onDelete(m),
-                      onCopy: () => widget.onCopy(m),
-                    );
-                  },
-                ),
-              ),
-            ),
+                avatar: role?.avatar,
+                onAvatarTap: role == null ? null : () => widget.onRoleTap(role),
+                onReply: () => widget.onReply(m),
+                onDelete: () => widget.onDelete(m),
+                onCopy: () => widget.onCopy(m),
+              );
+            },
+          ),
+        ),
+      ),
     );
   }
 }
