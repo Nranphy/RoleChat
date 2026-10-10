@@ -6,16 +6,12 @@ abstract final class FormMetrics {
   );
   static const textStyle = TextStyle(fontSize: 16, height: 1.5);
   static const fieldHeight = 48.0;
-  static const compactFieldHeight = 48.0;
   static const sectionActionGap = 6.0;
 
-  static InputDecoration decoration(String label, {bool compact = false}) =>
-      InputDecoration(
-        labelText: label,
-        isDense: true,
-        constraints: BoxConstraints.tightFor(
-          height: compact ? compactFieldHeight : fieldHeight,
-        ),
-        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      );
+  static InputDecoration decoration(String label) => InputDecoration(
+    labelText: label,
+    isDense: true,
+    constraints: BoxConstraints.tightFor(height: fieldHeight),
+    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+  );
 }

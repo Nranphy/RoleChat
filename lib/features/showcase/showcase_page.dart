@@ -1,12 +1,10 @@
 import '../chat/widgets/message_bubble.dart';
 import 'package:flutter/material.dart';
-import 'package:rolechat/app/preview_store.dart';
 import 'package:rolechat/models/preview_models.dart';
 import 'package:rolechat/shared/widgets/common.dart';
 
 class ShowcasePage extends StatefulWidget {
-  const ShowcasePage({super.key, required this.store});
-  final PreviewStore store;
+  const ShowcasePage({super.key});
   @override
   State<ShowcasePage> createState() => _ShowcasePageState();
 }

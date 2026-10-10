@@ -25,7 +25,7 @@ class AppShell extends StatelessWidget {
         0 => ChatPage(store: store, wide: wide),
         1 => RolesPage(store: store),
         2 => SettingsPage(store: store),
-        _ => ShowcasePage(store: store),
+        _ => const ShowcasePage(),
       };
       return Scaffold(
         body: SafeArea(

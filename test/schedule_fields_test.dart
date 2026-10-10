@@ -84,7 +84,7 @@ void main() {
       for (final field in find.byType(InputDecorator).evaluate()) {
         expect(
           tester.getSize(find.byWidget(field.widget)).height,
-          FormMetrics.compactFieldHeight,
+          FormMetrics.fieldHeight,
         );
         final text = find
             .descendant(

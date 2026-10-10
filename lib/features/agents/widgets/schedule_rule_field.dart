@@ -27,13 +27,13 @@ class ScheduleRuleField extends StatelessWidget {
       TextFormField(
         controller: draft.activity,
         style: FormMetrics.textStyle,
-        decoration: FormMetrics.decoration('活动内容', compact: true),
+        decoration: FormMetrics.decoration('活动内容'),
         validator: (v) => v == null || v.trim().isEmpty ? '请输入活动名称' : null,
       ),
       const SizedBox(height: 10),
       AnchoredSelect<ScheduleRuleKind>(
         label: '日期条件',
-        compact: true,
+
         value: draft.kind,
         options: ruleLabels,
         onChanged: (v) {
@@ -90,7 +90,7 @@ class ScheduleRuleField extends StatelessWidget {
           );
           final probability = AnchoredSelect<int>(
             label: '接收概率',
-            compact: true,
+
             value: draft.probability.round(),
             options: {
               for (var i = 0; i <= 100; i += 5) i: '$i%',
@@ -136,7 +136,6 @@ class ScheduleRuleField extends StatelessWidget {
             : last
             ? '结束日期'
             : '日期',
-        compact: true,
       ),
       onTap: () async {
         final selected = await showDatePicker(
@@ -174,7 +173,7 @@ class ScheduleRuleField extends StatelessWidget {
   }
 
   Widget timeButton(BuildContext context, bool last) => FieldAction(
-    decoration: FormMetrics.decoration(last ? '结束时间' : '开始时间', compact: true),
+    decoration: FormMetrics.decoration(last ? '结束时间' : '开始时间'),
     onTap: () async {
       final selected = await showTimePicker(
         context: context,

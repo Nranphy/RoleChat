@@ -9,14 +9,12 @@ class AvatarField extends StatelessWidget {
     required this.onChanged,
     this.group = false,
     this.name = '',
-    this.color,
     this.trailing,
   });
   final String? imageData;
   final ValueChanged<String?> onChanged;
   final bool group;
   final String name;
-  final Color? color;
   final Widget? trailing;
   @override
   Widget build(BuildContext context) => Row(
@@ -65,7 +63,6 @@ class _AvatarButtonState extends State<_AvatarButton> {
                 RoleAvatar(
                   widget.field.name,
                   imageData: widget.field.imageData,
-                  color: widget.field.color,
                   size: 96,
                   icon: widget.field.group
                       ? Icons.group_outlined

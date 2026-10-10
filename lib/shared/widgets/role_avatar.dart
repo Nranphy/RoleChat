@@ -6,7 +6,6 @@ class RoleAvatar extends StatelessWidget {
   const RoleAvatar(
     this.name, {
     super.key,
-    this.color,
     this.size = 48,
     this.imageData,
     this.icon = Icons.person_outline,
@@ -14,7 +13,6 @@ class RoleAvatar extends StatelessWidget {
   final String name;
   final String? imageData;
   final IconData icon;
-  final Color? color;
   final double size;
   static Color backgroundColor(BuildContext context, String name) =>
       name.isEmpty
@@ -23,7 +21,7 @@ class RoleAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-    color: color ?? backgroundColor(context, name),
+    color: backgroundColor(context, name),
     shape: RoundedSuperellipseBorder(
       borderRadius: BorderRadius.circular(size / 2),
     ),
@@ -40,32 +38,20 @@ class RoleAvatar extends StatelessWidget {
                         style: TextStyle(
                           fontSize: size / 2.5,
                           fontWeight: FontWeight.bold,
-                          color: color == null
-                              ? AppTheme.nameColors(
-                                  name.characters.first,
-                                ).onPrimaryContainer
-                              : ThemeData.estimateBrightnessForColor(color!) ==
-                                    Brightness.light
-                              ? Colors.black87
-                              : Colors.white,
+                          color: AppTheme.nameColors(
+                            name.characters.first,
+                          ).onPrimaryContainer,
                         ),
                       ),
                     )
                   : Icon(
                       icon,
                       size: size * .48,
-                      color: color == null
-                          ? (name.isEmpty
-                                ? Theme.of(
-                                    context,
-                                  ).colorScheme.onSecondaryContainer
-                                : AppTheme.nameColors(
-                                    name.characters.first,
-                                  ).onPrimaryContainer)
-                          : ThemeData.estimateBrightnessForColor(color!) ==
-                                Brightness.light
-                          ? Colors.black87
-                          : Colors.white,
+                      color: name.isEmpty
+                          ? Theme.of(context).colorScheme.onSecondaryContainer
+                          : AppTheme.nameColors(
+                              name.characters.first,
+                            ).onPrimaryContainer,
                     )
             : Image.memory(
                 base64Decode(imageData!),

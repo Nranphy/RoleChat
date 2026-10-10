@@ -11,10 +11,8 @@ class AnchoredSelect<T> extends StatelessWidget {
     required this.value,
     required this.options,
     required this.onChanged,
-    this.compact = false,
   });
   final String label;
-  final bool compact;
   final T value;
   final Map<T, String> options;
   final ValueChanged<T> onChanged;
@@ -24,7 +22,7 @@ class AnchoredSelect<T> extends StatelessWidget {
       button: true,
       label: '$label：${options[value] ?? ''}',
       child: FieldAction(
-        decoration: FormMetrics.decoration(label, compact: compact),
+        decoration: FormMetrics.decoration(label),
         onTap: () async {
           final field = fieldContext.findRenderObject()! as RenderBox;
           final overlay =
