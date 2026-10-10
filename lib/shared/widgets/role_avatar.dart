@@ -16,13 +16,14 @@ class RoleAvatar extends StatelessWidget {
   final IconData icon;
   final Color? color;
   final double size;
+  static Color backgroundColor(BuildContext context, String name) =>
+      name.isEmpty
+      ? Theme.of(context).colorScheme.secondaryContainer
+      : AppTheme.nameColors(name.characters.first).primaryContainer;
+
   @override
   Widget build(BuildContext context) => Material(
-    color:
-        color ??
-        (name.isEmpty
-            ? Theme.of(context).colorScheme.secondaryContainer
-            : AppTheme.nameColors(name.characters.first).primaryContainer),
+    color: color ?? backgroundColor(context, name),
     shape: RoundedSuperellipseBorder(
       borderRadius: BorderRadius.circular(size / 2),
     ),
