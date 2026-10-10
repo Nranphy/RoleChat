@@ -1,3 +1,4 @@
+import 'sender_color.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:rolechat/models/preview_models.dart';
@@ -13,6 +14,7 @@ class ChatTimeline extends StatefulWidget {
     required this.scroll,
     required this.onRoleTap,
     required this.onReply,
+    required this.onJumpToMessage,
     required this.onDelete,
     required this.onCopy,
   });
@@ -21,6 +23,7 @@ class ChatTimeline extends StatefulWidget {
   final ScrollController scroll;
   final ValueChanged<RoleProfile> onRoleTap;
   final ValueChanged<ChatMessage> onReply, onDelete, onCopy;
+  final ValueChanged<String> onJumpToMessage;
   @override
   State<ChatTimeline> createState() => ChatTimelineState();
 }
@@ -140,13 +143,10 @@ class ChatTimelineState extends State<ChatTimeline> {
                           widget.c.messages[i].roleId == m.roleId,
                       nameColor: role == null
                           ? null
-                          : Color.lerp(
-                              RoleAvatar.backgroundColor(context, role.name),
-                              Colors.black,
-                              Theme.of(context).brightness == Brightness.light
-                                  ? .38
-                                  : .12,
-                            ),
+                          : senderNameColor(context, role.name),
+                      onReferenceTap: m.reply == null
+                          ? null
+                          : () => widget.onJumpToMessage(m.reply!.messageId),
                       name: m.isUser ? '你' : role?.name ?? '已离开的角色',
 
                       avatar: role?.avatar,

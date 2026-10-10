@@ -1,3 +1,4 @@
+import 'package:rolechat/models/preview_models.dart';
 import 'widgets/chat_timeline.dart';
 import 'widgets/chat_header.dart';
 import 'widgets/chat_composer.dart';
@@ -20,7 +21,7 @@ class _ChatViewState extends State<ChatView> {
   final input = TextEditingController();
   final scroll = ScrollController();
   final timelineKey = GlobalKey<ChatTimelineState>();
-  String? reply;
+  MessageReference? reply;
   bool showTyping = false;
   @override
   void dispose() {
@@ -36,6 +37,10 @@ class _ChatViewState extends State<ChatView> {
       widget.store.roles,
     );
     if (!mounted || id == null) return;
+    await jumpToMessage(id);
+  }
+
+  Future<void> jumpToMessage(String id) async {
     final found = await timelineKey.currentState?.scrollToMessage(id) ?? false;
     if (mounted && !found) toast(context, '这条消息已不在当前会话中');
   }
@@ -95,7 +100,21 @@ class _ChatViewState extends State<ChatView> {
             roles: store.roles,
             scroll: scroll,
             onRoleTap: (r) => showRoleDetail(context, store, r),
-            onReply: (m) => setState(() => reply = m.text),
+            onJumpToMessage: jumpToMessage,
+            onReply: (m) => setState(
+              () => reply = MessageReference(
+                messageId: m.id,
+                text: m.text,
+                roleId: m.roleId,
+                senderName: m.isUser
+                    ? '你'
+                    : store.roles
+                              .where((r) => r.id == m.roleId)
+                              .firstOrNull
+                              ?.name ??
+                          '已离开的角色',
+              ),
+            ),
             onDelete: (m) async {
               if (await confirm(
                 context,
@@ -137,6 +156,9 @@ class _ChatViewState extends State<ChatView> {
           input: input,
           reply: reply,
           onClearReply: () => setState(() => reply = null),
+          onJumpToReply: reply == null
+              ? null
+              : () => jumpToMessage(reply!.messageId),
           onEmoji: () => showEmoji(context),
           onSend: send,
         ),

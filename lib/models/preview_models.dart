@@ -16,6 +16,17 @@ class RoleProfile {
   List<Map<String, String>> examples;
 }
 
+class MessageReference {
+  const MessageReference({
+    required this.messageId,
+    required this.text,
+    required this.senderName,
+    this.roleId,
+  });
+  final String messageId, text, senderName;
+  final String? roleId;
+}
+
 class ChatMessage {
   ChatMessage({
     required this.id,
@@ -26,7 +37,8 @@ class ChatMessage {
   });
   final String id;
   final String text;
-  final String? roleId, reply;
+  final String? roleId;
+  final MessageReference? reply;
   final String time;
   bool get isUser => roleId == null;
 }

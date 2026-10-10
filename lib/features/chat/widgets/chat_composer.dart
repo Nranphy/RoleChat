@@ -1,3 +1,5 @@
+import 'message_reference_preview.dart';
+import 'package:rolechat/models/preview_models.dart';
 import 'package:flutter/material.dart';
 import 'package:rolechat/design/app_theme.dart';
 
@@ -7,11 +9,13 @@ class ChatComposer extends StatelessWidget {
     required this.input,
     required this.reply,
     required this.onClearReply,
+    this.onJumpToReply,
     required this.onEmoji,
     required this.onSend,
   });
   final TextEditingController input;
-  final String? reply;
+  final MessageReference? reply;
+  final VoidCallback? onJumpToReply;
   final VoidCallback onClearReply, onEmoji, onSend;
   @override
   Widget build(BuildContext context) {
@@ -36,10 +40,10 @@ class ChatComposer extends StatelessWidget {
                       const Icon(Icons.reply, size: 18),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Text(
-                          reply!,
+                        child: MessageReferencePreview(
+                          reference: reply!,
                           maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          onTap: onJumpToReply,
                         ),
                       ),
                       IconButton(

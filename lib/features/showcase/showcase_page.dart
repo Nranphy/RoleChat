@@ -46,7 +46,12 @@ class _ShowcasePageState extends State<ShowcasePage> {
                       message: ChatMessage(
                         id: 'b',
                         text: '那我们就在这里待一会儿吧。',
-                        reply: '给你留了一杯热茶。 ☕',
+                        reply: const MessageReference(
+                          messageId: 'a',
+                          text: '给你留了一杯热茶。 ☕',
+                          senderName: '林间',
+                          roleId: 'lin',
+                        ),
                         time: '16:43',
                       ),
                       name: '你',

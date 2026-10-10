@@ -50,7 +50,7 @@ class PreviewStore extends ChangeNotifier {
   );
   RoleProfile role(String id) => roles.firstWhere((r) => r.id == id);
   String newId() => DateTime.now().microsecondsSinceEpoch.toString();
-  void send(String text, {String? reply}) {
+  void send(String text, {MessageReference? reply}) {
     if (text.trim().isEmpty) return;
     selected.messages.add(
       ChatMessage(
@@ -339,7 +339,11 @@ class PreviewStore extends ChangeNotifier {
           roleId: 'moon',
           text: '我带相机。希望那天有一点阳光，\n也有足够多的时间可以浪费。',
           time: '16:41',
-          reply: '周六下午怎么样？',
+          reply: const MessageReference(
+            messageId: 'm3',
+            text: '周六下午怎么样？',
+            senderName: '你',
+          ),
         ),
         ChatMessage(
           id: 'm5',

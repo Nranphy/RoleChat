@@ -1,3 +1,4 @@
+import 'message_reference_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:rolechat/models/preview_models.dart';
 import 'package:rolechat/shared/widgets/common.dart';
@@ -9,6 +10,7 @@ class MessageBubble extends StatefulWidget {
     required this.name,
     this.avatar,
     this.onAvatarTap,
+    this.onReferenceTap,
     this.onReply,
     this.onDelete,
     this.onCopy,
@@ -21,7 +23,7 @@ class MessageBubble extends StatefulWidget {
   final ChatMessage message;
   final String name;
   final String? avatar;
-  final VoidCallback? onAvatarTap, onReply, onDelete, onCopy;
+  final VoidCallback? onAvatarTap, onReferenceTap, onReply, onDelete, onCopy;
   final bool previousSame, nextSame, showName, highlighted;
   final Color? nameColor;
   @override
@@ -164,14 +166,10 @@ class _MessageBubbleState extends State<MessageBubble> {
                                               ),
                                             ),
                                           ),
-                                          child: Text(
-                                            widget.message.reply!,
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: foreground,
-                                            ),
+                                          child: MessageReferencePreview(
+                                            reference: widget.message.reply!,
+                                            textColor: foreground,
+                                            onTap: widget.onReferenceTap,
                                           ),
                                         ),
                                       SelectableText(
