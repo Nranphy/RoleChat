@@ -20,3 +20,7 @@ README.md 面向用户，只包含仓库名称、简短简介和对 FluffyChat U
 FluffyChat 仓库保持只读，不复制其业务代码，不修改其文件。RoleChat 独立实现 UI。
 
 修改后执行 Dart 格式化、Flutter 分析、必要行为测试及 Web 构建；验收覆盖窄宽屏和浅深主题。
+
+## UI 组件边界
+
+维护 UI 前阅读 docs/12-ui-component-structure.md。公共展示组件放在 shared/widgets，功能专用组件放在 features 对应目录；展示组件通过数据和回调交互，不依赖 PreviewStore 或直接访问本地存储。页面与编辑弹窗负责协调操作。保留各组件现有 hover、尺寸与保存行为，避免结构重构混入样式或功能修改。
