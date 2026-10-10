@@ -13,7 +13,7 @@ class RolesPage extends StatelessWidget {
     appBar: AppBar(
       title: const Text('角色'),
       automaticallyImplyLeading: false,
-      toolbarHeight: MediaQuery.sizeOf(context).width > 840 ? 72 : 56,
+      toolbarHeight: 56,
       actions: [
         TextButton.icon(
           onPressed: () => editRole(context, store),
@@ -40,7 +40,7 @@ class RolesPage extends StatelessWidget {
             final (index, r) = entry;
             return Padding(
               padding: EdgeInsets.only(
-                bottom: index == store.roles.length - 1 ? 0 : 8,
+                bottom: index == store.roles.length - 1 ? 0 : 4,
               ),
               child: RoleCard(
                 r: r,
