@@ -151,14 +151,22 @@ void main() {
     final store = await setup(tester);
     for (final size in [const Size(1280, 900), const Size(390, 844)]) {
       tester.view.physicalSize = size;
+      Rect? rolePanel;
       for (var i = 0; i < 4; i++) {
         store.navigate(i);
         await tester.pumpAndSettle();
-        if (i == 1) {
-          expect(
-            tester.getTopLeft(find.byType(AppBar).first).dy,
-            lessThanOrEqualTo(32),
+        if (i == 1 || i == 2) {
+          expect(find.byType(AppBar), findsNothing);
+          final panel = tester.getRect(
+            find.byKey(const ValueKey('content-page-panel')),
           );
+          expect(panel.top, lessThanOrEqualTo(32));
+          if (i == 1) {
+            rolePanel = panel;
+          } else {
+            expect(panel.topLeft, rolePanel!.topLeft);
+            expect(panel.width, rolePanel.width);
+          }
         }
         expect(
           tester.takeException(),
