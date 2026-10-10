@@ -154,6 +154,7 @@ class _ChatViewState extends State<ChatView> {
                 icon: const Icon(Icons.search),
               ),
               PopupMenuButton<String>(
+                clipBehavior: Clip.antiAlias,
                 position: PopupMenuPosition.under,
                 offset: const Offset(0, 6),
                 tooltip: '会话菜单',
@@ -588,6 +589,7 @@ class MessageBubble extends StatelessWidget {
                   widthFactor: 1,
                   alignment: Alignment.bottomRight,
                   child: PopupMenuButton<String>(
+                    clipBehavior: Clip.antiAlias,
                     tooltip: '',
                     position: PopupMenuPosition.under,
                     offset: const Offset(0, 6),

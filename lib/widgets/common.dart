@@ -263,8 +263,6 @@ class SettingsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Material(
     color: Theme.of(context).colorScheme.surface,
-    borderRadius: BorderRadius.circular(18),
-    clipBehavior: Clip.antiAlias,
     child: Padding(padding: padding, child: child),
   );
 }

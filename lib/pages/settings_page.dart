@@ -163,15 +163,11 @@ class _SettingsPageState extends State<SettingsPage> {
                       title: a.name,
                       subtitle: a.url,
                       onTap: () => editApi(context, store, profile: a),
-                      trailing: PopupMenuButton<String>(
-                        position: PopupMenuPosition.under,
-                        offset: const Offset(0, 6),
-                        tooltip: '配置操作',
-                        onSelected: (v) async {
-                          if (v == 'edit') {
-                            editApi(context, store, profile: a);
-                            return;
-                          }
+                      trailing: IconButton(
+                        tooltip: '删除 API 配置',
+                        icon: const Icon(Icons.delete_outline),
+                        color: Theme.of(context).colorScheme.error,
+                        onPressed: () async {
                           final used = store.roles
                               .where((r) => r.apiId == a.id)
                               .map((r) => r.name)
@@ -191,13 +187,6 @@ class _SettingsPageState extends State<SettingsPage> {
                             store.changed();
                           }
                         },
-                        itemBuilder: (_) => [
-                          const PopupMenuItem(value: 'edit', child: Text('编辑')),
-                          const PopupMenuItem(
-                            value: 'delete',
-                            child: Text('删除'),
-                          ),
-                        ],
                       ),
                     ),
                   ),
@@ -212,6 +201,9 @@ class _SettingsPageState extends State<SettingsPage> {
               child: Column(
                 children: [
                   SwitchListTile(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                     title: const Text('后台运行偏好'),
                     subtitle: const Text('展示开关；浏览器后台调度尚未实现'),

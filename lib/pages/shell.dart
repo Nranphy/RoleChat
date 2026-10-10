@@ -113,20 +113,33 @@ class _ConversationListState extends State<ConversationList> {
                 ),
                 const SizedBox(width: 8),
                 PopupMenuButton<String>(
+                  clipBehavior: Clip.antiAlias,
                   key: const ValueKey('create-menu'),
+                  borderRadius: BorderRadius.circular(20),
+                  constraints: const BoxConstraints.tightFor(width: 144),
+                  padding: EdgeInsets.zero,
                   tooltip: '',
                   position: PopupMenuPosition.under,
-                  offset: const Offset(0, 8),
+                  offset: const Offset(-52, 8),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  icon: const Icon(Icons.add),
+                  child: const SizedBox.square(
+                    dimension: 40,
+                    child: Center(child: Icon(Icons.add)),
+                  ),
                   onSelected: (v) => v == 'role'
                       ? editRole(context, store)
                       : editGroup(context, store),
                   itemBuilder: (_) => [
-                    const PopupMenuItem(value: 'role', child: Text('新建角色')),
-                    const PopupMenuItem(value: 'group', child: Text('新建群聊')),
+                    const PopupMenuItem(
+                      value: 'role',
+                      child: Center(child: Text('新建角色')),
+                    ),
+                    const PopupMenuItem(
+                      value: 'group',
+                      child: Center(child: Text('新建群聊')),
+                    ),
                   ],
                 ),
               ],

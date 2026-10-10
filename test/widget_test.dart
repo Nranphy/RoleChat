@@ -47,9 +47,20 @@ void main() {
       matching: find.byType(RoleAvatar),
     );
     expect(tester.widget<RoleAvatar>(dialogAvatar).name, '林间');
+    expect(find.text('简介（可选）'), findsNothing);
     await tester.enterText(find.widgetWithText(TextFormField, '名称'), '青禾');
     await tester.pumpAndSettle();
     expect(tester.widget<RoleAvatar>(dialogAvatar).name, '青禾');
+    await tester.tap(find.widgetWithText(Tab, '对话示例'));
+    await tester.pumpAndSettle();
+    final userHeight = tester
+        .getSize(find.widgetWithText(TextField, 'user'))
+        .height;
+    final assistantHeight = tester
+        .getSize(find.widgetWithText(TextField, 'assistant'))
+        .height;
+    expect(userHeight, greaterThanOrEqualTo(48));
+    expect(assistantHeight, userHeight);
     await tester.tap(find.text('取消'));
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('删除角色').first);
@@ -59,6 +70,26 @@ void main() {
     await tester.tap(find.text('取消'));
     await tester.pumpAndSettle();
     expect(store.roles.length, 3);
+  });
+  testWidgets('API row opens editor and delete requires confirmation', (
+    tester,
+  ) async {
+    final store = await setup(tester);
+    store.navigate(2);
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('配置操作'), findsNothing);
+    await tester.ensureVisible(find.text('我的模型接口'));
+    await tester.tap(find.text('我的模型接口'));
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(TextFormField, '配置名称'), findsOneWidget);
+    await tester.tap(find.text('取消'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('删除 API 配置'));
+    await tester.pumpAndSettle();
+    expect(find.text('删除 API 配置？'), findsOneWidget);
+    await tester.tap(find.text('取消'));
+    await tester.pumpAndSettle();
+    expect(store.apis.length, 1);
   });
   testWidgets('new role creates an empty private conversation', (tester) async {
     final store = await setup(tester);

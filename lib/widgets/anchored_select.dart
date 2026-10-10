@@ -38,7 +38,8 @@ class AnchoredSelect<T> extends StatelessWidget {
           final top = openBelow ? bottom + 6 : origin.dy - height - 6;
           final selected = await showMenu<T>(
             context: context,
-            menuPadding: const EdgeInsets.all(8),
+            menuPadding: EdgeInsets.zero,
+            clipBehavior: Clip.antiAlias,
             position: RelativeRect.fromLTRB(
               origin.dx,
               top,
@@ -59,7 +60,7 @@ class AnchoredSelect<T> extends StatelessWidget {
           if (context.mounted && selected != null) onChanged(selected);
         },
         child: InputDecorator(
-          decoration: InputDecoration(labelText: label, isDense: true),
+          decoration: InputDecoration(labelText: label),
           child: Row(
             children: [
               Expanded(

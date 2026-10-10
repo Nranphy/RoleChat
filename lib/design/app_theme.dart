@@ -33,7 +33,7 @@ abstract final class AppTheme {
     return ThemeData(
       useMaterial3: true,
       popupMenuTheme: PopupMenuThemeData(
-        menuPadding: const EdgeInsets.all(8),
+        menuPadding: EdgeInsets.zero,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       colorScheme: scheme,
