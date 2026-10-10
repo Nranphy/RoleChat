@@ -208,4 +208,14 @@ void main() {
     range.dispose();
     copy.dispose();
   });
+
+  test('schedule times require the current HH:mm representation', () {
+    expect(
+      ScheduleDraft.parseTime('09:30'),
+      const TimeOfDay(hour: 9, minute: 30),
+    );
+    for (final value in ['9', '09', '9:30', '24:00', '09:60', 'bad']) {
+      expect(() => ScheduleDraft.parseTime(value), throwsFormatException);
+    }
+  });
 }

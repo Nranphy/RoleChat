@@ -19,10 +19,20 @@ class ScheduleDraft {
       probability = entry?.probability ?? 80 {
     kind = entry?.ruleKind ?? ScheduleRuleKind.daily;
     weekdays = {...entry?.weekdays ?? []};
-    from = kind == ScheduleRuleKind.annual
-        ? DateTime(2024, entry?.annualMonth ?? 1, entry?.annualDay ?? 1)
-        : DateTime.tryParse(entry?.dateFrom ?? '') ?? DateTime.now();
-    until = DateTime.tryParse(entry?.dateUntil ?? '') ?? from;
+    final today = DateTime.now();
+    from = switch (kind) {
+      ScheduleRuleKind.annual => DateTime(
+        2024,
+        entry!.annualMonth!,
+        entry.annualDay!,
+      ),
+      ScheduleRuleKind.date ||
+      ScheduleRuleKind.range => DateTime.parse(entry!.dateFrom!),
+      ScheduleRuleKind.daily || ScheduleRuleKind.weekly => today,
+    };
+    until = kind == ScheduleRuleKind.range
+        ? DateTime.parse(entry!.dateUntil!)
+        : from;
   }
   final String? id;
   final TextEditingController activity;
@@ -32,11 +42,11 @@ class ScheduleDraft {
   TimeOfDay start, end;
   double probability;
   static TimeOfDay parseTime(String text) {
+    if (!RegExp(r'^(?:[01]\d|2[0-3]):[0-5]\d$').hasMatch(text)) {
+      throw const FormatException('Time must use HH:mm format');
+    }
     final parts = text.split(':');
-    return TimeOfDay(
-      hour: int.tryParse(parts.first) ?? 9,
-      minute: parts.length > 1 ? int.tryParse(parts.last) ?? 0 : 0,
-    );
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
   }
 
   static String dateText(DateTime date, {bool annual = false}) {

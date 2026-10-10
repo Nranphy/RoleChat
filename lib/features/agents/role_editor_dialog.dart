@@ -58,7 +58,7 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
     avatar = r?.avatar;
     api = r?.apiId;
     for (final e in r?.examples ?? <Map<String, String>>[]) {
-      examples.add((text(e['question'] ?? ''), text(e['answer'] ?? '')));
+      examples.add((text(e['question']!), text(e['answer']!)));
     }
     for (final s in widget.store.schedules.where((s) => s.roleId == id)) {
       schedules.add(ScheduleDraft(s));

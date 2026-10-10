@@ -100,7 +100,12 @@ class ProfilePersistence {
           soul: r['soul'] as String,
           memory: r['memory'] as String,
           examples: (r['examples'] as List)
-              .map((e) => Map<String, String>.from(e as Map))
+              .map(
+                (e) => <String, String>{
+                  'question': e['question'] as String,
+                  'answer': e['answer'] as String,
+                },
+              )
               .toList(),
         );
       }).toList();
