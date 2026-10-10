@@ -15,9 +15,7 @@ class GroupEditorDialog extends StatefulWidget {
   State<GroupEditorDialog> createState() => _GroupEditorDialogState();
 }
 
-class _GroupEditorDialogState extends State<GroupEditorDialog>
-    with SingleTickerProviderStateMixin {
-  late final TabController tabs;
+class _GroupEditorDialogState extends State<GroupEditorDialog> {
   late final TextEditingController name, background;
   late final Set<String> members;
   String? avatar;
@@ -27,7 +25,6 @@ class _GroupEditorDialogState extends State<GroupEditorDialog>
   @override
   void initState() {
     super.initState();
-    tabs = TabController(length: 3, vsync: this);
     name = TextEditingController(text: widget.group?.name ?? '');
     background = TextEditingController(text: widget.group?.background ?? '');
     members = {...widget.group?.members ?? []};
@@ -38,7 +35,6 @@ class _GroupEditorDialogState extends State<GroupEditorDialog>
   void dispose() {
     name.dispose();
     background.dispose();
-    tabs.dispose();
     super.dispose();
   }
 
@@ -47,58 +43,53 @@ class _GroupEditorDialogState extends State<GroupEditorDialog>
     title: widget.group == null ? '新建群聊' : '群聊资料',
     saving: saving,
     onSave: save,
-    maxWidth: 640,
-    maxHeight: 680,
-    tabGap: 12,
-    tabs: TabBar(
-      controller: tabs,
-      isScrollable: true,
-      tabAlignment: TabAlignment.start,
-      onTap: (i) => setState(() => tab = i),
-      tabs: const [
-        Tab(text: '基础'),
-        Tab(text: '成员'),
-        Tab(text: '背景'),
-      ],
-    ),
-    child: tab == 2
-        ? DocumentEditorTab(
-            controller: background,
-            title: 'background.md',
-            explanation: '介绍群聊的背景。',
-          )
-        : tab == 0
-        ? GroupBasicTab(
-            name: name,
-            avatar: avatar,
-            memberCount: members.length,
-            onAvatarChanged: (v) => setState(() => avatar = v),
-            onNameChanged: () => setState(() {}),
-            onNameCommitted: (value) {
-              if (widget.group != null) {
-                widget.group!.name = value.isEmpty ? '未命名' : value;
-                widget.store.changed();
-              }
-              setState(() {});
-            },
-          )
-        : GroupMembersTab(
-            roles: widget.store.roles,
-            members: members,
-            onMemberChanged: (id, v) =>
-                setState(() => v ? members.add(id) : members.remove(id)),
-          ),
+    selectedIndex: tab,
+    onTabChanged: (i) => setState(() => tab = i),
+    tabs: [
+      ProfileDialogTab(
+        '基础',
+        GroupBasicTab(
+          name: name,
+          avatar: avatar,
+          memberCount: members.length,
+          onAvatarChanged: (v) => setState(() => avatar = v),
+          onNameChanged: () => setState(() {}),
+          onNameCommitted: (value) {
+            if (widget.group != null) {
+              widget.group!.name = value.isEmpty ? '未命名' : value;
+              widget.store.changed();
+            }
+            setState(() {});
+          },
+        ),
+      ),
+      ProfileDialogTab(
+        '背景',
+        DocumentEditorTab(
+          controller: background,
+          title: 'background.md',
+          explanation: '介绍群聊的背景。',
+        ),
+      ),
+      ProfileDialogTab(
+        '成员',
+        GroupMembersTab(
+          roles: widget.store.roles,
+          members: members,
+          onMemberChanged: (id, v) =>
+              setState(() => v ? members.add(id) : members.remove(id)),
+        ),
+      ),
+    ],
   );
   Future<void> save() async {
     if (name.text.trim().isEmpty) {
-      tabs.animateTo(0);
       setState(() => tab = 0);
       toast(context, '请填写群聊名称');
       return;
     }
     if (members.isEmpty) {
-      tabs.animateTo(1);
-      setState(() => tab = 1);
+      setState(() => tab = 2);
       toast(context, '至少选择一个角色');
       return;
     }

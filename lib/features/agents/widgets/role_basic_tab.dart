@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rolechat/design/form_metrics.dart';
-import 'package:rolechat/shared/widgets/avatar_field.dart';
-import 'package:rolechat/shared/widgets/profile_name.dart';
+import 'package:rolechat/shared/widgets/profile_identity_header.dart';
 import 'package:rolechat/shared/widgets/anchored_select.dart';
 
 class RoleBasicTab extends StatelessWidget {
@@ -27,15 +26,13 @@ class RoleBasicTab extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     mainAxisSize: MainAxisSize.min,
     children: [
-      AvatarField(
-        name: name.text,
-        imageData: avatar,
-        onChanged: onAvatarChanged,
-        trailing: ProfileName(
-          controller: name,
-          onChanged: onNameChanged,
-          onCommitted: onNameCommitted,
-        ),
+      ProfileIdentityHeader(
+        name: name,
+        avatar: avatar,
+        group: false,
+        onAvatarChanged: onAvatarChanged,
+        onNameChanged: onNameChanged,
+        onNameCommitted: onNameCommitted,
       ),
       const SizedBox(height: 24),
       AnchoredSelect<String>(

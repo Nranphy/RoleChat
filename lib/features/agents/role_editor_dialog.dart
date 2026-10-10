@@ -17,9 +17,7 @@ class RoleEditorDialog extends StatefulWidget {
   State<RoleEditorDialog> createState() => _RoleEditorDialogState();
 }
 
-class _RoleEditorDialogState extends State<RoleEditorDialog>
-    with SingleTickerProviderStateMixin {
-  late final TabController tabs;
+class _RoleEditorDialogState extends State<RoleEditorDialog> {
   final form = GlobalKey<FormState>();
   final controllers = <TextEditingController>[];
   late final TextEditingController name, model, identity, soul, memoryDocument;
@@ -40,7 +38,6 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
   @override
   void initState() {
     super.initState();
-    tabs = TabController(length: 6, vsync: this);
     final r = widget.role;
     id = r?.id ?? widget.store.newId();
     name = text(r?.name ?? '');
@@ -66,7 +63,6 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
     for (final draft in [...schedules, ...removedSchedules]) {
       draft.dispose();
     }
-    tabs.dispose();
     super.dispose();
   }
 
@@ -76,72 +72,70 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
     saving: saving,
     onSave: save,
     saveLabel: widget.role == null ? '创建角色' : '保存',
-    tabs: TabBar(
-      controller: tabs,
-      isScrollable: true,
-      tabAlignment: TabAlignment.start,
-      onTap: (i) => setState(() => tab = i),
-      tabs: [
+    selectedIndex: tab,
+    onTabChanged: (i) => setState(() => tab = i),
+    formKey: form,
+    tabs: [
+      ProfileDialogTab(
         '基础',
-        '样例',
-        '身份',
-        '灵魂',
-        '记忆',
-        '行程',
-      ].map((label) => Tab(text: label)).toList(),
-    ),
-    child: Form(
-      key: form,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          switch (tab) {
-            0 => RoleBasicTab(
-              name: name,
-              model: model,
-              avatar: avatar,
-              api: api,
-              apiOptions: {
-                '': '暂不选择',
-                for (final a in widget.store.apis) a.id: a.name,
-              },
-              onAvatarChanged: (v) => setState(() => avatar = v),
-              onApiChanged: (v) => setState(() => api = v.isEmpty ? null : v),
-              onNameChanged: () => setState(() {}),
-              onNameCommitted: commitName,
-            ),
-            1 => RoleExamplesTab(
-              examples: examples,
-              onAdd: () => setState(() => examples.add((text(''), text('')))),
-              onDelete: (i) => setState(() => examples.removeAt(i)),
-            ),
-            2 => DocumentEditorTab(
-              controller: identity,
-              title: 'identity.md',
-              explanation: '声明 Agent 的身份。',
-            ),
-            3 => DocumentEditorTab(
-              controller: soul,
-              title: 'soul.md',
-              explanation: '控制 Agent 的性格和观念（会自主更新）。',
-            ),
-            4 => DocumentEditorTab(
-              controller: memoryDocument,
-              title: 'memory.md',
-              explanation: '记录 Agent 的记忆内容（会自主更新）。',
-            ),
-            _ => RoleScheduleTab(
-              schedules: schedules,
-              onAdd: () => setState(() => schedules.add(ScheduleDraft())),
-              onChanged: () => setState(() {}),
-              onDelete: (i) =>
-                  setState(() => removedSchedules.add(schedules.removeAt(i))),
-            ),
+        RoleBasicTab(
+          name: name,
+          model: model,
+          avatar: avatar,
+          api: api,
+          apiOptions: {
+            '': '暂不选择',
+            for (final a in widget.store.apis) a.id: a.name,
           },
-        ],
+          onAvatarChanged: (v) => setState(() => avatar = v),
+          onApiChanged: (v) => setState(() => api = v.isEmpty ? null : v),
+          onNameChanged: () => setState(() {}),
+          onNameCommitted: commitName,
+        ),
       ),
-    ),
+      ProfileDialogTab(
+        '样例',
+        RoleExamplesTab(
+          examples: examples,
+          onAdd: () => setState(() => examples.add((text(''), text('')))),
+          onDelete: (i) => setState(() => examples.removeAt(i)),
+        ),
+      ),
+      ProfileDialogTab(
+        '身份',
+        DocumentEditorTab(
+          controller: identity,
+          title: 'identity.md',
+          explanation: '声明 Agent 的身份。',
+        ),
+      ),
+      ProfileDialogTab(
+        '灵魂',
+        DocumentEditorTab(
+          controller: soul,
+          title: 'soul.md',
+          explanation: '控制 Agent 的性格和观念（会自主更新）。',
+        ),
+      ),
+      ProfileDialogTab(
+        '记忆',
+        DocumentEditorTab(
+          controller: memoryDocument,
+          title: 'memory.md',
+          explanation: '记录 Agent 的记忆内容（会自主更新）。',
+        ),
+      ),
+      ProfileDialogTab(
+        '行程',
+        RoleScheduleTab(
+          schedules: schedules,
+          onAdd: () => setState(() => schedules.add(ScheduleDraft())),
+          onChanged: () => setState(() {}),
+          onDelete: (i) =>
+              setState(() => removedSchedules.add(schedules.removeAt(i))),
+        ),
+      ),
+    ],
   );
   void commitName(String value) {
     final role = widget.role;
@@ -159,7 +153,6 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
 
   Future<void> save() async {
     if (name.text.trim().isEmpty) {
-      tabs.animateTo(0);
       setState(() => tab = 0);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) form.currentState?.validate();
@@ -172,7 +165,6 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
           (s.kind == ScheduleRuleKind.weekly && s.weekdays.isEmpty) ||
           (s.kind == ScheduleRuleKind.range && s.until.isBefore(s.from)),
     )) {
-      tabs.animateTo(5);
       setState(() => tab = 5);
       toast(context, '请填写活动，并检查星期和日期范围');
       return;

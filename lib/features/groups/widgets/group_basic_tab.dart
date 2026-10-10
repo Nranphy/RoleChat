@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:rolechat/shared/widgets/avatar_field.dart';
-import 'package:rolechat/shared/widgets/profile_name.dart';
+import 'package:rolechat/shared/widgets/profile_identity_header.dart';
 
 class GroupBasicTab extends StatelessWidget {
   const GroupBasicTab({
@@ -23,16 +22,13 @@ class GroupBasicTab extends StatelessWidget {
     mainAxisSize: MainAxisSize.min,
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      AvatarField(
+      ProfileIdentityHeader(
+        name: name,
+        avatar: avatar,
         group: true,
-        name: name.text,
-        imageData: avatar,
-        onChanged: onAvatarChanged,
-        trailing: ProfileName(
-          controller: name,
-          onChanged: onNameChanged,
-          onCommitted: onNameCommitted,
-        ),
+        onAvatarChanged: onAvatarChanged,
+        onNameChanged: onNameChanged,
+        onNameCommitted: onNameCommitted,
       ),
       const SizedBox(height: 16),
       Text('${memberCount + 1} 位成员'),

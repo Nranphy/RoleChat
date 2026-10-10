@@ -23,6 +23,64 @@ void main() {
   }
 
   testWidgets(
+    'profile documents share spacing and group validation selects members',
+    (tester) async {
+      final store = await setup(tester);
+      final context = tester.element(find.byType(Scaffold));
+      editRole(context, store, role: store.roles.first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(Tab, '身份'));
+      await tester.pumpAndSettle();
+      final roleGap =
+          tester.getTopLeft(find.text('声明 Agent 的身份。')).dy -
+          tester.getBottomLeft(find.byType(TabBar)).dy;
+      await tester.tap(find.text('取消'));
+      await tester.pumpAndSettle();
+      editGroup(context, store);
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widgetList<Tab>(find.byType(Tab))
+            .map((tab) => tab.text)
+            .toList(),
+        ['基础', '背景', '成员'],
+      );
+      await tester.tap(find.text('未命名'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('profile-name-input')),
+        '背景测试群',
+      );
+      await tester.tap(find.widgetWithText(Tab, '背景'));
+      await tester.pumpAndSettle();
+      final groupGap =
+          tester.getTopLeft(find.text('介绍群聊的背景。')).dy -
+          tester.getBottomLeft(find.byType(TabBar)).dy;
+      expect(groupGap, closeTo(roleGap, .01));
+      await tester.enterText(
+        find.widgetWithText(TextField, 'background.md'),
+        '保留的背景草稿',
+      );
+      await tester.tap(find.text('保存'));
+      await tester.pumpAndSettle();
+      expect(find.byType(CheckboxListTile), findsNWidgets(store.roles.length));
+      final tabs = tester.widget<TabBar>(find.byType(TabBar));
+      expect(tabs.controller!.index, 2);
+      await tester.tap(find.widgetWithText(Tab, '背景'));
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<TextField>(find.widgetWithText(TextField, 'background.md'))
+            .controller!
+            .text,
+        '保留的背景草稿',
+      );
+      await tester.tap(find.text('取消'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    },
+  );
+  testWidgets(
     'group editor creates the selected member set on a narrow screen',
     (tester) async {
       final store = await setup(tester);
