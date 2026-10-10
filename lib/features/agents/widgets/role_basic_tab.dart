@@ -15,13 +15,20 @@ class RoleBasicTab extends StatelessWidget {
     required this.onApiChanged,
     required this.onNameChanged,
     required this.onNameCommitted,
+    required this.onCheckModel,
+    required this.onModelChanged,
+    this.modelCheckMessage,
+    this.modelCheckSucceeded = false,
   });
   final TextEditingController name, model;
   final String? avatar, api;
   final Map<String, String> apiOptions;
   final ValueChanged<String?> onAvatarChanged;
   final ValueChanged<String> onApiChanged, onNameCommitted;
-  final VoidCallback onNameChanged;
+  final VoidCallback onNameChanged, onCheckModel;
+  final ValueChanged<String> onModelChanged;
+  final String? modelCheckMessage;
+  final bool modelCheckSucceeded;
   @override
   Widget build(BuildContext context) => Column(
     mainAxisSize: MainAxisSize.min,
@@ -45,8 +52,33 @@ class RoleBasicTab extends StatelessWidget {
       TextField(
         controller: model,
         style: FormMetrics.textStyle,
-        decoration: FormMetrics.decoration('模型'),
+        onChanged: onModelChanged,
+        decoration: FormMetrics.decoration('模型').copyWith(
+          suffixIcon: IconButton(
+            tooltip: '检测模型',
+            onPressed: onCheckModel,
+            icon: const Icon(Icons.refresh),
+          ),
+        ),
       ),
+      if (modelCheckMessage != null)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              modelCheckMessage!,
+              style: TextStyle(
+                fontSize: 12,
+                color: modelCheckSucceeded
+                    ? (Theme.of(context).brightness == Brightness.dark
+                          ? Colors.green.shade300
+                          : Colors.green.shade700)
+                    : Theme.of(context).colorScheme.error,
+              ),
+            ),
+          ),
+        ),
     ],
   );
 }

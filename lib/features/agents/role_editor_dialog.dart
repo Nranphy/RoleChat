@@ -25,6 +25,8 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
   String? avatar, api;
   int tab = 0;
   bool saving = false;
+  String? modelCheckMessage;
+  bool modelCheckSucceeded = false;
   final examples = <(TextEditingController, TextEditingController)>[];
 
   final schedules = <ScheduleDraft>[];
@@ -88,7 +90,14 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
             for (final a in widget.store.apis) a.id: a.name,
           },
           onAvatarChanged: (v) => setState(() => avatar = v),
-          onApiChanged: (v) => setState(() => api = v.isEmpty ? null : v),
+          onApiChanged: (v) => setState(() {
+            api = v.isEmpty ? null : v;
+            modelCheckMessage = null;
+          }),
+          onCheckModel: checkModel,
+          onModelChanged: (_) => setState(() => modelCheckMessage = null),
+          modelCheckMessage: modelCheckMessage,
+          modelCheckSucceeded: modelCheckSucceeded,
           onNameChanged: () => setState(() {}),
           onNameCommitted: commitName,
         ),
@@ -137,6 +146,20 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
       ),
     ],
   );
+  void checkModel() {
+    setState(() {
+      modelCheckSucceeded = false;
+      if (api == null || !widget.store.apis.any((a) => a.id == api)) {
+        modelCheckMessage = '检查失败：请先选择 API 配置。';
+      } else if (model.text.trim().isEmpty) {
+        modelCheckMessage = '检查失败：请输入模型名称。';
+      } else {
+        modelCheckSucceeded = true;
+        modelCheckMessage = '展示检查成功（未请求 API）。';
+      }
+    });
+  }
+
   void commitName(String value) {
     final role = widget.role;
     if (role != null) {
