@@ -1,3 +1,4 @@
+import 'package:rolechat/shared/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 
 void toast(BuildContext context, String text) =>
@@ -11,7 +12,7 @@ Future<bool> confirm(
 }) async =>
     await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AppDialog.content(
         title: Text(title),
         content: Text(body),
         actions: [

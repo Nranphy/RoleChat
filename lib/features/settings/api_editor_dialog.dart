@@ -1,3 +1,4 @@
+import 'package:rolechat/shared/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:rolechat/app/preview_store.dart';
 import 'package:rolechat/design/form_metrics.dart';
@@ -45,7 +46,7 @@ class _ApiEditorDialogState extends State<ApiEditorDialog> {
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: check,
-    builder: (context, _) => AlertDialog(
+    builder: (context, _) => AppDialog.content(
       title: Text(widget.profile == null ? '添加 API 配置' : '编辑 API 配置'),
       content: SizedBox(
         width: 440,

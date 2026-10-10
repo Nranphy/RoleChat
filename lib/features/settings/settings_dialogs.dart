@@ -1,12 +1,15 @@
+import 'package:rolechat/shared/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:rolechat/shared/widgets/common.dart';
 import 'package:rolechat/design/form_metrics.dart';
 
 Future<void> showLocalDataInfo(BuildContext context) => managedDialog<void>(
   context: context,
-  builder: (context) => AlertDialog(
+  builder: (context) => AppDialog.content(
     title: const Text('关于本地数据'),
-    content: const Text('主题、头像以及角色与群聊资料保存在当前浏览器。消息仍为临时展示数据。导入导出与模型运行尚未实现。'),
+    content: const Text(
+      '主题、头像以及角色与群聊资料保存在当前浏览器。API 配置与消息仅在本次运行中保留。导入导出和角色自动回复尚未实现。',
+    ),
     actions: [
       TextButton(
         style: FormMetrics.dialogActionStyle,
@@ -21,7 +24,7 @@ void showRoleChatAbout(BuildContext context) => showAboutDialog(
   applicationName: 'RoleChat',
   applicationVersion: 'UI Preview 0.1',
   applicationIcon: const RoleAvatar('', icon: Icons.chat_bubble_outline),
-  children: [const Text('本版本用于 UI 验收，不连接模型接口。')],
+  children: [const Text('本版本提供 UI 预览与真实接口检测，聊天暂不调用模型。')],
 );
 
 Future<void> editThemeColor(
@@ -35,7 +38,7 @@ Future<void> editThemeColor(
   final form = GlobalKey<FormState>();
   await managedDialog<void>(
     context: context,
-    builder: (context) => AlertDialog(
+    builder: (context) => AppDialog.content(
       title: const Text('自定义主题颜色'),
       content: Form(
         key: form,

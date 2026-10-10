@@ -1,3 +1,4 @@
+import 'package:rolechat/shared/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:rolechat/models/preview_models.dart';
 import 'package:rolechat/shared/widgets/common.dart';
@@ -21,7 +22,7 @@ class _ChatSearchDialogState extends State<ChatSearchDialog> {
     final results = widget.conversation.messages.reversed
         .where((m) => m.text.contains(query))
         .toList();
-    return AlertDialog(
+    return AppDialog.content(
       title: const Text('搜索聊天记录'),
       content: SizedBox(
         width: 520,

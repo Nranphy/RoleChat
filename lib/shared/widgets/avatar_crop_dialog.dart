@@ -1,3 +1,4 @@
+import 'package:rolechat/shared/widgets/app_dialog.dart';
 import 'dart:math' as math;
 import 'dart:convert';
 import 'dart:typed_data';
@@ -27,7 +28,7 @@ class _AvatarCropDialogState extends State<AvatarCropDialog> {
   }
 
   @override
-  Widget build(BuildContext context) => AlertDialog(
+  Widget build(BuildContext context) => AppDialog.content(
     title: const Text('裁剪头像'),
     content: SizedBox(
       width: 440,
