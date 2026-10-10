@@ -166,12 +166,14 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
     mainAxisSize: MainAxisSize.min,
     children: [
       AvatarField(
+        name: name.text,
         imageData: avatar,
         onChanged: (v) => setState(() => avatar = v),
       ),
       const SizedBox(height: 24),
       TextFormField(
         controller: name,
+        onChanged: (_) => setState(() {}),
         decoration: const InputDecoration(labelText: '名称'),
         validator: (v) => v == null || v.trim().isEmpty ? '请填写角色名称' : null,
       ),
@@ -434,6 +436,7 @@ class _GroupEditorDialogState extends State<GroupEditorDialog>
                     ? [
                         AvatarField(
                           group: true,
+                          name: name.text,
                           imageData: avatar,
                           onChanged: (v) => setState(() => avatar = v),
                         ),

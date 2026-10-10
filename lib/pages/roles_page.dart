@@ -26,7 +26,6 @@ class RolesPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 16),
           if (store.roles.isEmpty)
             EmptyState(
               emoji: '',
@@ -37,9 +36,12 @@ class RolesPage extends StatelessWidget {
                 child: const Text('新建角色'),
               ),
             ),
-          ...store.roles.map(
-            (r) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+          ...store.roles.indexed.map((entry) {
+            final (index, r) = entry;
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: index == store.roles.length - 1 ? 0 : 8,
+              ),
               child: Material(
                 color: Colors.transparent,
                 borderRadius: BorderRadius.circular(18),
@@ -53,12 +55,7 @@ class RolesPage extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        RoleAvatar(
-                          r.name,
-                          imageData: r.avatar,
-                          color: r.color,
-                          size: 80,
-                        ),
+                        RoleAvatar(r.name, imageData: r.avatar, size: 80),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Column(
@@ -95,15 +92,11 @@ class RolesPage extends StatelessWidget {
                                 if (chat != null) store.select(chat.id);
                               },
                             ),
-                            PopupMenuButton<String>(
-                              tooltip: '角色操作',
-                              position: PopupMenuPosition.under,
-                              offset: const Offset(0, 6),
-                              onSelected: (v) async {
-                                if (v == 'edit') {
-                                  editRole(context, store, role: r);
-                                  return;
-                                }
+                            IconButton(
+                              tooltip: '删除角色',
+                              icon: const Icon(Icons.delete_outline),
+                              color: Theme.of(context).colorScheme.error,
+                              onPressed: () async {
                                 final groups = store.conversations
                                     .where(
                                       (c) =>
@@ -120,16 +113,6 @@ class RolesPage extends StatelessWidget {
                                   store.removeRole(r.id);
                                 }
                               },
-                              itemBuilder: (_) => [
-                                const PopupMenuItem(
-                                  value: 'edit',
-                                  child: Text('角色资料'),
-                                ),
-                                const PopupMenuItem(
-                                  value: 'delete',
-                                  child: Text('删除角色'),
-                                ),
-                              ],
                             ),
                           ],
                         ),
@@ -138,8 +121,8 @@ class RolesPage extends StatelessWidget {
                   ),
                 ),
               ),
-            ),
-          ),
+            );
+          }),
         ],
       ),
     ),

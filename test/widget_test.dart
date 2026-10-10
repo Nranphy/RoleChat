@@ -33,6 +33,33 @@ void main() {
     expect(find.text('一起去看花吧'), findsNWidgets(2));
     expect(tester.takeException(), isNull);
   });
+  testWidgets('role card edits initials and delete opens confirmation', (
+    tester,
+  ) async {
+    final store = await setup(tester);
+    store.navigate(1);
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('角色操作'), findsNothing);
+    await tester.tap(find.text('林间'));
+    await tester.pumpAndSettle();
+    final dialogAvatar = find.descendant(
+      of: find.byType(Dialog),
+      matching: find.byType(RoleAvatar),
+    );
+    expect(tester.widget<RoleAvatar>(dialogAvatar).name, '林间');
+    await tester.enterText(find.widgetWithText(TextFormField, '名称'), '青禾');
+    await tester.pumpAndSettle();
+    expect(tester.widget<RoleAvatar>(dialogAvatar).name, '青禾');
+    await tester.tap(find.text('取消'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('删除角色').first);
+    await tester.pumpAndSettle();
+    expect(find.text('删除 林间？'), findsOneWidget);
+    expect(store.roles.length, 3);
+    await tester.tap(find.text('取消'));
+    await tester.pumpAndSettle();
+    expect(store.roles.length, 3);
+  });
   testWidgets('new role creates an empty private conversation', (tester) async {
     final store = await setup(tester);
     store.navigate(1);

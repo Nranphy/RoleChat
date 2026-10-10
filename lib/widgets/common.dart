@@ -40,9 +40,9 @@ class RoleAvatar extends StatelessWidget {
                           fontSize: size / 2.5,
                           fontWeight: FontWeight.bold,
                           color: color == null
-                              ? Theme.of(
-                                  context,
-                                ).colorScheme.onSecondaryContainer
+                              ? AppTheme.nameColors(
+                                  name.characters.first,
+                                ).onPrimaryContainer
                               : ThemeData.estimateBrightnessForColor(color!) ==
                                     Brightness.light
                               ? Colors.black87

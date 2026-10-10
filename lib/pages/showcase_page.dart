@@ -117,10 +117,10 @@ class _ShowcasePageState extends State<ShowcasePage> {
                     const Wrap(
                       spacing: 12,
                       children: [
-                        RoleAvatar('🌱'),
-                        RoleAvatar('🌙'),
-                        RoleAvatar('🍊'),
-                        RoleAvatar('🌷'),
+                        RoleAvatar('林间'),
+                        RoleAvatar('月白'),
+                        RoleAvatar('夏芽'),
+                        RoleAvatar('周末小花园'),
                       ],
                     ),
                     const SizedBox(height: 18),

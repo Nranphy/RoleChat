@@ -13,15 +13,20 @@ class AvatarField extends StatelessWidget {
     required this.imageData,
     required this.onChanged,
     this.group = false,
+    this.name = '',
+    this.color,
   });
   final String? imageData;
   final ValueChanged<String?> onChanged;
   final bool group;
+  final String name;
+  final Color? color;
   @override
   Widget build(BuildContext context) => Row(
     children: [
       RoleAvatar(
-        '',
+        name,
+        color: color,
         imageData: imageData,
         size: 96,
         icon: group ? Icons.group_outlined : Icons.person_outline,
