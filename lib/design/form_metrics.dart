@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 abstract final class FormMetrics {
+  static const dialogActionStyle = ButtonStyle(
+    fixedSize: WidgetStatePropertyAll(Size(104, 40)),
+  );
   static const textStyle = TextStyle(fontSize: 16, height: 1.5);
   static const fieldHeight = 48.0;
   static const compactFieldHeight = 48.0;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../design/form_metrics.dart';
 import '../app/preview_store.dart';
 import '../design/app_theme.dart';
 import '../widgets/common.dart';
@@ -224,6 +225,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                         actions: [
                           TextButton(
+                            style: FormMetrics.dialogActionStyle,
                             onPressed: () => Navigator.pop(context),
                             child: const Text('知道了'),
                           ),
@@ -284,10 +286,12 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
         actions: [
           TextButton(
+            style: FormMetrics.dialogActionStyle,
             onPressed: () => Navigator.pop(context),
             child: const Text('取消'),
           ),
           FilledButton(
+            style: FormMetrics.dialogActionStyle,
             onPressed: () {
               if (!form.currentState!.validate()) return;
               store.setSeed(

@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:crop_image/crop_image.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+import '../design/form_metrics.dart';
 import 'common.dart';
 
 class AvatarField extends StatelessWidget {
@@ -238,10 +239,12 @@ class _AvatarCropDialogState extends State<AvatarCropDialog> {
     ),
     actions: [
       TextButton(
+        style: FormMetrics.dialogActionStyle,
         onPressed: saving ? null : () => Navigator.pop(context),
         child: const Text('取消'),
       ),
       FilledButton(
+        style: FormMetrics.dialogActionStyle,
         onPressed: saving ? null : save,
         child: saving
             ? const SizedBox(

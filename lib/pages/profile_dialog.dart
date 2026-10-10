@@ -141,11 +141,13 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 TextButton(
+                  style: FormMetrics.dialogActionStyle,
                   onPressed: saving ? null : () => Navigator.pop(context),
                   child: const Text('取消'),
                 ),
                 const SizedBox(width: 8),
                 FilledButton(
+                  style: FormMetrics.dialogActionStyle,
                   onPressed: saving ? null : save,
                   child: Text(
                     saving
@@ -512,11 +514,13 @@ class _GroupEditorDialogState extends State<GroupEditorDialog>
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 TextButton(
+                  style: FormMetrics.dialogActionStyle,
                   onPressed: saving ? null : () => Navigator.pop(context),
                   child: const Text('取消'),
                 ),
                 const SizedBox(width: 8),
                 FilledButton(
+                  style: FormMetrics.dialogActionStyle,
                   onPressed: saving ? null : save,
                   child: Text(saving ? '保存中…' : '保存'),
                 ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../design/form_metrics.dart';
 import '../app/preview_store.dart';
 import '../models/preview_models.dart';
 import '../widgets/common.dart';
@@ -92,10 +93,12 @@ Future<void> editApi(
         ),
         actions: [
           TextButton(
+            style: FormMetrics.dialogActionStyle,
             onPressed: () => Navigator.pop(context),
             child: const Text('取消'),
           ),
           FilledButton(
+            style: FormMetrics.dialogActionStyle,
             onPressed: () {
               if (!form.currentState!.validate()) return;
               final p =
@@ -143,10 +146,12 @@ Future<String?> editText(
       ),
       actions: [
         TextButton(
+          style: FormMetrics.dialogActionStyle,
           onPressed: () => Navigator.pop(context),
           child: const Text('取消'),
         ),
         FilledButton(
+          style: FormMetrics.dialogActionStyle,
           onPressed: () => Navigator.pop(context, controller.text),
           child: const Text('保存'),
         ),
