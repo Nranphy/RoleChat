@@ -49,68 +49,65 @@ class _AvatarButtonState extends State<_AvatarButton> {
   Widget build(BuildContext context) => MouseRegion(
     onEnter: (_) => setState(() => hovered = true),
     onExit: (_) => setState(() => hovered = false),
-    child: Tooltip(
-      message: '编辑头像',
-      child: Semantics(
-        button: true,
-        label: '编辑头像',
-        child: Material(
-          shape: RoundedSuperellipseBorder(
-            borderRadius: BorderRadius.circular(48),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: () async {
-              final avatar = await selectAvatar(context);
-              if (mounted && avatar != null) widget.field.onChanged(avatar);
-            },
-            child: SizedBox.square(
-              dimension: 96,
-              child: Stack(
-                children: [
-                  RoleAvatar(
-                    widget.field.name,
-                    imageData: widget.field.imageData,
-                    color: widget.field.color,
-                    size: 96,
-                    icon: widget.field.group
-                        ? Icons.group_outlined
-                        : Icons.person_outline,
-                  ),
-                  if (hovered)
-                    Positioned.fill(
-                      child: ColoredBox(
-                        color: Colors.black.withValues(alpha: .06),
-                      ),
-                    ),
-                  AnimatedPositioned(
-                    duration: const Duration(milliseconds: 160),
-                    curve: Curves.easeOut,
-                    left: 0,
-                    right: 0,
-                    bottom: hovered ? 0 : -32,
-                    child: Container(
-                      height: 32,
-                      color: Colors.black54,
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.edit_outlined,
-                            size: 14,
-                            color: Colors.white,
-                          ),
-                          SizedBox(width: 4),
-                          Text(
-                            '编辑',
-                            style: TextStyle(color: Colors.white, fontSize: 12),
-                          ),
-                        ],
-                      ),
+    child: Semantics(
+      button: true,
+      label: '编辑头像',
+      child: Material(
+        shape: RoundedSuperellipseBorder(
+          borderRadius: BorderRadius.circular(48),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () async {
+            final avatar = await selectAvatar(context);
+            if (mounted && avatar != null) widget.field.onChanged(avatar);
+          },
+          child: SizedBox.square(
+            dimension: 96,
+            child: Stack(
+              children: [
+                RoleAvatar(
+                  widget.field.name,
+                  imageData: widget.field.imageData,
+                  color: widget.field.color,
+                  size: 96,
+                  icon: widget.field.group
+                      ? Icons.group_outlined
+                      : Icons.person_outline,
+                ),
+                if (hovered)
+                  Positioned.fill(
+                    child: ColoredBox(
+                      color: Colors.black.withValues(alpha: .06),
                     ),
                   ),
-                ],
-              ),
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 160),
+                  curve: Curves.easeOut,
+                  left: 0,
+                  right: 0,
+                  bottom: hovered ? 0 : -32,
+                  child: Container(
+                    height: 32,
+                    color: Colors.black54,
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.edit_outlined,
+                          size: 14,
+                          color: Colors.white,
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          '编辑',
+                          style: TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
