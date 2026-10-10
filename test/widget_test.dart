@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:rolechat/app/preview_store.dart';
 import 'package:rolechat/main.dart';
+import 'package:rolechat/widgets/common.dart';
 
 void main() {
   Future<PreviewStore> setup(
@@ -64,6 +65,12 @@ void main() {
       for (var i = 0; i < 4; i++) {
         store.navigate(i);
         await tester.pumpAndSettle();
+        if (i == 1) {
+          expect(
+            tester.getTopLeft(find.byType(PageHeading)).dy,
+            lessThanOrEqualTo(32),
+          );
+        }
         expect(
           tester.takeException(),
           isNull,

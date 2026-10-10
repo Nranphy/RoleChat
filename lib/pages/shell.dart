@@ -31,6 +31,7 @@ class AppShell extends StatelessWidget {
       return Scaffold(
         body: SafeArea(
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (wide) _RoleNavigationRail(store: store),
               Expanded(child: page),
