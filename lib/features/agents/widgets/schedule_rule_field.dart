@@ -149,7 +149,7 @@ class ScheduleRuleField extends StatelessWidget {
               ? '结束日期'
               : '开始日期',
         );
-        if (selected == null) return;
+        if (selected == null || !context.mounted) return;
         if (last) {
           draft.until = selected;
         } else {

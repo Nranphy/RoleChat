@@ -37,6 +37,17 @@ class ChatTimelineState extends State<ChatTimeline> {
     super.dispose();
   }
 
+  @override
+  void didUpdateWidget(covariant ChatTimeline oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final ids = widget.c.messages.map((m) => m.id).toSet();
+    messageKeys.removeWhere((id, _) => !ids.contains(id));
+    if (!ids.contains(highlightedId)) {
+      highlightTimer?.cancel();
+      highlightedId = null;
+    }
+  }
+
   /// Locate by stable ID, including messages outside the lazy list's viewport.
   Future<bool> scrollToMessage(String id) async {
     final indexes = {
