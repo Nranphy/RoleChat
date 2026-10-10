@@ -72,4 +72,23 @@ void main() {
       }
     }
   });
+  testWidgets('conversation title opens chat while avatar opens its editor', (
+    tester,
+  ) async {
+    final store = await setup(tester, size: const Size(390, 844));
+    await tester.tap(find.text('周末小花园'));
+    await tester.pumpAndSettle();
+    expect(store.showChatOnMobile, isTrue);
+    expect(find.byType(Dialog), findsNothing);
+    await tester.tap(find.byTooltip('返回会话'));
+    await tester.pumpAndSettle();
+    final semantics = tester.ensureSemantics();
+
+    await tester.tap(find.bySemanticsLabel('编辑 周末小花园'));
+    await tester.pumpAndSettle();
+    semantics.dispose();
+    expect(find.byType(Dialog), findsOneWidget);
+    expect(find.text('群聊名称'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }

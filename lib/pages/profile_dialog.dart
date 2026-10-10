@@ -14,7 +14,9 @@ class RoleEditorDialog extends StatefulWidget {
   State<RoleEditorDialog> createState() => _RoleEditorDialogState();
 }
 
-class _RoleEditorDialogState extends State<RoleEditorDialog> {
+class _RoleEditorDialogState extends State<RoleEditorDialog>
+    with SingleTickerProviderStateMixin {
+  late final TabController tabs;
   final form = GlobalKey<FormState>();
   final controllers = <TextEditingController>[];
   late final TextEditingController name,
@@ -40,6 +42,7 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
   @override
   void initState() {
     super.initState();
+    tabs = TabController(length: 6, vsync: this);
     final r = widget.role;
     id = r?.id ?? widget.store.newId();
     name = text(r?.name ?? '');
@@ -66,6 +69,7 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
     for (final draft in [...schedules, ...removedSchedules]) {
       draft.dispose();
     }
+    tabs.dispose();
     super.dispose();
   }
 
@@ -93,22 +97,19 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
               ],
             ),
           ),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: List.generate(
-                6,
-                (i) => Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    label: Text(['基础信息', '身份', '灵魂', '对话示例', '记忆', '行程'][i]),
-                    selected: tab == i,
-                    onSelected: (_) => setState(() => tab = i),
-                  ),
-                ),
-              ),
-            ),
+          TabBar(
+            controller: tabs,
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            onTap: (i) => setState(() => tab = i),
+            tabs: [
+              '基础信息',
+              '身份',
+              '灵魂',
+              '对话示例',
+              '记忆',
+              '行程',
+            ].map((label) => Tab(text: label)).toList(),
           ),
           const SizedBox(height: 12),
           Expanded(
@@ -294,6 +295,7 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
   );
   Future<void> save() async {
     if (name.text.trim().isEmpty) {
+      tabs.animateTo(0);
       setState(() => tab = 0);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) form.currentState?.validate();
@@ -306,6 +308,7 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
           (s.kind == ScheduleRuleKind.weekly && s.weekdays.isEmpty) ||
           (s.kind == ScheduleRuleKind.range && s.until.isBefore(s.from)),
     )) {
+      tabs.animateTo(5);
       setState(() => tab = 5);
       toast(context, '请填写活动，并检查星期和日期范围');
       return;
@@ -361,7 +364,9 @@ class GroupEditorDialog extends StatefulWidget {
   State<GroupEditorDialog> createState() => _GroupEditorDialogState();
 }
 
-class _GroupEditorDialogState extends State<GroupEditorDialog> {
+class _GroupEditorDialogState extends State<GroupEditorDialog>
+    with SingleTickerProviderStateMixin {
+  late final TabController tabs;
   late final TextEditingController name;
   late final Set<String> members;
   String? avatar;
@@ -371,6 +376,7 @@ class _GroupEditorDialogState extends State<GroupEditorDialog> {
   @override
   void initState() {
     super.initState();
+    tabs = TabController(length: 2, vsync: this);
     name = TextEditingController(text: widget.group?.name ?? '');
     members = {...widget.group?.members ?? []};
     avatar = widget.group?.avatar;
@@ -379,6 +385,7 @@ class _GroupEditorDialogState extends State<GroupEditorDialog> {
   @override
   void dispose() {
     name.dispose();
+    tabs.dispose();
     super.dispose();
   }
 
@@ -407,21 +414,13 @@ class _GroupEditorDialogState extends State<GroupEditorDialog> {
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: List.generate(
-                2,
-                (i) => Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    label: Text(['基础信息', '成员'][i]),
-                    selected: tab == i,
-                    onSelected: (_) => setState(() => tab = i),
-                  ),
-                ),
-              ),
-            ),
+          TabBar(
+            controller: tabs,
+            onTap: (i) => setState(() => tab = i),
+            tabs: const [
+              Tab(text: '基础信息'),
+              Tab(text: '成员'),
+            ],
           ),
           const SizedBox(height: 12),
           Flexible(
@@ -495,11 +494,13 @@ class _GroupEditorDialogState extends State<GroupEditorDialog> {
   );
   Future<void> save() async {
     if (name.text.trim().isEmpty) {
+      tabs.animateTo(0);
       setState(() => tab = 0);
       toast(context, '请填写群聊名称');
       return;
     }
     if (members.isEmpty) {
+      tabs.animateTo(1);
       setState(() => tab = 1);
       toast(context, '至少选择一个角色');
       return;

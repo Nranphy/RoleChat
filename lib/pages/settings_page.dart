@@ -18,11 +18,12 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     final store = widget.store;
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(28),
-      child: Center(
+      padding: const EdgeInsets.all(16),
+      child: Align(
+        alignment: Alignment.topCenter,
         heightFactor: 1,
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 820),
+          constraints: const BoxConstraints(maxWidth: 760),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -31,7 +32,7 @@ class _SettingsPageState extends State<SettingsPage> {
               const SizedBox(height: 26),
               Text('外观', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 12),
-              SectionCard(
+              SettingsSection(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -146,7 +147,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ],
               ),
               const SizedBox(height: 12),
-              SectionCard(
+              SettingsSection(
                 padding: const EdgeInsets.all(8),
                 child: Column(
                   children: [
@@ -209,7 +210,7 @@ class _SettingsPageState extends State<SettingsPage> {
               const SizedBox(height: 26),
               Text('运行与数据', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 12),
-              SectionCard(
+              SettingsSection(
                 child: Column(
                   children: [
                     SwitchListTile(

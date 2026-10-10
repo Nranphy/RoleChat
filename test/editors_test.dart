@@ -31,7 +31,7 @@ void main() {
         find.widgetWithText(TextFormField, '群聊名称'),
         '雨天茶会',
       );
-      await tester.tap(find.widgetWithText(ChoiceChip, '成员'));
+      await tester.tap(find.widgetWithText(Tab, '成员'));
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(CheckboxListTile, '林间'));
       await tester.tap(find.widgetWithText(CheckboxListTile, '月白'));
@@ -53,16 +53,16 @@ void main() {
       store.roles.first,
     );
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.widgetWithText(ChoiceChip, '灵魂'));
-    await tester.tap(find.widgetWithText(ChoiceChip, '灵魂'));
+    await tester.ensureVisible(find.widgetWithText(Tab, '灵魂'));
+    await tester.tap(find.widgetWithText(Tab, '灵魂'));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.widgetWithText(TextField, 'soul.md'),
       '喜欢在雨天听故事。',
     );
     for (final label in ['记忆', '行程', '对话示例']) {
-      await tester.ensureVisible(find.widgetWithText(ChoiceChip, label));
-      await tester.tap(find.widgetWithText(ChoiceChip, label));
+      await tester.ensureVisible(find.widgetWithText(Tab, label));
+      await tester.tap(find.widgetWithText(Tab, label));
       await tester.pumpAndSettle();
       expect(find.byType(Dialog), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -123,15 +123,15 @@ void main() {
       role: store.roles.first,
     );
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.widgetWithText(ChoiceChip, '记忆'));
-    await tester.tap(find.widgetWithText(ChoiceChip, '记忆'));
+    await tester.ensureVisible(find.widgetWithText(Tab, '记忆'));
+    await tester.tap(find.widgetWithText(Tab, '记忆'));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.widgetWithText(TextField, 'Memory.md'),
       '# 记忆\n喜欢雨天。',
     );
-    await tester.ensureVisible(find.widgetWithText(ChoiceChip, '行程'));
-    await tester.tap(find.widgetWithText(ChoiceChip, '行程'));
+    await tester.ensureVisible(find.widgetWithText(Tab, '行程'));
+    await tester.tap(find.widgetWithText(Tab, '行程'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilterChip, '五'));
     await tester.ensureVisible(

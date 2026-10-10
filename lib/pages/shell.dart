@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../app/preview_store.dart';
 import '../widgets/common.dart';
+import '../design/app_theme.dart';
 import 'chat_page.dart';
 import 'roles_page.dart';
 import 'settings_page.dart';
@@ -20,7 +21,7 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
-      final wide = constraints.maxWidth >= 880;
+      final wide = constraints.maxWidth > AppTheme.wideBreakpoint;
       Widget page = switch (store.destination) {
         0 => ChatPage(store: store, wide: wide),
         1 => RolesPage(store: store),
@@ -31,67 +32,7 @@ class AppShell extends StatelessWidget {
         body: SafeArea(
           child: Row(
             children: [
-              if (wide)
-                Container(
-                  width: 88,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerLow,
-                    border: Border(
-                      right: BorderSide(color: Theme.of(context).dividerColor),
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 24),
-                      const RoleAvatar(
-                        '',
-                        size: 44,
-                        icon: Icons.chat_bubble_outline,
-                      ),
-                      const SizedBox(height: 34),
-                      ...List.generate(
-                        4,
-                        (i) => Padding(
-                          padding: const EdgeInsets.only(bottom: 18),
-                          child: Column(
-                            children: [
-                              IconButton.filledTonal(
-                                isSelected: store.destination == i,
-                                onPressed: () => store.navigate(i),
-                                tooltip: labels[i],
-                                icon: Icon(icons[i]),
-                                style: IconButton.styleFrom(
-                                  backgroundColor: store.destination == i
-                                      ? Theme.of(
-                                          context,
-                                        ).colorScheme.secondaryContainer
-                                      : Colors.transparent,
-                                ),
-                              ),
-                              Text(
-                                labels[i],
-                                style: const TextStyle(fontSize: 11),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const Spacer(),
-                      Tooltip(
-                        message: '切换浅色 / 深色',
-                        child: IconButton(
-                          onPressed: () => store.setMode(
-                            Theme.of(context).brightness == Brightness.dark
-                                ? ThemeMode.light
-                                : ThemeMode.dark,
-                          ),
-                          icon: const Icon(Icons.contrast),
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                    ],
-                  ),
-                ),
+              if (wide) _RoleNavigationRail(store: store),
               Expanded(child: page),
             ],
           ),
@@ -139,55 +80,61 @@ class _ConversationListState extends State<ConversationList> {
         .toList();
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 26, 16, 16),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'RoleChat',
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
+        SizedBox(
+          height: 72,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    onChanged: (v) => setState(() => query = v),
+                    decoration: InputDecoration(
+                      hintText: '搜索会话',
+                      prefixIcon: const Icon(Icons.search),
+                      filled: true,
+                      fillColor: scheme.secondaryContainer,
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                      contentPadding: const EdgeInsets.all(12),
                     ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                PopupMenuButton<String>(
+                  key: const ValueKey('create-menu'),
+                  tooltip: '',
+                  position: PopupMenuPosition.under,
+                  offset: const Offset(0, 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  icon: const Icon(Icons.add),
+                  onSelected: (v) => v == 'role'
+                      ? editRole(context, store)
+                      : editGroup(context, store),
+                  itemBuilder: (_) => [
+                    const PopupMenuItem(value: 'role', child: Text('新建角色')),
+                    const PopupMenuItem(value: 'group', child: Text('新建群聊')),
                   ],
                 ),
-              ),
-              PopupMenuButton<String>(
-                position: PopupMenuPosition.under,
-                offset: const Offset(0, 8),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                key: const ValueKey('create-menu'),
-                tooltip: '',
-                icon: const Icon(Icons.add_circle_outline),
-                onSelected: (v) => v == 'role'
-                    ? editRole(context, store)
-                    : editGroup(context, store),
-                itemBuilder: (_) => [
-                  const PopupMenuItem(value: 'role', child: Text('新建角色')),
-                  const PopupMenuItem(value: 'group', child: Text('新建群聊')),
-                ],
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: TextField(
-            onChanged: (v) => setState(() => query = v),
-            decoration: const InputDecoration(
-              hintText: '搜索会话',
-              prefixIcon: Icon(Icons.search),
-              contentPadding: EdgeInsets.all(12),
+              ],
             ),
           ),
         ),
+        const Divider(height: 1),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           child: Row(
             children: List.generate(
               3,
@@ -210,92 +157,210 @@ class _ConversationListState extends State<ConversationList> {
                   subtitle: '换一个关键词试试',
                 )
               : ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
                   itemCount: chats.length,
                   separatorBuilder: (_, i) => const SizedBox(height: 5),
                   itemBuilder: (context, i) {
                     final c = chats[i];
                     return Material(
                       color: c.id == store.selectedId
-                          ? scheme.secondaryContainer.withValues(alpha: .65)
+                          ? scheme.secondaryContainer
                           : Colors.transparent,
-                      borderRadius: BorderRadius.circular(20),
-                      child: ListTile(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(
+                        AppTheme.cornerRadius,
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 16,
                         ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 7,
-                        ),
-                        leading: GestureDetector(
-                          onTap: () => c.group
-                              ? editGroup(context, store, group: c)
-                              : (c.members.isEmpty
+                        child: Row(
+                          children: [
+                            Semantics(
+                              button: true,
+                              label: '编辑 ${c.name}',
+                              child: GestureDetector(
+                                onTap: () => c.group
+                                    ? editGroup(context, store, group: c)
+                                    : c.members.isEmpty
                                     ? null
                                     : editRole(
                                         context,
                                         store,
                                         role: store.role(c.members.first),
-                                      )),
-                          child: RoleAvatar(
-                            c.name,
-                            imageData: store.avatarFor(c),
-                            size: 56,
-                            icon: c.group
-                                ? Icons.group_outlined
-                                : Icons.person_outline,
-                          ),
-                        ),
-                        title: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                c.name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
+                                      ),
+                                child: RoleAvatar(
+                                  c.name,
+                                  imageData: store.avatarFor(c),
+                                  size: 56,
+                                  icon: c.group
+                                      ? Icons.group_outlined
+                                      : Icons.person_outline,
                                 ),
                               ),
                             ),
-                            if (c.muted)
-                              const Icon(
-                                Icons.notifications_off_outlined,
-                                size: 14,
-                              ),
-                            Text(
-                              c.messages.isEmpty ? '' : c.messages.last.time,
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: scheme.onSurfaceVariant,
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: InkWell(
+                                onTap: () => store.select(c.id),
+                                borderRadius: BorderRadius.circular(9),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 4,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              c.name,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: c.unread > 0
+                                                    ? FontWeight.w600
+                                                    : FontWeight.normal,
+                                              ),
+                                            ),
+                                          ),
+                                          if (c.muted)
+                                            const Icon(
+                                              Icons.notifications_off_outlined,
+                                              size: 14,
+                                            ),
+                                          Text(
+                                            c.messages.isEmpty
+                                                ? ''
+                                                : c.messages.last.time,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: scheme.onSurfaceVariant,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        c.messages.isEmpty
+                                            ? '暂无消息'
+                                            : c.messages.last.text.replaceAll(
+                                                '\n',
+                                                ' ',
+                                              ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: scheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           ],
                         ),
-                        subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 5),
-                          child: Text(
-                            c.messages.isEmpty
-                                ? '暂无消息'
-                                : c.messages.last.text.replaceAll('\n', ' '),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: scheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                        onTap: () => store.select(c.id),
                       ),
                     );
                   },
                 ),
         ),
-        const Padding(
-          padding: EdgeInsets.all(18),
-          child: PreviewNotice(text: 'UI 预览 · 不会发送网络请求'),
-        ),
       ],
+    );
+  }
+}
+
+class _RoleNavigationRail extends StatelessWidget {
+  const _RoleNavigationRail({required this.store});
+  final PreviewStore store;
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return SizedBox(
+      width: AppTheme.railWidth,
+      child: Column(
+        children: [
+          const SizedBox(height: 4),
+          ...List.generate(AppShell.labels.length, (i) {
+            final selected = store.destination == i;
+            return SizedBox(
+              height: 64,
+              child: Stack(
+                children: [
+                  if (selected)
+                    Positioned(
+                      left: 0,
+                      top: 8,
+                      bottom: 8,
+                      child: Container(
+                        width: 8,
+                        decoration: BoxDecoration(
+                          color: colors.primary,
+                          borderRadius: const BorderRadius.horizontal(
+                            right: Radius.circular(90),
+                          ),
+                        ),
+                      ),
+                    ),
+                  Center(
+                    child: Tooltip(
+                      message: AppShell.labels[i],
+                      child: Material(
+                        color: selected
+                            ? colors.secondaryContainer
+                            : colors.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(
+                          AppTheme.cornerRadius,
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.cornerRadius,
+                          ),
+                          onTap: () => store.navigate(i),
+                          child: SizedBox(
+                            width: 48,
+                            height: 48,
+                            child: Icon(
+                              AppShell.icons[i],
+                              color: selected
+                                  ? colors.onSecondaryContainer
+                                  : colors.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+          const Spacer(),
+          const Tooltip(
+            message: '界面预览，未连接模型',
+            child: Padding(
+              padding: EdgeInsets.all(12),
+              child: Icon(Icons.science_outlined, size: 20),
+            ),
+          ),
+          IconButton(
+            tooltip: '切换浅色 / 深色',
+            onPressed: () => store.setMode(
+              Theme.of(context).brightness == Brightness.dark
+                  ? ThemeMode.light
+                  : ThemeMode.dark,
+            ),
+            icon: const Icon(Icons.contrast),
+          ),
+          const SizedBox(height: 12),
+        ],
+      ),
     );
   }
 }

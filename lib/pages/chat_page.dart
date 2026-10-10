@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../app/preview_store.dart';
 import '../models/preview_models.dart';
 import '../widgets/common.dart';
+import '../design/app_theme.dart';
 import 'shell.dart';
 import 'editors.dart';
 import 'roles_page.dart';
@@ -16,7 +17,11 @@ class ChatPage extends StatelessWidget {
     if (!wide && !store.showChatOnMobile) return ConversationList(store: store);
     return Row(
       children: [
-        if (wide) SizedBox(width: 340, child: ConversationList(store: store)),
+        if (wide)
+          SizedBox(
+            width: AppTheme.conversationWidth,
+            child: ConversationList(store: store),
+          ),
         if (wide) const VerticalDivider(width: 1),
         Expanded(
           child: ChatView(
@@ -74,8 +79,8 @@ class _ChatViewState extends State<ChatView> {
     return Column(
       children: [
         Container(
-          height: 86,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          height: 72,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Row(
             children: [
               if (!widget.wide)
@@ -122,8 +127,9 @@ class _ChatViewState extends State<ChatView> {
                                   c.name,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.titleMedium
-                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
                                 ),
                                 if (c.group)
                                   Text(
@@ -185,71 +191,70 @@ class _ChatViewState extends State<ChatView> {
         const Divider(height: 1),
         Expanded(
           child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  scheme.surface,
-                  scheme.secondaryContainer.withValues(alpha: .18),
-                  scheme.tertiaryContainer.withValues(alpha: .12),
-                ],
-              ),
-            ),
+            color: scheme.surface,
             child: c.messages.isEmpty
                 ? const EmptyState(
                     emoji: '💬',
                     title: '暂无消息',
                     subtitle: '发送消息开始聊天。',
                   )
-                : ListView.builder(
-                    controller: scroll,
-                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
-                    itemCount: c.messages.length + 1,
-                    itemBuilder: (context, i) {
-                      if (i == 0) {
-                        return Center(
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 26),
-                            child: Text(
-                              '今天 · 示例对话',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: scheme.onSurfaceVariant,
+                : Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: AppTheme.timelineWidth,
+                      ),
+                      child: ListView.builder(
+                        controller: scroll,
+                        padding: const EdgeInsets.fromLTRB(8, 16, 8, 16),
+                        itemCount: c.messages.length + 1,
+                        itemBuilder: (context, i) {
+                          if (i == 0) {
+                            return Center(
+                              child: Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: Text(
+                                  '今天 · 示例对话',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        );
-                      }
-                      final m = c.messages[i - 1];
-                      final role = store.roles
-                          .where((r) => r.id == m.roleId)
-                          .firstOrNull;
-                      return MessageBubble(
-                        message: m,
-                        name: m.isUser ? '你' : role?.name ?? '已离开的角色',
-                        emoji: '',
-                        avatar: role?.avatar,
-                        onAvatarTap: role == null
-                            ? null
-                            : () => showRoleDetail(context, store, role),
-                        onReply: () => setState(() => reply = m.text),
-                        onDelete: () async {
-                          if (await confirm(
-                            context,
-                            title: '删除这条展示消息？',
-                            body: '此操作只影响当前预览。',
-                          )) {
-                            c.messages.remove(m);
-                            store.changed();
+                            );
                           }
+                          final m = c.messages[i - 1];
+                          final role = store.roles
+                              .where((r) => r.id == m.roleId)
+                              .firstOrNull;
+                          return MessageBubble(
+                            message: m,
+                            name: m.isUser ? '你' : role?.name ?? '已离开的角色',
+                            emoji: '',
+                            avatar: role?.avatar,
+                            onAvatarTap: role == null
+                                ? null
+                                : () => showRoleDetail(context, store, role),
+                            onReply: () => setState(() => reply = m.text),
+                            onDelete: () async {
+                              if (await confirm(
+                                context,
+                                title: '删除这条展示消息？',
+                                body: '此操作只影响当前预览。',
+                              )) {
+                                c.messages.remove(m);
+                                store.changed();
+                              }
+                            },
+                            onCopy: () async {
+                              await Clipboard.setData(
+                                ClipboardData(text: m.text),
+                              );
+                              if (context.mounted) toast(context, '已复制消息');
+                            },
+                          );
                         },
-                        onCopy: () async {
-                          await Clipboard.setData(ClipboardData(text: m.text));
-                          if (context.mounted) toast(context, '已复制消息');
-                        },
-                      );
-                    },
+                      ),
+                    ),
                   ),
           ),
         ),
@@ -274,67 +279,80 @@ class _ChatViewState extends State<ChatView> {
               ],
             ),
           ),
-        Container(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
-          child: Column(
-            children: [
-              if (reply != null)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: scheme.surfaceContainer,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.reply, size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          reply!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => setState(() => reply = null),
-                        icon: const Icon(Icons.close, size: 16),
-                      ),
-                    ],
-                  ),
-                ),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: AppTheme.timelineWidth),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(8, 12, 8, 14),
+              child: Column(
                 children: [
-                  IconButton(
-                    tooltip: '表情',
-                    onPressed: () => showEmoji(context),
-                    icon: const Icon(Icons.sentiment_satisfied_alt),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: input,
-                      minLines: 1,
-                      maxLines: 5,
-                      decoration: const InputDecoration(hintText: '输入消息'),
-                      onSubmitted: (_) => send(),
+                  if (reply != null)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: scheme.surfaceContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.reply, size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              reply!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => setState(() => reply = null),
+                            icon: const Icon(Icons.close, size: 16),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  IconButton.filled(
-                    tooltip: '发送消息',
-                    onPressed: send,
-                    icon: const Icon(Icons.arrow_upward),
+                  Material(
+                    color: scheme.surfaceContainer,
+                    borderRadius: BorderRadius.circular(32),
+                    clipBehavior: Clip.antiAlias,
+                    child: Padding(
+                      padding: const EdgeInsets.all(6),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          IconButton(
+                            tooltip: '表情',
+                            onPressed: () => showEmoji(context),
+                            icon: const Icon(Icons.sentiment_satisfied_alt),
+                          ),
+                          Expanded(
+                            child: TextField(
+                              controller: input,
+                              minLines: 1,
+                              maxLines: 5,
+                              decoration: const InputDecoration(
+                                hintText: '输入消息',
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                              ),
+                              onSubmitted: (_) => send(),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          IconButton.filled(
+                            tooltip: '发送消息',
+                            onPressed: send,
+                            icon: const Icon(Icons.send_outlined),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 9),
-              Text(
-                'UI 预览 · 消息仅在本次页面会话中展示，不会调用模型',
-                style: TextStyle(fontSize: 10, color: scheme.onSurfaceVariant),
-              ),
-            ],
+            ),
           ),
         ),
       ],
@@ -405,139 +423,144 @@ class MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final mine = message.isUser;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final bubbleText = mine
+        ? (dark ? scheme.onPrimaryContainer : scheme.onPrimary)
+        : scheme.onSurface;
     return Align(
       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 24),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            if (!mine) ...[
-              GestureDetector(
-                onTap: onAvatarTap,
-                child: MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: RoleAvatar(name, size: 40, imageData: avatar),
+        padding: const EdgeInsets.only(bottom: 16),
+        child: IntrinsicHeight(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!mine) ...[
+                GestureDetector(
+                  onTap: onAvatarTap,
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: RoleAvatar(name, size: 48, imageData: avatar),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
-            ],
-            Flexible(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 510),
-                child: Column(
-                  crossAxisAlignment: mine
-                      ? CrossAxisAlignment.end
-                      : CrossAxisAlignment.start,
-                  children: [
-                    if (!mine)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 3, bottom: 6),
-                        child: Text(
-                          name,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                    Container(
-                      padding: const EdgeInsets.fromLTRB(17, 13, 17, 9),
-                      decoration: BoxDecoration(
-                        color: mine
-                            ? scheme.primary
-                            : scheme.surfaceContainerLowest,
-                        borderRadius: BorderRadius.only(
-                          topLeft: const Radius.circular(20),
-                          topRight: const Radius.circular(20),
-                          bottomLeft: Radius.circular(mine ? 20 : 5),
-                          bottomRight: Radius.circular(mine ? 5 : 20),
-                        ),
-                        border: mine
-                            ? null
-                            : Border.all(
-                                color: scheme.outlineVariant.withValues(
-                                  alpha: .28,
-                                ),
-                              ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (message.reply != null)
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(10),
-                              margin: const EdgeInsets.only(bottom: 10),
-                              decoration: BoxDecoration(
-                                color:
-                                    (mine ? scheme.onPrimary : scheme.primary)
-                                        .withValues(alpha: .09),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                message.reply!,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: mine
-                                      ? scheme.onPrimary
-                                      : scheme.primary,
-                                ),
-                              ),
-                            ),
-                          SelectableText(
-                            message.text,
+                const SizedBox(width: 10),
+              ],
+              Flexible(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 570),
+                  child: Column(
+                    crossAxisAlignment: mine
+                        ? CrossAxisAlignment.end
+                        : CrossAxisAlignment.start,
+                    children: [
+                      if (!mine)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 3, bottom: 6),
+                          child: Text(
+                            name,
                             style: TextStyle(
-                              fontSize: 14,
-                              height: 1.65,
-                              color: mine ? scheme.onPrimary : scheme.onSurface,
+                              fontSize: 11,
+                              color: scheme.onSurfaceVariant,
                             ),
                           ),
-                          const SizedBox(height: 5),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                message.time,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: mine
-                                      ? scheme.onPrimary.withValues(alpha: .7)
-                                      : scheme.onSurfaceVariant,
+                        ),
+                      Container(
+                        padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+                        decoration: BoxDecoration(
+                          color: mine
+                              ? (dark
+                                    ? scheme.primaryContainer
+                                    : scheme.primary)
+                              : scheme.surfaceContainerHigh,
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(mine ? 18 : 3),
+                            topRight: const Radius.circular(18),
+                            bottomLeft: const Radius.circular(18),
+                            bottomRight: Radius.circular(mine ? 3 : 18),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (message.reply != null)
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(10),
+                                margin: const EdgeInsets.only(bottom: 10),
+                                decoration: BoxDecoration(
+                                  color: (mine ? bubbleText : scheme.primary)
+                                      .withValues(alpha: .09),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  message.reply!,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: mine ? bubbleText : scheme.primary,
+                                  ),
                                 ),
                               ),
-                            ],
-                          ),
-                        ],
+                            SelectableText(
+                              message.text,
+                              style: TextStyle(
+                                fontSize: 16,
+                                height: 1.4,
+                                color: bubbleText,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  message.time,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: mine
+                                        ? bubbleText.withValues(alpha: .7)
+                                        : scheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-            if (onReply != null)
-              PopupMenuButton<String>(
-                position: PopupMenuPosition.under,
-                offset: const Offset(0, 6),
-                tooltip: '',
-                padding: EdgeInsets.zero,
-                iconSize: 16,
-                icon: Icon(Icons.more_horiz, color: scheme.onSurfaceVariant),
-                onSelected: (v) {
-                  if (v == 'reply') onReply?.call();
-                  if (v == 'delete') onDelete?.call();
-                  if (v == 'copy') onCopy?.call();
-                },
-                itemBuilder: (_) => [
-                  const PopupMenuItem(value: 'reply', child: Text('引用回复')),
-                  const PopupMenuItem(value: 'copy', child: Text('复制')),
-                  const PopupMenuItem(value: 'delete', child: Text('删除')),
-                ],
-              ),
-          ],
+              if (onReply != null)
+                Align(
+                  widthFactor: 1,
+                  alignment: Alignment.bottomRight,
+                  child: PopupMenuButton<String>(
+                    position: PopupMenuPosition.under,
+                    offset: const Offset(0, 6),
+                    tooltip: '',
+                    padding: EdgeInsets.zero,
+                    iconSize: 16,
+                    icon: Icon(
+                      Icons.more_horiz,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                    onSelected: (v) {
+                      if (v == 'reply') onReply?.call();
+                      if (v == 'delete') onDelete?.call();
+                      if (v == 'copy') onCopy?.call();
+                    },
+                    itemBuilder: (_) => [
+                      const PopupMenuItem(value: 'reply', child: Text('引用回复')),
+                      const PopupMenuItem(value: 'copy', child: Text('复制')),
+                      const PopupMenuItem(value: 'delete', child: Text('删除')),
+                    ],
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
