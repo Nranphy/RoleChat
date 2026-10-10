@@ -114,7 +114,10 @@ class _MessageBubbleState extends State<MessageBubble> {
                             children: [
                               Padding(
                                 padding: EdgeInsets.only(
-                                  right: widget.onReply == null ? 0 : 32,
+                                  left: mine && widget.onReply != null ? 32 : 0,
+                                  right: !mine && widget.onReply != null
+                                      ? 32
+                                      : 0,
                                 ),
                                 child: AnimatedContainer(
                                   key: ValueKey(widget.message.id),
@@ -180,7 +183,8 @@ class _MessageBubbleState extends State<MessageBubble> {
                               ),
                               if (widget.onReply != null)
                                 Positioned(
-                                  right: 0,
+                                  left: mine ? 0 : null,
+                                  right: mine ? null : 0,
                                   bottom: 0,
                                   child: IgnorePointer(
                                     ignoring: !(hovered || menuOpen),
@@ -246,12 +250,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                         ),
                         if (!widget.nextSame)
                           Padding(
-                            padding: EdgeInsets.fromLTRB(
-                              8,
-                              2,
-                              mine && widget.onReply != null ? 40 : 8,
-                              2,
-                            ),
+                            padding: EdgeInsets.fromLTRB(8, 2, 8, 2),
                             child: Text(
                               widget.message.time,
                               style: TextStyle(

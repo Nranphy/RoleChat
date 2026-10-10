@@ -89,6 +89,12 @@ void main() {
             matching: find.byType(PopupMenuButton<String>),
           );
           expect(tester.getBottomLeft(menu).dy, closeTo(before.bottom, .01));
+          final menuCenter = tester.getCenter(menu);
+          if (mine) {
+            expect(menuCenter.dx, lessThanOrEqualTo(before.left));
+          } else {
+            expect(menuCenter.dx, greaterThanOrEqualTo(before.right));
+          }
           await tester.tap(menu);
           await tester.pumpAndSettle();
           expect(find.text('引用回复'), findsOneWidget);
