@@ -250,12 +250,6 @@ class _ConversationListState extends State<ConversationList> {
                                                 ),
                                               ),
                                             ),
-                                            if (c.muted)
-                                              const Icon(
-                                                Icons
-                                                    .notifications_off_outlined,
-                                                size: 14,
-                                              ),
                                             Text(
                                               c.messages.isEmpty
                                                   ? ''

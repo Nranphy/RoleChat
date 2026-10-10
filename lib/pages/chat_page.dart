@@ -160,10 +160,6 @@ class _ChatViewState extends State<ChatView> {
                 tooltip: '会话菜单',
                 onSelected: (v) async {
                   if (v == 'info') showInfo(context, store, c);
-                  if (v == 'mute') {
-                    c.muted = !c.muted;
-                    store.changed();
-                  }
                   if (v == 'typing') setState(() => showTyping = !showTyping);
                   if (v == 'clear' &&
                       await confirm(
@@ -178,10 +174,6 @@ class _ChatViewState extends State<ChatView> {
                 },
                 itemBuilder: (_) => [
                   const PopupMenuItem(value: 'info', child: Text('会话资料')),
-                  PopupMenuItem(
-                    value: 'mute',
-                    child: Text(c.muted ? '取消免打扰' : '免打扰'),
-                  ),
                   const PopupMenuItem(value: 'typing', child: Text('切换输入中效果')),
                   const PopupMenuItem(value: 'clear', child: Text('清空展示消息')),
                 ],

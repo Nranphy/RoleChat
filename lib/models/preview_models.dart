@@ -52,7 +52,6 @@ class Conversation {
   bool group;
   List<String> members;
   List<ChatMessage> messages;
-  bool muted = false;
   int unread = 0;
 }
 
