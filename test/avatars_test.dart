@@ -1,3 +1,4 @@
+import 'package:rolechat/shared/widgets/avatar_crop_dialog.dart';
 import 'dart:convert';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
