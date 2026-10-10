@@ -57,6 +57,16 @@ void main() {
         await mouse.moveTo(target);
         await tester.pumpAndSettle();
         expect(await pixel(sample), colors.surfaceContainerHigh.toARGB32());
+        await mouse.moveTo(Offset.zero);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 40));
+        final leaving = await pixel(sample);
+        expect(leaving, isNot(colors.surface.toARGB32()));
+        expect(leaving, isNot(colors.surfaceContainerHigh.toARGB32()));
+        await tester.pumpAndSettle();
+        expect(await pixel(sample), colors.surface.toARGB32());
+        await mouse.moveTo(target);
+        await tester.pumpAndSettle();
         await mouse.down(target);
         await tester.pump();
         await mouse.up();
