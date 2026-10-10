@@ -15,6 +15,15 @@ abstract final class AppTheme {
     Color(0xffa2884d),
   ];
   static const seedNames = ['紫色', '森林', '海盐', '暮紫', '珊瑚', '麦田'];
+  static ColorScheme nameColors(String name) {
+    final hue =
+        name.codeUnits.fold<int>(0, (sum, unit) => sum + unit) % 12 * 25.5;
+    return ColorScheme.fromSeed(
+      seedColor: HSLColor.fromAHSL(.75, hue, 1, .3).toColor(),
+      dynamicSchemeVariant: DynamicSchemeVariant.rainbow,
+    );
+  }
+
   static ThemeData build(Color seed, Brightness brightness) {
     final scheme = ColorScheme.fromSeed(
       seedColor: seed,
@@ -27,27 +36,18 @@ abstract final class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       colorScheme: scheme,
+      dividerColor: brightness == Brightness.dark
+          ? scheme.surfaceContainerHighest
+          : scheme.surfaceContainer,
       scaffoldBackgroundColor: scheme.surface,
       fontFamily: 'RoleChatRoboto',
-      textTheme: ThemeData(brightness: brightness).textTheme
-          .copyWith(
-            bodyMedium: const TextStyle(
-              fontSize: 15,
-              height: 1.5,
-              letterSpacing: .1,
-            ),
-            bodyLarge: const TextStyle(
-              fontSize: 16,
-              height: 1.5,
-              letterSpacing: .1,
-            ),
-          )
-          .apply(
-            fontFamily: 'RoleChatRoboto',
-            fontFamilyFallback: const ['NotoSansSC', 'NotoColorEmoji'],
-          ),
+      textTheme: ThemeData(brightness: brightness).textTheme.apply(
+        fontFamily: 'RoleChatRoboto',
+        fontFamilyFallback: const ['NotoSansSC', 'NotoColorEmoji'],
+      ),
       fontFamilyFallback: const ['NotoSansSC', 'NotoColorEmoji'],
       appBarTheme: AppBarTheme(
+        actionsPadding: const EdgeInsets.symmetric(horizontal: 16),
         backgroundColor: scheme.surface,
         surfaceTintColor: Colors.transparent,
         centerTitle: false,

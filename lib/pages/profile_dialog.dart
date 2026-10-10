@@ -78,6 +78,7 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
     child: ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 720, maxHeight: 780),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 16, 12, 8),
@@ -112,7 +113,7 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
             ].map((label) => Tab(text: label)).toList(),
           ),
           const SizedBox(height: 12),
-          Expanded(
+          Flexible(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
               child: Form(

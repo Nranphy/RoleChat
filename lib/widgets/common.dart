@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import '../design/app_theme.dart';
 
 class RoleAvatar extends StatelessWidget {
   const RoleAvatar(
@@ -16,50 +17,63 @@ class RoleAvatar extends StatelessWidget {
   final Color? color;
   final double size;
   @override
-  Widget build(BuildContext context) => Container(
-    width: size,
-    height: size,
-    decoration: BoxDecoration(
-      color: color ?? Theme.of(context).colorScheme.secondaryContainer,
+  Widget build(BuildContext context) => Material(
+    color:
+        color ??
+        (name.isEmpty
+            ? Theme.of(context).colorScheme.secondaryContainer
+            : AppTheme.nameColors(name.characters.first).primaryContainer),
+    shape: RoundedSuperellipseBorder(
       borderRadius: BorderRadius.circular(size / 2),
     ),
-    alignment: Alignment.center,
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(size / 2),
-      child: imageData == null
-          ? name.isNotEmpty &&
-                    RegExp(r'[\p{L}\p{N}]', unicode: true).hasMatch(name) &&
-                    icon == Icons.person_outline
-                ? Text(
-                    name.characters.first.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: size / 2.5,
-                      fontWeight: FontWeight.w500,
+    clipBehavior: Clip.antiAlias,
+    child: SizedBox.square(
+      dimension: size,
+      child: Center(
+        child: imageData == null
+            ? name.isNotEmpty &&
+                      RegExp(r'[\p{L}\p{N}]', unicode: true).hasMatch(name)
+                  ? ExcludeSemantics(
+                      child: Text(
+                        name.characters.first.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: size / 2.5,
+                          fontWeight: FontWeight.bold,
+                          color: color == null
+                              ? Theme.of(
+                                  context,
+                                ).colorScheme.onSecondaryContainer
+                              : ThemeData.estimateBrightnessForColor(color!) ==
+                                    Brightness.light
+                              ? Colors.black87
+                              : Colors.white,
+                        ),
+                      ),
+                    )
+                  : Icon(
+                      icon,
+                      size: size * .48,
                       color: color == null
-                          ? Theme.of(context).colorScheme.onSecondaryContainer
+                          ? (name.isEmpty
+                                ? Theme.of(
+                                    context,
+                                  ).colorScheme.onSecondaryContainer
+                                : AppTheme.nameColors(
+                                    name.characters.first,
+                                  ).onPrimaryContainer)
                           : ThemeData.estimateBrightnessForColor(color!) ==
                                 Brightness.light
                           ? Colors.black87
                           : Colors.white,
-                    ),
-                  )
-                : Icon(
-                    icon,
-                    size: size * .48,
-                    color: color == null
-                        ? Theme.of(context).colorScheme.onSecondaryContainer
-                        : ThemeData.estimateBrightnessForColor(color!) ==
-                              Brightness.light
-                        ? Colors.black87
-                        : Colors.white,
-                  )
-          : Image.memory(
-              base64Decode(imageData!),
-              width: size,
-              height: size,
-              fit: BoxFit.cover,
-              errorBuilder: (_, error, stack) => Icon(icon, size: size * .48),
-            ),
+                    )
+            : Image.memory(
+                base64Decode(imageData!),
+                width: size,
+                height: size,
+                fit: BoxFit.cover,
+                errorBuilder: (_, error, stack) => Icon(icon, size: size * .48),
+              ),
+      ),
     ),
   );
 }

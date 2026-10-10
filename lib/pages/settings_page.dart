@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../app/preview_store.dart';
 import '../design/app_theme.dart';
 import '../widgets/common.dart';
+import '../widgets/reference_page_body.dart';
 import 'editors.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -17,255 +18,249 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final store = widget.store;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Align(
-        alignment: Alignment.topCenter,
-        heightFactor: 1,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 760),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const PageHeading('设置', ''),
-              const PreviewNotice(),
-              const SizedBox(height: 26),
-              Text('外观', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 12),
-              SettingsSection(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      '明暗模式',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 14),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: List.generate(
-                        3,
-                        (i) => ChoiceChip(
-                          avatar: Icon(
-                            [
-                              Icons.brightness_auto,
-                              Icons.light_mode_outlined,
-                              Icons.dark_mode_outlined,
-                            ][i],
-                            size: 18,
-                          ),
-                          label: Text(['跟随系统', '浅色', '深色'][i]),
-                          selected: store.mode.index == i,
-                          onSelected: (_) => store.setMode(ThemeMode.values[i]),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 26),
-                    const Text(
-                      '主题配色',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 16),
-                    Wrap(
-                      spacing: 20,
-                      runSpacing: 16,
-                      children: List.generate(AppTheme.seeds.length, (i) {
-                        final color = AppTheme.seeds[i];
-                        final selected =
-                            store.seed.toARGB32() == color.toARGB32();
-                        return Semantics(
-                          label: '${AppTheme.seedNames[i]}配色',
-                          selected: selected,
-                          button: true,
-                          child: InkWell(
-                            onTap: () => store.setSeed(color),
-                            borderRadius: BorderRadius.circular(14),
-                            child: Column(
-                              children: [
-                                Container(
-                                  width: 48,
-                                  height: 48,
-                                  decoration: BoxDecoration(
-                                    color: color,
-                                    borderRadius: BorderRadius.circular(17),
-                                    border: Border.all(
-                                      color: selected
-                                          ? Theme.of(
-                                              context,
-                                            ).colorScheme.onSurface
-                                          : Colors.transparent,
-                                      width: 3,
-                                    ),
-                                  ),
-                                  child: selected
-                                      ? const Icon(
-                                          Icons.check,
-                                          color: Colors.white,
-                                        )
-                                      : null,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  AppTheme.seedNames[i],
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
-                    const SizedBox(height: 20),
-                    TextButton.icon(
-                      onPressed: () => customColor(context, store),
-                      icon: const Icon(Icons.palette_outlined),
-                      label: const Text('自定义颜色'),
-                    ),
-                    const Divider(height: 28),
-                    const Text(
-                      '颜色与明暗选择会保存在当前浏览器。',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 26),
-              Row(
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('设置'),
+        automaticallyImplyLeading: false,
+        toolbarHeight: MediaQuery.sizeOf(context).width > 840 ? 72 : 56,
+        scrolledUnderElevation: 0,
+      ),
+      body: ReferencePageBody(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SettingsSection(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Text(
-                      'API 配置',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
+                  const Text(
+                    '明暗模式',
+                    style: TextStyle(fontWeight: FontWeight.w600),
                   ),
+                  const SizedBox(height: 14),
+                  SegmentedButton<ThemeMode>(
+                    segments: const [
+                      ButtonSegment(
+                        value: ThemeMode.light,
+                        label: Text('浅色'),
+                        icon: Icon(Icons.light_mode_outlined),
+                      ),
+                      ButtonSegment(
+                        value: ThemeMode.dark,
+                        label: Text('深色'),
+                        icon: Icon(Icons.dark_mode_outlined),
+                      ),
+                      ButtonSegment(
+                        value: ThemeMode.system,
+                        label: Text('跟随系统'),
+                        icon: Icon(Icons.auto_mode_outlined),
+                      ),
+                    ],
+                    selected: {store.mode},
+                    onSelectionChanged: (values) =>
+                        store.setMode(values.single),
+                  ),
+                  const SizedBox(height: 26),
+                  const Text(
+                    '主题配色',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 20,
+                    runSpacing: 16,
+                    children: List.generate(AppTheme.seeds.length, (i) {
+                      final color = AppTheme.seeds[i];
+                      final selected =
+                          store.seed.toARGB32() == color.toARGB32();
+                      return Semantics(
+                        label: '${AppTheme.seedNames[i]}配色',
+                        selected: selected,
+                        button: true,
+                        child: InkWell(
+                          onTap: () => store.setSeed(color),
+                          borderRadius: BorderRadius.circular(14),
+                          child: Column(
+                            children: [
+                              Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: color,
+                                  borderRadius: BorderRadius.circular(32),
+                                  border: Border.all(
+                                    color: selected
+                                        ? Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface
+                                        : Colors.transparent,
+                                    width: 0,
+                                  ),
+                                ),
+                                child: selected
+                                    ? const Icon(
+                                        Icons.check,
+                                        color: Colors.white,
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                AppTheme.seedNames[i],
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 20),
                   TextButton.icon(
-                    onPressed: () => editApi(context, store),
-                    icon: const Icon(Icons.add),
-                    label: const Text('添加'),
+                    onPressed: () => customColor(context, store),
+                    icon: const Icon(Icons.palette_outlined),
+                    label: const Text('自定义颜色'),
+                  ),
+                  const Divider(height: 28),
+                  const Text(
+                    '颜色与明暗选择会保存在当前浏览器。',
+                    style: TextStyle(fontSize: 12),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              SettingsSection(
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  children: [
-                    if (store.apis.isEmpty)
-                      const EmptyState(
-                        emoji: '🔌',
-                        title: '还没有接口配置',
-                        subtitle: '这里只展示表单，不会连接外部接口。',
-                      ),
-                    ...store.apis.map(
-                      (a) => SettingsRow(
-                        icon: Icons.dns_outlined,
-                        title: a.name,
-                        subtitle: a.url,
-                        onTap: () => editApi(context, store, profile: a),
-                        trailing: PopupMenuButton<String>(
-                          position: PopupMenuPosition.under,
-                          offset: const Offset(0, 6),
-                          tooltip: '配置操作',
-                          onSelected: (v) async {
-                            if (v == 'edit') {
-                              editApi(context, store, profile: a);
-                              return;
-                            }
-                            final used = store.roles
-                                .where((r) => r.apiId == a.id)
-                                .map((r) => r.name)
-                                .join('、');
-                            if (await confirm(
-                              context,
-                              title: '删除 API 配置？',
-                              body:
-                                  '使用此配置的角色：${used.isEmpty ? '无' : used}\n移除后，这些角色的配置选择会清空。',
-                            )) {
-                              for (final r in store.roles.where(
-                                (r) => r.apiId == a.id,
-                              )) {
-                                r.apiId = null;
-                              }
-                              store.apis.remove(a);
-                              store.changed();
-                            }
-                          },
-                          itemBuilder: (_) => [
-                            const PopupMenuItem(
-                              value: 'edit',
-                              child: Text('编辑'),
-                            ),
-                            const PopupMenuItem(
-                              value: 'delete',
-                              child: Text('删除'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+            ),
+            const SizedBox(height: 26),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'API 配置',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 26),
-              Text('运行与数据', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 12),
-              SettingsSection(
-                child: Column(
-                  children: [
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('后台运行偏好'),
-                      subtitle: const Text('展示开关；浏览器后台调度尚未实现'),
-                      value: background,
-                      onChanged: (v) => setState(() => background = v),
+                TextButton.icon(
+                  onPressed: () => editApi(context, store),
+                  icon: const Icon(Icons.add),
+                  label: const Text('添加'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SettingsSection(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                children: [
+                  if (store.apis.isEmpty)
+                    const EmptyState(
+                      emoji: '🔌',
+                      title: '还没有接口配置',
+                      subtitle: '这里只展示表单，不会连接外部接口。',
                     ),
-                    const Divider(),
-                    SettingsRow(
-                      icon: Icons.storage_outlined,
-                      title: '本地数据',
-                      subtitle: '头像与角色、群聊资料保存在浏览器本地',
-                      onTap: () => managedDialog<void>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('关于本地数据'),
-                          content: const Text(
-                            '主题、头像以及角色与群聊资料保存在当前浏览器。消息仍为临时展示数据。导入导出与模型运行尚未实现。',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text('知道了'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SettingsRow(
-                      icon: Icons.info_outline,
-                      title: '关于 RoleChat',
-                      subtitle: '版本与许可信息',
-                      onTap: () => showAboutDialog(
-                        context: context,
-                        applicationName: 'RoleChat',
-                        applicationVersion: 'UI Preview 0.1',
-                        applicationIcon: const RoleAvatar(
-                          '',
-                          icon: Icons.chat_bubble_outline,
-                        ),
-                        children: [
-                          const Text(
-                            '界面风格借鉴 FluffyChat，独立实现 Flutter Web 组件。\n\n本版本用于 UI 验收，不连接模型接口。',
+                  ...store.apis.map(
+                    (a) => SettingsRow(
+                      icon: Icons.dns_outlined,
+                      title: a.name,
+                      subtitle: a.url,
+                      onTap: () => editApi(context, store, profile: a),
+                      trailing: PopupMenuButton<String>(
+                        position: PopupMenuPosition.under,
+                        offset: const Offset(0, 6),
+                        tooltip: '配置操作',
+                        onSelected: (v) async {
+                          if (v == 'edit') {
+                            editApi(context, store, profile: a);
+                            return;
+                          }
+                          final used = store.roles
+                              .where((r) => r.apiId == a.id)
+                              .map((r) => r.name)
+                              .join('、');
+                          if (await confirm(
+                            context,
+                            title: '删除 API 配置？',
+                            body:
+                                '使用此配置的角色：${used.isEmpty ? '无' : used}\n移除后，这些角色的配置选择会清空。',
+                          )) {
+                            for (final r in store.roles.where(
+                              (r) => r.apiId == a.id,
+                            )) {
+                              r.apiId = null;
+                            }
+                            store.apis.remove(a);
+                            store.changed();
+                          }
+                        },
+                        itemBuilder: (_) => [
+                          const PopupMenuItem(value: 'edit', child: Text('编辑')),
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Text('删除'),
                           ),
                         ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 30),
-            ],
-          ),
+            ),
+            const SizedBox(height: 26),
+            Text('运行与数据', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 12),
+            SettingsSection(
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('后台运行偏好'),
+                    subtitle: const Text('展示开关；浏览器后台调度尚未实现'),
+                    value: background,
+                    onChanged: (v) => setState(() => background = v),
+                  ),
+                  const Divider(),
+                  SettingsRow(
+                    icon: Icons.storage_outlined,
+                    title: '本地数据',
+                    subtitle: '头像与角色、群聊资料保存在浏览器本地',
+                    onTap: () => managedDialog<void>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('关于本地数据'),
+                        content: const Text(
+                          '主题、头像以及角色与群聊资料保存在当前浏览器。消息仍为临时展示数据。导入导出与模型运行尚未实现。',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('知道了'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SettingsRow(
+                    icon: Icons.info_outline,
+                    title: '关于 RoleChat',
+                    subtitle: '版本与许可信息',
+                    onTap: () => showAboutDialog(
+                      context: context,
+                      applicationName: 'RoleChat',
+                      applicationVersion: 'UI Preview 0.1',
+                      applicationIcon: const RoleAvatar(
+                        '',
+                        icon: Icons.chat_bubble_outline,
+                      ),
+                      children: [
+                        const Text(
+                          '界面风格借鉴 FluffyChat，独立实现 Flutter Web 组件。\n\n本版本用于 UI 验收，不连接模型接口。',
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 30),
+          ],
         ),
       ),
     );

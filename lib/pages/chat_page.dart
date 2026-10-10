@@ -228,6 +228,20 @@ class _ChatViewState extends State<ChatView> {
                               .firstOrNull;
                           return MessageBubble(
                             message: m,
+                            showName: c.group,
+                            previousSame:
+                                i > 1 && c.messages[i - 2].roleId == m.roleId,
+                            nextSame:
+                                i < c.messages.length &&
+                                c.messages[i].roleId == m.roleId,
+                            nameColor: role == null
+                                ? null
+                                : (Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? AppTheme.nameColors(role.name).primary
+                                      : AppTheme.nameColors(
+                                          role.name,
+                                        ).primaryContainer),
                             name: m.isUser ? '你' : role?.name ?? '已离开的角色',
                             emoji: '',
                             avatar: role?.avatar,
@@ -317,22 +331,31 @@ class _ChatViewState extends State<ChatView> {
                     borderRadius: BorderRadius.circular(32),
                     clipBehavior: Clip.antiAlias,
                     child: Padding(
-                      padding: const EdgeInsets.all(6),
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          IconButton(
-                            tooltip: '表情',
-                            onPressed: () => showEmoji(context),
-                            icon: const Icon(Icons.sentiment_satisfied_alt),
+                          SizedBox(
+                            width: 48,
+                            height: 56,
+                            child: Center(
+                              child: IconButton(
+                                tooltip: '表情',
+                                onPressed: () => showEmoji(context),
+                                color: scheme.onPrimaryContainer,
+                                icon: const Icon(Icons.add_reaction_outlined),
+                              ),
+                            ),
                           ),
                           Expanded(
                             child: TextField(
                               controller: input,
                               minLines: 1,
-                              maxLines: 5,
+                              maxLines: 8,
+                              style: const TextStyle(fontSize: 16),
                               decoration: const InputDecoration(
                                 hintText: '输入消息',
+                                contentPadding: EdgeInsets.fromLTRB(6, 3, 6, 6),
                                 border: InputBorder.none,
                                 enabledBorder: InputBorder.none,
                                 focusedBorder: InputBorder.none,
@@ -340,11 +363,16 @@ class _ChatViewState extends State<ChatView> {
                               onSubmitted: (_) => send(),
                             ),
                           ),
-                          const SizedBox(width: 10),
-                          IconButton.filled(
-                            tooltip: '发送消息',
-                            onPressed: send,
-                            icon: const Icon(Icons.send_outlined),
+                          SizedBox(
+                            width: 56,
+                            height: 56,
+                            child: Center(
+                              child: IconButton.filled(
+                                tooltip: '发送消息',
+                                onPressed: send,
+                                icon: const Icon(Icons.send_outlined),
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -408,35 +436,52 @@ class MessageBubble extends StatelessWidget {
     required this.message,
     required this.name,
     required this.emoji,
+    this.avatar,
+    this.onAvatarTap,
     this.onReply,
     this.onDelete,
     this.onCopy,
-    this.avatar,
-    this.onAvatarTap,
+    this.previousSame = false,
+    this.nextSame = false,
+    this.showName = true,
+    this.nameColor,
   });
   final ChatMessage message;
   final String name, emoji;
   final String? avatar;
-  final VoidCallback? onAvatarTap;
-  final VoidCallback? onReply, onDelete, onCopy;
+  final VoidCallback? onAvatarTap, onReply, onDelete, onCopy;
+  final bool previousSame, nextSame, showName;
+  final Color? nameColor;
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final mine = message.isUser;
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final bubbleText = mine
-        ? (dark ? scheme.onPrimaryContainer : scheme.onPrimary)
-        : scheme.onSurface;
+    final theme = Theme.of(context), colors = theme.colorScheme;
+    final mine = message.isUser, dark = theme.brightness == Brightness.dark;
+    final foreground = mine
+        ? (dark ? colors.onPrimaryContainer : colors.onPrimary)
+        : colors.onSurface;
+    final shape = BorderRadius.only(
+      topLeft: Radius.circular(mine ? 18 : 3),
+      topRight: Radius.circular(mine && previousSame ? 3 : 18),
+      bottomLeft: Radius.circular(!mine && nextSame ? 3 : 18),
+      bottomRight: Radius.circular(mine ? 3 : 18),
+    );
     return Align(
-      alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
+      alignment: mine ? Alignment.topRight : Alignment.topLeft,
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 16),
+        padding: EdgeInsets.fromLTRB(
+          8,
+          previousSame ? 1 : 8,
+          8,
+          nextSame ? 1 : 8,
+        ),
         child: IntrinsicHeight(
           child: Row(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (!mine) ...[
+              if (mine || previousSame)
+                const SizedBox(width: 48)
+              else
                 GestureDetector(
                   onTap: onAvatarTap,
                   child: MouseRegion(
@@ -444,91 +489,91 @@ class MessageBubble extends StatelessWidget {
                     child: RoleAvatar(name, size: 48, imageData: avatar),
                   ),
                 ),
-                const SizedBox(width: 10),
-              ],
+              const SizedBox(width: 8),
               Flexible(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 570),
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: mine
                         ? CrossAxisAlignment.end
                         : CrossAxisAlignment.start,
                     children: [
-                      if (!mine)
+                      if (!mine && !previousSame)
                         Padding(
-                          padding: const EdgeInsets.only(left: 3, bottom: 6),
+                          padding: const EdgeInsets.only(left: 8, bottom: 2),
                           child: Text(
                             name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              fontSize: 11,
-                              color: scheme.onSurfaceVariant,
+                              fontWeight: FontWeight.bold,
+                              color: showName
+                                  ? nameColor ?? colors.primary
+                                  : Colors.transparent,
                             ),
                           ),
                         ),
                       Container(
-                        padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
                         decoration: BoxDecoration(
+                          borderRadius: shape,
                           color: mine
                               ? (dark
-                                    ? scheme.primaryContainer
-                                    : scheme.primary)
-                              : scheme.surfaceContainerHigh,
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(mine ? 18 : 3),
-                            topRight: const Radius.circular(18),
-                            bottomLeft: const Radius.circular(18),
-                            bottomRight: Radius.circular(mine ? 3 : 18),
-                          ),
+                                    ? colors.primaryContainer
+                                    : colors.primary)
+                              : colors.surfaceContainerHigh,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
                         ),
                         child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             if (message.reply != null)
                               Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.all(10),
-                                margin: const EdgeInsets.only(bottom: 10),
+                                padding: const EdgeInsets.all(8),
+                                margin: const EdgeInsets.only(bottom: 8),
                                 decoration: BoxDecoration(
-                                  color: (mine ? bubbleText : scheme.primary)
-                                      .withValues(alpha: .09),
-                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border(
+                                    left: BorderSide(
+                                      width: 3,
+                                      color: mine ? foreground : colors.primary,
+                                    ),
+                                  ),
                                 ),
                                 child: Text(
                                   message.reply!,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
-                                    fontSize: 12,
-                                    color: mine ? bubbleText : scheme.primary,
+                                    fontSize: 14,
+                                    color: foreground,
                                   ),
                                 ),
                               ),
                             SelectableText(
                               message.text,
-                              style: TextStyle(
-                                fontSize: 16,
-                                height: 1.4,
-                                color: bubbleText,
-                              ),
-                            ),
-                            const SizedBox(height: 5),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  message.time,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: mine
-                                        ? bubbleText.withValues(alpha: .7)
-                                        : scheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
+                              style: TextStyle(fontSize: 16, color: foreground),
                             ),
                           ],
                         ),
                       ),
+                      if (!nextSame)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          child: Text(
+                            message.time,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: colors.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -538,24 +583,29 @@ class MessageBubble extends StatelessWidget {
                   widthFactor: 1,
                   alignment: Alignment.bottomRight,
                   child: PopupMenuButton<String>(
+                    tooltip: '',
                     position: PopupMenuPosition.under,
                     offset: const Offset(0, 6),
-                    tooltip: '',
                     padding: EdgeInsets.zero,
                     iconSize: 16,
+                    style: IconButton.styleFrom(
+                      minimumSize: const Size(32, 32),
+                      maximumSize: const Size(32, 32),
+                      padding: EdgeInsets.zero,
+                    ),
                     icon: Icon(
                       Icons.more_horiz,
-                      color: scheme.onSurfaceVariant,
+                      color: colors.onSurfaceVariant,
                     ),
                     onSelected: (v) {
                       if (v == 'reply') onReply?.call();
-                      if (v == 'delete') onDelete?.call();
                       if (v == 'copy') onCopy?.call();
+                      if (v == 'delete') onDelete?.call();
                     },
-                    itemBuilder: (_) => [
-                      const PopupMenuItem(value: 'reply', child: Text('引用回复')),
-                      const PopupMenuItem(value: 'copy', child: Text('复制')),
-                      const PopupMenuItem(value: 'delete', child: Text('删除')),
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(value: 'reply', child: Text('引用回复')),
+                      PopupMenuItem(value: 'copy', child: Text('复制')),
+                      PopupMenuItem(value: 'delete', child: Text('删除')),
                     ],
                   ),
                 ),

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:rolechat/app/preview_store.dart';
 import 'package:rolechat/main.dart';
+import 'package:rolechat/models/preview_models.dart';
 import 'package:rolechat/widgets/common.dart';
 
 void main() {
@@ -50,7 +51,7 @@ void main() {
     expect(find.byType(NavigationBar), findsOneWidget);
     await tester.tap(find.text('设置').last);
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(ChoiceChip, '深色'));
+    await tester.tap(find.text('深色'));
     await tester.pumpAndSettle();
     expect(store.mode, ThemeMode.dark);
     expect(store.preferences.getInt('themeMode'), ThemeMode.dark.index);
@@ -67,7 +68,7 @@ void main() {
         await tester.pumpAndSettle();
         if (i == 1) {
           expect(
-            tester.getTopLeft(find.byType(PageHeading)).dy,
+            tester.getTopLeft(find.byType(AppBar).first).dy,
             lessThanOrEqualTo(32),
           );
         }
@@ -96,6 +97,25 @@ void main() {
     semantics.dispose();
     expect(find.byType(Dialog), findsOneWidget);
     expect(find.text('群聊名称'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+  testWidgets('consecutive role messages share one sender heading and avatar', (
+    tester,
+  ) async {
+    final store = await setup(tester);
+    store.selected.messages = [
+      ChatMessage(id: 'a', roleId: 'lin', text: '第一条'),
+      ChatMessage(id: 'b', roleId: 'lin', text: '第二条'),
+    ];
+    store.changed();
+    await tester.pumpAndSettle();
+    expect(find.text('第一条'), findsOneWidget);
+    expect(find.text('第二条'), findsNWidgets(2));
+    expect(find.text('林间'), findsNWidgets(2));
+    expect(
+      find.byWidgetPredicate((w) => w is RoleAvatar && w.name == '林间'),
+      findsNWidgets(2),
+    );
     expect(tester.takeException(), isNull);
   });
 }
