@@ -1,0 +1,22 @@
+# RoleChat 开发约定
+
+开始开发前阅读 docs/ 目录中的产品、UI、架构和设计决定；最新用户要求优先。当前只开发 Flutter Web 的 UI 与展示交互，不连接外部 API，不实现角色调度或模型运行。
+
+## Git
+
+- docs/ 暂时不纳入 Git 跟踪，不修改 .gitignore 来忽略它。
+- 使用明确路径暂存；禁止 git add . 或 git add -A 导致 docs/ 被提交。
+- 提交前检查暂存文件，确保不包含 docs/、凭据和构建产物。
+- 自主管理本地提交，使用 feat:、fix:、chore: 等 Conventional Commits，按可审查功能划分提交。不自动推送远端。
+
+## README
+
+README.md 面向用户，只包含仓库名称、简短简介和对 FluffyChat UI 参考的感谢。开发技术细节放在 docs/；不要频繁修改 README。
+
+## 实现
+
+组件化实现统一主题、配色、响应式布局和各页面。使用本地展示数据，提供可操作的 UI 预览入口，覆盖正常、空、错误与加载状态。演示行为明确标注，不假装已经连接模型。
+
+FluffyChat 仓库保持只读，不复制其业务代码，不修改其文件。RoleChat 独立实现 UI。
+
+修改后执行 Dart 格式化、Flutter 分析、必要行为测试及 Web 构建；验收覆盖窄宽屏和浅深主题。
