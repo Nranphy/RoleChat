@@ -19,6 +19,7 @@ class RoleBasicTab extends StatelessWidget {
     required this.onModelChanged,
     this.modelCheckMessage,
     this.modelCheckSucceeded = false,
+    this.checkingModel = false,
   });
   final TextEditingController name, model;
   final String? avatar, api;
@@ -28,7 +29,7 @@ class RoleBasicTab extends StatelessWidget {
   final VoidCallback onNameChanged, onCheckModel;
   final ValueChanged<String> onModelChanged;
   final String? modelCheckMessage;
-  final bool modelCheckSucceeded;
+  final bool modelCheckSucceeded, checkingModel;
   @override
   Widget build(BuildContext context) => Column(
     mainAxisSize: MainAxisSize.min,
@@ -43,7 +44,7 @@ class RoleBasicTab extends StatelessWidget {
       ),
       const SizedBox(height: 24),
       AnchoredSelect<String>(
-        label: 'API 配置（展示）',
+        label: 'API 配置',
         value: api ?? '',
         options: apiOptions,
         onChanged: onApiChanged,
@@ -56,8 +57,14 @@ class RoleBasicTab extends StatelessWidget {
         decoration: FormMetrics.decoration('模型').copyWith(
           suffixIcon: IconButton(
             tooltip: '检测模型',
-            onPressed: onCheckModel,
-            icon: const Icon(Icons.refresh),
+            onPressed: checkingModel ? null : onCheckModel,
+            icon: checkingModel
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.refresh),
           ),
         ),
       ),

@@ -1,3 +1,4 @@
+import 'package:rolechat/services/model_availability_checker.dart';
 import 'editing/schedule_draft.dart';
 import 'package:rolechat/shared/widgets/document_editor_tab.dart';
 import 'widgets/role_examples_tab.dart';
@@ -10,9 +11,15 @@ import 'package:rolechat/models/preview_models.dart';
 import 'package:rolechat/shared/widgets/common.dart';
 
 class RoleEditorDialog extends StatefulWidget {
-  const RoleEditorDialog({super.key, required this.store, this.role});
+  const RoleEditorDialog({
+    super.key,
+    required this.store,
+    this.role,
+    this.modelChecker,
+  });
   final PreviewStore store;
   final RoleProfile? role;
+  final ModelAvailabilityChecker? modelChecker;
   @override
   State<RoleEditorDialog> createState() => _RoleEditorDialogState();
 }
@@ -27,6 +34,8 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
   bool saving = false;
   String? modelCheckMessage;
   bool modelCheckSucceeded = false;
+  bool checkingModel = false;
+  int modelCheckRevision = 0;
   final examples = <(TextEditingController, TextEditingController)>[];
 
   final schedules = <ScheduleDraft>[];
@@ -93,9 +102,14 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
           onApiChanged: (v) => setState(() {
             api = v.isEmpty ? null : v;
             modelCheckMessage = null;
+            modelCheckRevision++;
           }),
           onCheckModel: checkModel,
-          onModelChanged: (_) => setState(() => modelCheckMessage = null),
+          onModelChanged: (_) => setState(() {
+            modelCheckMessage = null;
+            modelCheckRevision++;
+          }),
+          checkingModel: checkingModel,
           modelCheckMessage: modelCheckMessage,
           modelCheckSucceeded: modelCheckSucceeded,
           onNameChanged: () => setState(() {}),
@@ -146,16 +160,35 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
       ),
     ],
   );
-  void checkModel() {
+  Future<void> checkModel() async {
+    if (checkingModel) return;
+    final configuration = widget.store.apis
+        .where((a) => a.id == api)
+        .firstOrNull;
+    if (configuration == null) {
+      setState(() {
+        modelCheckSucceeded = false;
+        modelCheckMessage = '检测失败：请先选择 API 配置。';
+      });
+      return;
+    }
+    final revision = ++modelCheckRevision;
     setState(() {
-      modelCheckSucceeded = false;
-      if (api == null || !widget.store.apis.any((a) => a.id == api)) {
-        modelCheckMessage = '检查失败：请先选择 API 配置。';
-      } else if (model.text.trim().isEmpty) {
-        modelCheckMessage = '检查失败：请输入模型名称。';
-      } else {
-        modelCheckSucceeded = true;
-        modelCheckMessage = '展示检查成功（未请求 API）。';
+      checkingModel = true;
+      modelCheckMessage = null;
+    });
+    final result = await (widget.modelChecker ?? ModelAvailabilityChecker())
+        .check(
+          address: configuration.url,
+          apiKey: configuration.key,
+          model: model.text,
+        );
+    if (!mounted) return;
+    setState(() {
+      checkingModel = false;
+      if (revision == modelCheckRevision) {
+        modelCheckSucceeded = result.success;
+        modelCheckMessage = result.message;
       }
     });
   }

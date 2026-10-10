@@ -56,7 +56,7 @@ class ApiConfigurationForm extends StatelessWidget {
         ),
       ),
       const SizedBox(height: 16),
-      const PreviewNotice(text: '只预览配置表单。不测试连接、不保存真实密钥，请勿填写有效凭据。'),
+      const PreviewNotice(text: '配置用于角色模型检测；保存后可在角色基础页发起检测。'),
     ],
   );
 }
