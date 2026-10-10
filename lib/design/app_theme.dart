@@ -16,6 +16,9 @@ abstract final class AppTheme {
     );
     return ThemeData(
       useMaterial3: true,
+      popupMenuTheme: PopupMenuThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
       colorScheme: scheme,
       scaffoldBackgroundColor: scheme.surface,
       fontFamily: 'NotoSansSC',

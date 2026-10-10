@@ -26,7 +26,7 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const PageHeading('设置', '让这里，更像你的空间。'),
+              const PageHeading('设置', ''),
               const PreviewNotice(),
               const SizedBox(height: 26),
               Text('外观', style: Theme.of(context).textTheme.titleMedium),
@@ -220,13 +220,13 @@ class _SettingsPageState extends State<SettingsPage> {
                     SettingsRow(
                       icon: Icons.storage_outlined,
                       title: '本地数据',
-                      subtitle: '消息及角色编辑仅保留本次预览；刷新后恢复样例',
+                      subtitle: '头像与角色、群聊资料保存在浏览器本地',
                       onTap: () => managedDialog<void>(
                         context: context,
                         builder: (context) => AlertDialog(
                           title: const Text('关于本地数据'),
                           content: const Text(
-                            '当前阶段仅实现 UI。主题偏好已保存在浏览器，其他编辑是临时展示状态。聊天数据库、导入导出与模型运行尚未实现。',
+                            '主题、头像以及角色与群聊资料保存在当前浏览器。消息仍为临时展示数据。导入导出与模型运行尚未实现。',
                           ),
                           actions: [
                             TextButton(
@@ -240,12 +240,15 @@ class _SettingsPageState extends State<SettingsPage> {
                     SettingsRow(
                       icon: Icons.info_outline,
                       title: '关于 RoleChat',
-                      subtitle: '一个属于角色与故事的空间',
+                      subtitle: '版本与许可信息',
                       onTap: () => showAboutDialog(
                         context: context,
                         applicationName: 'RoleChat',
                         applicationVersion: 'UI Preview 0.1',
-                        applicationIcon: const RoleAvatar('✳'),
+                        applicationIcon: const RoleAvatar(
+                          '',
+                          icon: Icons.chat_bubble_outline,
+                        ),
                         children: [
                           const Text(
                             '界面风格借鉴 FluffyChat，独立实现 Flutter Web 组件。\n\n本版本用于 UI 验收，不连接模型接口。',

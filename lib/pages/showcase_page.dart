@@ -28,7 +28,7 @@ class _ShowcasePageState extends State<ShowcasePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const PageHeading('界面展览', '把每个细节摆出来，慢慢看看。'),
+              const PageHeading('界面展览', ''),
               const PreviewNotice(text: '这里可独立验收组件，不需要创建角色或连接 API。'),
               const SizedBox(height: 26),
               section(
@@ -39,7 +39,7 @@ class _ShowcasePageState extends State<ShowcasePage> {
                       message: ChatMessage(
                         id: 'a',
                         roleId: 'lin',
-                        text: '窗外开始下雨了。\n给你留了一杯热茶。 ☕',
+                        text: '窗外开始下雨了。\n给你留了一杯热茶。',
                         time: '16:42',
                       ),
                       name: '林间',
@@ -238,8 +238,8 @@ class _ShowcasePageState extends State<ShowcasePage> {
                       child: switch (state) {
                         '空状态' => const EmptyState(
                           emoji: '🌱',
-                          title: '还没有故事',
-                          subtitle: '从一句简单的问候开始。',
+                          title: '暂无消息',
+                          subtitle: '发送消息开始聊天。',
                         ),
                         '加载中' => const Center(
                           child: Column(
@@ -276,10 +276,10 @@ class _ShowcasePageState extends State<ShowcasePage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('一个悠闲的下午', style: theme.textTheme.headlineSmall),
+                    Text('文字样式', style: theme.textTheme.headlineSmall),
                     const SizedBox(height: 14),
                     const Text(
-                      '正文适合长一点的故事，保持舒适的行高。\n这里是一段普通文字，后续 Markdown 渲染可复用相同的色彩与排版。',
+                      '正文样式示例。\n这里是一段普通文字，后续 Markdown 渲染可复用相同的色彩与排版。',
                       style: TextStyle(height: 1.8),
                     ),
                     const SizedBox(height: 18),
