@@ -97,13 +97,6 @@ class _RoleNavigationRailState extends State<RoleNavigationRail> {
             );
           }),
           const Spacer(),
-          const Tooltip(
-            message: '界面预览，未连接模型',
-            child: Padding(
-              padding: EdgeInsets.all(12),
-              child: Icon(Icons.science_outlined, size: 20),
-            ),
-          ),
           IconButton(
             tooltip: '切换浅色 / 深色',
             onPressed: widget.onToggleTheme,
