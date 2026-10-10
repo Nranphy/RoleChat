@@ -30,6 +30,7 @@ class _SettingsPageState extends State<SettingsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SettingsSection(
+              padding: EdgeInsets.zero,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -135,7 +136,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 Expanded(
                   child: Text(
                     'API 配置',
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
                 TextButton.icon(
@@ -147,12 +148,12 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             const SizedBox(height: 12),
             SettingsSection(
-              padding: const EdgeInsets.all(8),
+              padding: EdgeInsets.zero,
               child: Column(
                 children: [
                   if (store.apis.isEmpty)
                     const EmptyState(
-                      emoji: '🔌',
+                      emoji: '',
                       title: '还没有接口配置',
                       subtitle: '这里只展示表单，不会连接外部接口。',
                     ),
@@ -204,13 +205,14 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
             const SizedBox(height: 26),
-            Text('运行与数据', style: Theme.of(context).textTheme.titleMedium),
+            const Text('运行与数据', style: TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(height: 12),
             SettingsSection(
+              padding: EdgeInsets.zero,
               child: Column(
                 children: [
                   SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                     title: const Text('后台运行偏好'),
                     subtitle: const Text('展示开关；浏览器后台调度尚未实现'),
                     value: background,
@@ -259,7 +261,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 ],
               ),
             ),
-            const SizedBox(height: 30),
           ],
         ),
       ),

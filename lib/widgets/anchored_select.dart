@@ -38,6 +38,7 @@ class AnchoredSelect<T> extends StatelessWidget {
           final top = openBelow ? bottom + 6 : origin.dy - height - 6;
           final selected = await showMenu<T>(
             context: context,
+            menuPadding: const EdgeInsets.all(8),
             position: RelativeRect.fromLTRB(
               origin.dx,
               top,

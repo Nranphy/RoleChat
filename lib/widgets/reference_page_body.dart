@@ -21,13 +21,7 @@ class ReferencePageBody extends StatelessWidget {
                     : BorderSide.none,
               ),
               clipBehavior: Clip.antiAlias,
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: wide ? 16 : 0,
-                ),
-                child: child,
-              ),
+              child: Padding(padding: const EdgeInsets.all(12), child: child),
             ),
           ),
         ),
