@@ -22,6 +22,18 @@ abstract final class AppTheme {
       colorScheme: scheme,
       scaffoldBackgroundColor: scheme.surface,
       fontFamily: 'NotoSansSC',
+      textTheme: ThemeData(brightness: brightness).textTheme.copyWith(
+        bodyMedium: const TextStyle(
+          fontSize: 15,
+          height: 1.5,
+          letterSpacing: .1,
+        ),
+        bodyLarge: const TextStyle(
+          fontSize: 16,
+          height: 1.5,
+          letterSpacing: .1,
+        ),
+      ),
       fontFamilyFallback: const ['NotoColorEmoji'],
       appBarTheme: AppBarTheme(
         backgroundColor: scheme.surface,
@@ -37,7 +49,7 @@ abstract final class AppTheme {
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
-          vertical: 16,
+          vertical: 12,
         ),
       ),
       cardTheme: CardThemeData(

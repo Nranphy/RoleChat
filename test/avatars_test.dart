@@ -126,7 +126,7 @@ void main() {
       RoleChatApp(store: PreviewStore(await SharedPreferences.getInstance())),
     );
     await tester.pumpAndSettle();
-    final button = find.byTooltip('新建');
+    final button = find.byKey(const ValueKey('create-menu'));
     final buttonBounds = tester.getRect(button);
     await tester.tap(button);
     await tester.pumpAndSettle();
@@ -136,7 +136,9 @@ void main() {
     );
     final menu = tester.widget<PopupMenuButton<String>>(
       find.byWidgetPredicate(
-        (w) => w is PopupMenuButton<String> && w.tooltip == '新建',
+        (w) =>
+            w is PopupMenuButton<String> &&
+            w.key == const ValueKey('create-menu'),
       ),
     );
     expect(menu.position, PopupMenuPosition.under);

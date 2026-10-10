@@ -92,6 +92,9 @@ class _ChatViewState extends State<ChatView> {
                   color: Colors.transparent,
                   borderRadius: BorderRadius.circular(16),
                   child: InkWell(
+                    hoverColor: Colors.transparent,
+                    splashColor: Colors.transparent,
+                    highlightColor: Colors.transparent,
                     borderRadius: BorderRadius.circular(16),
                     onTap: () => showInfo(context, store, c),
                     child: Padding(
@@ -225,6 +228,9 @@ class _ChatViewState extends State<ChatView> {
                         name: m.isUser ? '你' : role?.name ?? '已离开的角色',
                         emoji: '',
                         avatar: role?.avatar,
+                        onAvatarTap: role == null
+                            ? null
+                            : () => showRoleDetail(context, store, role),
                         onReply: () => setState(() => reply = m.text),
                         onDelete: () async {
                           if (await confirm(
@@ -386,10 +392,12 @@ class MessageBubble extends StatelessWidget {
     this.onDelete,
     this.onCopy,
     this.avatar,
+    this.onAvatarTap,
   });
   final ChatMessage message;
   final String name, emoji;
   final String? avatar;
+  final VoidCallback? onAvatarTap;
   final VoidCallback? onReply, onDelete, onCopy;
   @override
   Widget build(BuildContext context) {
@@ -401,10 +409,16 @@ class MessageBubble extends StatelessWidget {
         padding: const EdgeInsets.only(bottom: 24),
         child: Row(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             if (!mine) ...[
-              RoleAvatar(name, size: 34, imageData: avatar),
+              GestureDetector(
+                onTap: onAvatarTap,
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: RoleAvatar(name, size: 34, imageData: avatar),
+                ),
+              ),
               const SizedBox(width: 10),
             ],
             Flexible(
@@ -493,14 +507,6 @@ class MessageBubble extends StatelessWidget {
                                       : scheme.onSurfaceVariant,
                                 ),
                               ),
-                              if (mine) ...[
-                                const SizedBox(width: 5),
-                                Icon(
-                                  Icons.done_all,
-                                  size: 14,
-                                  color: scheme.onPrimary.withValues(alpha: .7),
-                                ),
-                              ],
                             ],
                           ),
                         ],
@@ -512,7 +518,9 @@ class MessageBubble extends StatelessWidget {
             ),
             if (onReply != null)
               PopupMenuButton<String>(
-                tooltip: '消息操作',
+                position: PopupMenuPosition.under,
+                offset: const Offset(0, 6),
+                tooltip: '',
                 padding: EdgeInsets.zero,
                 iconSize: 16,
                 icon: Icon(Icons.more_horiz, color: scheme.onSurfaceVariant),
@@ -593,87 +601,5 @@ void showInfo(BuildContext context, PreviewStore store, Conversation c) {
     showRoleDetail(context, store, store.role(c.members.first));
     return;
   }
-  showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    builder: (context) => ListenableBuilder(
-      listenable: store,
-      builder: (context, _) => FractionallySizedBox(
-        heightFactor: .8,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: RoleAvatar(
-                      c.name,
-                      size: 80,
-                      imageData: store.avatarFor(c),
-                      icon: Icons.group_outlined,
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  Center(
-                    child: Text(
-                      c.name,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  SettingsRow(
-                    icon: Icons.edit_outlined,
-                    title: '编辑群资料',
-                    subtitle: '名称与成员',
-                    onTap: () => editGroup(context, store, group: c),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    '群成员 · ${c.members.length + 1}',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const ListTile(
-                    leading: RoleAvatar('🙂', size: 38),
-                    title: Text('你'),
-                    subtitle: Text('本地用户'),
-                  ),
-                  ...c.members.map((id) {
-                    final r = store.roles.where((r) => r.id == id).firstOrNull;
-                    if (r == null) return const SizedBox.shrink();
-                    return ListTile(
-                      leading: RoleAvatar(
-                        r.name,
-                        size: 38,
-                        imageData: r.avatar,
-                      ),
-                      title: Text(r.name),
-                      subtitle: Text(r.description),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () => showRoleDetail(context, store, r),
-                    );
-                  }),
-                  const Divider(),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('免打扰'),
-                    value: c.muted,
-                    onChanged: (v) {
-                      c.muted = v;
-                      store.changed();
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  const PreviewNotice(text: '群成员及资料可编辑；概率调度尚未实现。'),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    ),
-  );
+  editGroup(context, store, group: c);
 }

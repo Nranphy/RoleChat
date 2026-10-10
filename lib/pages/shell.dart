@@ -161,7 +161,8 @@ class _ConversationListState extends State<ConversationList> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
-                tooltip: '新建',
+                key: const ValueKey('create-menu'),
+                tooltip: '',
                 icon: const Icon(Icons.add_circle_outline),
                 onSelected: (v) => v == 'role'
                     ? editRole(context, store)
@@ -227,12 +228,23 @@ class _ConversationListState extends State<ConversationList> {
                           horizontal: 12,
                           vertical: 7,
                         ),
-                        leading: RoleAvatar(
-                          c.name,
-                          imageData: store.avatarFor(c),
-                          icon: c.group
-                              ? Icons.group_outlined
-                              : Icons.person_outline,
+                        leading: GestureDetector(
+                          onTap: () => c.group
+                              ? editGroup(context, store, group: c)
+                              : (c.members.isEmpty
+                                    ? null
+                                    : editRole(
+                                        context,
+                                        store,
+                                        role: store.role(c.members.first),
+                                      )),
+                          child: RoleAvatar(
+                            c.name,
+                            imageData: store.avatarFor(c),
+                            icon: c.group
+                                ? Icons.group_outlined
+                                : Icons.person_outline,
+                          ),
                         ),
                         title: Row(
                           children: [

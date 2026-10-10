@@ -47,12 +47,13 @@ class SectionCard extends StatelessWidget {
   const SectionCard({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(22),
+    this.padding = const EdgeInsets.all(16),
   });
   final Widget child;
   final EdgeInsets padding;
   @override
   Widget build(BuildContext context) => Card(
+    clipBehavior: Clip.antiAlias,
     child: Padding(padding: padding, child: child),
   );
 }
@@ -201,7 +202,8 @@ class SettingsRow extends StatelessWidget {
   final VoidCallback? onTap;
   @override
   Widget build(BuildContext context) => ListTile(
-    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
     leading: Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(

@@ -29,6 +29,8 @@ void main() {
         find.widgetWithText(TextFormField, '群聊名称'),
         '雨天茶会',
       );
+      await tester.tap(find.widgetWithText(ChoiceChip, '成员'));
+      await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(CheckboxListTile, '林间'));
       await tester.tap(find.widgetWithText(CheckboxListTile, '月白'));
       await tester.tap(find.text('保存'));
@@ -49,26 +51,23 @@ void main() {
       store.roles.first,
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('编辑 soul.md'));
+    await tester.ensureVisible(find.widgetWithText(ChoiceChip, '灵魂'));
+    await tester.tap(find.widgetWithText(ChoiceChip, '灵魂'));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.descendant(
-        of: find.byType(AlertDialog),
-        matching: find.byType(TextField),
-      ),
+      find.widgetWithText(TextField, 'soul.md'),
       '喜欢在雨天听故事。',
     );
-    await tester.tap(find.text('保存'));
-    await tester.pumpAndSettle();
-    expect(store.roles.first.soul, '喜欢在雨天听故事。');
     for (final label in ['记忆', '行程', '对话示例']) {
       await tester.ensureVisible(find.widgetWithText(ChoiceChip, label));
       await tester.tap(find.widgetWithText(ChoiceChip, label));
       await tester.pumpAndSettle();
+      expect(find.byType(Dialog), findsOneWidget);
       expect(tester.takeException(), isNull);
     }
-    await tester.tap(find.byTooltip('关闭'));
+    await tester.tap(find.text('保存'));
     await tester.pumpAndSettle();
+    expect(store.roles.first.soul, '喜欢在雨天听故事。');
     expect(tester.takeException(), isNull);
   });
   testWidgets(

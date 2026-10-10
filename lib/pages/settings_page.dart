@@ -147,6 +147,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               const SizedBox(height: 12),
               SectionCard(
+                padding: const EdgeInsets.all(8),
                 child: Column(
                   children: [
                     if (store.apis.isEmpty)
