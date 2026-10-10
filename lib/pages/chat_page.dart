@@ -1,0 +1,636 @@
+import 'package:flutter/material.dart';
+import '../app/preview_store.dart';
+import '../models/preview_models.dart';
+import '../widgets/common.dart';
+import 'shell.dart';
+import 'editors.dart';
+import 'roles_page.dart';
+
+class ChatPage extends StatelessWidget {
+  const ChatPage({super.key, required this.store, required this.wide});
+  final PreviewStore store;
+  final bool wide;
+  @override
+  Widget build(BuildContext context) {
+    if (!wide && !store.showChatOnMobile) return ConversationList(store: store);
+    return Row(
+      children: [
+        if (wide) SizedBox(width: 340, child: ConversationList(store: store)),
+        if (wide) const VerticalDivider(width: 1),
+        Expanded(
+          child: ChatView(
+            key: ValueKey(store.selectedId),
+            store: store,
+            wide: wide,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class ChatView extends StatefulWidget {
+  const ChatView({super.key, required this.store, required this.wide});
+  final PreviewStore store;
+  final bool wide;
+  @override
+  State<ChatView> createState() => _ChatViewState();
+}
+
+class _ChatViewState extends State<ChatView> {
+  final input = TextEditingController();
+  final scroll = ScrollController();
+  String? reply;
+  bool showTyping = false;
+  @override
+  void dispose() {
+    input.dispose();
+    scroll.dispose();
+    super.dispose();
+  }
+
+  void send() {
+    if (input.text.trim().isEmpty) return;
+    widget.store.send(input.text, reply: reply);
+    input.clear();
+    setState(() => reply = null);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (scroll.hasClients) {
+        scroll.animateTo(
+          scroll.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final store = widget.store;
+    final c = store.selected;
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      children: [
+        Container(
+          height: 86,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              if (!widget.wide)
+                IconButton(
+                  tooltip: '返回会话',
+                  onPressed: () {
+                    store.showChatOnMobile = false;
+                    store.changed();
+                  },
+                  icon: const Icon(Icons.arrow_back),
+                ),
+              RoleAvatar(c.emoji, size: 46),
+              const SizedBox(width: 14),
+              Expanded(
+                child: InkWell(
+                  onTap: () => showInfo(context, store, c),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        c.name,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        c.group
+                            ? '你和 ${c.members.length} 位角色 · 一个悠闲的下午'
+                            : '私聊 · ${c.members.isEmpty ? '角色已离开' : '展示角色'}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: '搜索聊天记录',
+                onPressed: () => showSearch(context, c),
+                icon: const Icon(Icons.search),
+              ),
+              PopupMenuButton<String>(
+                tooltip: '会话菜单',
+                onSelected: (v) async {
+                  if (v == 'info') showInfo(context, store, c);
+                  if (v == 'mute') {
+                    c.muted = !c.muted;
+                    store.changed();
+                  }
+                  if (v == 'typing') setState(() => showTyping = !showTyping);
+                  if (v == 'clear' &&
+                      await confirm(
+                        context,
+                        title: '清空展示消息？',
+                        body: '只清空当前预览会话，不影响其他会话。',
+                        action: '清空',
+                      )) {
+                    c.messages.clear();
+                    store.changed();
+                  }
+                },
+                itemBuilder: (_) => [
+                  const PopupMenuItem(value: 'info', child: Text('会话资料')),
+                  PopupMenuItem(
+                    value: 'mute',
+                    child: Text(c.muted ? '取消免打扰' : '免打扰'),
+                  ),
+                  const PopupMenuItem(value: 'typing', child: Text('切换输入中效果')),
+                  const PopupMenuItem(value: 'clear', child: Text('清空展示消息')),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  scheme.surface,
+                  scheme.secondaryContainer.withValues(alpha: .18),
+                  scheme.tertiaryContainer.withValues(alpha: .12),
+                ],
+              ),
+            ),
+            child: c.messages.isEmpty
+                ? const EmptyState(
+                    emoji: '💬',
+                    title: '故事从这里开始',
+                    subtitle: '写下第一句话吧。\n新建的角色不会自动发送初始消息。',
+                  )
+                : ListView.builder(
+                    controller: scroll,
+                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
+                    itemCount: c.messages.length + 1,
+                    itemBuilder: (context, i) {
+                      if (i == 0) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 26),
+                            child: Text(
+                              '今天 · 示例对话',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                      final m = c.messages[i - 1];
+                      final role = store.roles
+                          .where((r) => r.id == m.roleId)
+                          .firstOrNull;
+                      return MessageBubble(
+                        message: m,
+                        name: m.isUser ? '你' : role?.name ?? '已离开的角色',
+                        emoji: role?.emoji ?? '🌱',
+                        onReply: () => setState(() => reply = m.text),
+                        onDelete: () async {
+                          if (await confirm(
+                            context,
+                            title: '删除这条展示消息？',
+                            body: '此操作只影响当前预览。',
+                          )) {
+                            c.messages.remove(m);
+                            store.changed();
+                          }
+                        },
+                        onCopy: () => toast(context, '请在消息文本中选择并复制'),
+                      );
+                    },
+                  ),
+          ),
+        ),
+        if (showTyping)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            child: Row(
+              children: [
+                const SizedBox(
+                  width: 12,
+                  height: 12,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text('角色正在输入…（展示效果）', style: TextStyle(fontSize: 12)),
+                ),
+                TextButton(
+                  onPressed: () => setState(() => showTyping = false),
+                  child: const Text('停止'),
+                ),
+              ],
+            ),
+          ),
+        Container(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
+          child: Column(
+            children: [
+              if (reply != null)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: scheme.surfaceContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.reply, size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          reply!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => setState(() => reply = null),
+                        icon: const Icon(Icons.close, size: 16),
+                      ),
+                    ],
+                  ),
+                ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  IconButton(
+                    tooltip: '表情',
+                    onPressed: () => showEmoji(context),
+                    icon: const Icon(Icons.sentiment_satisfied_alt),
+                  ),
+                  Expanded(
+                    child: TextField(
+                      controller: input,
+                      minLines: 1,
+                      maxLines: 5,
+                      decoration: const InputDecoration(
+                        hintText: '说点什么，让故事继续…',
+                      ),
+                      onSubmitted: (_) => send(),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  IconButton.filled(
+                    tooltip: '发送消息',
+                    onPressed: send,
+                    icon: const Icon(Icons.arrow_upward),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 9),
+              Text(
+                'UI 预览 · 消息仅在本次页面会话中展示，不会调用模型',
+                style: TextStyle(fontSize: 10, color: scheme.onSurfaceVariant),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void showEmoji(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Wrap(
+          spacing: 16,
+          runSpacing: 16,
+          children:
+              [
+                    '🌼',
+                    '🌿',
+                    '✨',
+                    '☕',
+                    '🌙',
+                    '🍊',
+                    '😊',
+                    '💛',
+                    '🎬',
+                    '📷',
+                    '🌷',
+                    '🐈',
+                  ]
+                  .map(
+                    (e) => InkWell(
+                      onTap: () {
+                        input.text += e;
+                        Navigator.pop(context);
+                      },
+                      child: RoleAvatar(e),
+                    ),
+                  )
+                  .toList(),
+        ),
+      ),
+    );
+  }
+}
+
+class MessageBubble extends StatelessWidget {
+  const MessageBubble({
+    super.key,
+    required this.message,
+    required this.name,
+    required this.emoji,
+    this.onReply,
+    this.onDelete,
+    this.onCopy,
+  });
+  final ChatMessage message;
+  final String name, emoji;
+  final VoidCallback? onReply, onDelete, onCopy;
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final mine = message.isUser;
+    return Align(
+      alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 24),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (!mine) ...[
+              RoleAvatar(emoji, size: 34),
+              const SizedBox(width: 10),
+            ],
+            Flexible(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 510),
+                child: Column(
+                  crossAxisAlignment: mine
+                      ? CrossAxisAlignment.end
+                      : CrossAxisAlignment.start,
+                  children: [
+                    if (!mine)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 3, bottom: 6),
+                        child: Text(
+                          name,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(17, 13, 17, 9),
+                      decoration: BoxDecoration(
+                        color: mine
+                            ? scheme.primary
+                            : scheme.surfaceContainerLowest,
+                        borderRadius: BorderRadius.only(
+                          topLeft: const Radius.circular(20),
+                          topRight: const Radius.circular(20),
+                          bottomLeft: Radius.circular(mine ? 20 : 5),
+                          bottomRight: Radius.circular(mine ? 5 : 20),
+                        ),
+                        border: mine
+                            ? null
+                            : Border.all(
+                                color: scheme.outlineVariant.withValues(
+                                  alpha: .28,
+                                ),
+                              ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (message.reply != null)
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(10),
+                              margin: const EdgeInsets.only(bottom: 10),
+                              decoration: BoxDecoration(
+                                color:
+                                    (mine ? scheme.onPrimary : scheme.primary)
+                                        .withValues(alpha: .09),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                message.reply!,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: mine
+                                      ? scheme.onPrimary
+                                      : scheme.primary,
+                                ),
+                              ),
+                            ),
+                          SelectableText(
+                            message.text,
+                            style: TextStyle(
+                              fontSize: 14,
+                              height: 1.65,
+                              color: mine ? scheme.onPrimary : scheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                message.time,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: mine
+                                      ? scheme.onPrimary.withValues(alpha: .7)
+                                      : scheme.onSurfaceVariant,
+                                ),
+                              ),
+                              if (mine) ...[
+                                const SizedBox(width: 5),
+                                Icon(
+                                  Icons.done_all,
+                                  size: 14,
+                                  color: scheme.onPrimary.withValues(alpha: .7),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (onReply != null)
+              PopupMenuButton<String>(
+                tooltip: '消息操作',
+                padding: EdgeInsets.zero,
+                iconSize: 16,
+                icon: Icon(Icons.more_horiz, color: scheme.onSurfaceVariant),
+                onSelected: (v) {
+                  if (v == 'reply') onReply?.call();
+                  if (v == 'delete') onDelete?.call();
+                  if (v == 'copy') onCopy?.call();
+                },
+                itemBuilder: (_) => [
+                  const PopupMenuItem(value: 'reply', child: Text('引用回复')),
+                  const PopupMenuItem(value: 'copy', child: Text('复制')),
+                  const PopupMenuItem(value: 'delete', child: Text('删除')),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+void showSearch(BuildContext context, Conversation c) {
+  var query = '';
+  showDialog<void>(
+    context: context,
+    builder: (context) => StatefulBuilder(
+      builder: (context, setLocal) => AlertDialog(
+        title: const Text('搜索聊天记录'),
+        content: SizedBox(
+          width: 520,
+          height: 360,
+          child: Column(
+            children: [
+              TextField(
+                autofocus: true,
+                decoration: const InputDecoration(
+                  hintText: '搜索这段故事',
+                  prefixIcon: Icon(Icons.search),
+                ),
+                onChanged: (v) => setLocal(() => query = v),
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: query.isEmpty
+                    ? const EmptyState(
+                        emoji: '🔎',
+                        title: '找回某句话',
+                        subtitle: '输入关键词搜索当前会话',
+                      )
+                    : ListView(
+                        children: c.messages
+                            .where((m) => m.text.contains(query))
+                            .map(
+                              (m) => ListTile(
+                                title: Text(m.text),
+                                subtitle: Text(m.time),
+                              ),
+                            )
+                            .toList(),
+                      ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('关闭'),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+void showInfo(BuildContext context, PreviewStore store, Conversation c) {
+  if (!c.group && c.members.isNotEmpty) {
+    showRoleDetail(context, store, store.role(c.members.first));
+    return;
+  }
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (context) => ListenableBuilder(
+      listenable: store,
+      builder: (context, _) => FractionallySizedBox(
+        heightFactor: .8,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(child: RoleAvatar(c.emoji, size: 80)),
+                  const SizedBox(height: 18),
+                  Center(
+                    child: Text(
+                      c.name,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  SettingsRow(
+                    icon: Icons.edit_outlined,
+                    title: '编辑群资料',
+                    subtitle: '名称与成员',
+                    onTap: () => editGroup(context, store, group: c),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    '群成员 · ${c.members.length + 1}',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const ListTile(
+                    leading: RoleAvatar('🙂', size: 38),
+                    title: Text('你'),
+                    subtitle: Text('本地用户'),
+                  ),
+                  ...c.members.map((id) {
+                    final r = store.roles.where((r) => r.id == id).firstOrNull;
+                    if (r == null) return const SizedBox.shrink();
+                    return ListTile(
+                      leading: RoleAvatar(r.emoji, size: 38),
+                      title: Text(r.name),
+                      subtitle: Text(r.description),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => showRoleDetail(context, store, r),
+                    );
+                  }),
+                  const Divider(),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('免打扰'),
+                    value: c.muted,
+                    onChanged: (v) {
+                      c.muted = v;
+                      store.changed();
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  const PreviewNotice(text: '群成员及资料可编辑；概率调度尚未实现。'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
