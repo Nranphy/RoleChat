@@ -206,6 +206,8 @@ class _ConversationListState extends State<ConversationList> {
                               child: InkWell(
                                 onTap: () => store.select(c.id),
                                 hoverColor: Colors.transparent,
+                                highlightColor: Colors.transparent,
+                                splashFactory: NoSplash.splashFactory,
                                 borderRadius: BorderRadius.circular(9),
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
