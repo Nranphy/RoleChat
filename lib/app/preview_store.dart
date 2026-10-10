@@ -1,21 +1,28 @@
+import '../data/preview_data.dart';
+import '../data/profile_persistence.dart';
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../design/app_theme.dart';
 import '../models/preview_models.dart';
 
 class PreviewStore extends ChangeNotifier {
-  PreviewStore(this.preferences) {
+  PreviewStore(this.preferences)
+    : _persistence = ProfilePersistence(preferences) {
     restoreProfiles();
   }
   final SharedPreferences preferences;
+  final ProfilePersistence _persistence;
   int destination = 0;
   String selectedId = 'garden';
   bool showChatOnMobile = false;
-  ThemeMode get mode =>
-      ThemeMode.values[preferences.getInt('themeMode') ??
-          ThemeMode.system.index];
+  ThemeMode get mode {
+    final index = preferences.getInt('themeMode');
+    return index != null && index >= 0 && index < ThemeMode.values.length
+        ? ThemeMode.values[index]
+        : ThemeMode.system;
+  }
+
   Color get seed =>
       Color(preferences.getInt('seed') ?? AppTheme.seeds.first.toARGB32());
   Future<void> setMode(ThemeMode value) async {
@@ -51,7 +58,13 @@ class PreviewStore extends ChangeNotifier {
     orElse: () => conversations.first,
   );
   RoleProfile role(String id) => roles.firstWhere((r) => r.id == id);
-  String newId() => DateTime.now().microsecondsSinceEpoch.toString();
+  int _lastId = 0;
+  String newId() {
+    final now = DateTime.now().microsecondsSinceEpoch;
+    _lastId = now > _lastId ? now : _lastId + 1;
+    return _lastId.toString();
+  }
+
   void send(String text, {MessageReference? reply}) {
     if (text.trim().isEmpty) return;
     selected.messages.add(
@@ -80,6 +93,7 @@ class PreviewStore extends ChangeNotifier {
 
   void removeRole(String id) {
     roles.removeWhere((r) => r.id == id);
+    schedules.removeWhere((s) => s.roleId == id);
     for (final c in conversations) {
       c.members.remove(id);
     }
@@ -108,330 +122,36 @@ class PreviewStore extends ChangeNotifier {
     changed();
   }
 
-  String? persistenceError;
-  Future<void> _saveQueue = Future.value();
+  String? get persistenceError => _persistence.persistenceError;
   String? avatarFor(Conversation c) => c.group
       ? c.avatar
       : roles.where((r) => c.members.contains(r.id)).firstOrNull?.avatar;
   Future<bool> saveProfiles() async {
-    final snapshot = jsonEncode({
-      'version': 1,
-      'roles': roles
-          .map(
-            (r) => {
-              'id': r.id,
-              'name': r.name,
-              'avatar': r.avatar,
-              'model': r.model,
-              'apiId': r.apiId,
-              'identity': r.identity,
-              'soul': r.soul,
-              'memory': r.memory,
-              'examples': r.examples,
-            },
-          )
-          .toList(),
-      'schedules': schedules
-          .map(
-            (s) => {
-              'id': s.id,
-              'roleId': s.roleId,
-              'activity': s.activity,
-              'condition': s.condition,
-              'weekdays': s.weekdays,
-              'ruleKind': s.ruleKind?.name,
-              'dateFrom': s.dateFrom,
-              'dateUntil': s.dateUntil,
-              'annualMonth': s.annualMonth,
-              'annualDay': s.annualDay,
-              'start': s.start,
-              'end': s.end,
-              'probability': s.probability,
-              'dateDetail': s.dateDetail,
-            },
-          )
-          .toList(),
-      'conversations': conversations
-          .map(
-            (c) => {
-              'id': c.id,
-              'name': c.name,
-              'avatar': c.group ? c.avatar : null,
-              'members': c.members,
-              'group': c.group,
-              'background': c.background,
-            },
-          )
-          .toList(),
-    });
-    final operation = _saveQueue.then((_) async {
-      if (!await preferences.setString('profiles.v1', snapshot)) {
-        throw StateError('Storage unavailable');
-      }
-    });
-    _saveQueue = operation.catchError((Object _) {});
-    try {
-      await operation;
-      persistenceError = null;
-      return true;
-    } catch (_) {
-      persistenceError = '本地保存失败，请检查浏览器存储空间';
-      notifyListeners();
-      return false;
-    }
+    final saved = await _persistence.save(
+      roles: roles,
+      schedules: schedules,
+      conversations: conversations,
+    );
+    if (!saved) notifyListeners();
+    return saved;
   }
 
   void restoreProfiles() {
-    final raw = preferences.getString('profiles.v1');
-    if (raw == null) return;
-    try {
-      final data = jsonDecode(raw) as Map<String, dynamic>;
-      if (data['version'] != 1) {
-        throw const FormatException('Unsupported data version');
-      }
-      final restoredRoles = (data['roles'] as List).map((item) {
-        final r = item as Map<String, dynamic>;
-        return RoleProfile(
-          id: r['id'] as String,
-          name: r['name'] as String,
-          avatar: r['avatar'] as String?,
-          model: r['model'] as String,
-          apiId: apis.any((a) => a.id == r['apiId'])
-              ? r['apiId'] as String?
-              : null,
-          identity: r['identity'] as String,
-          soul: r['soul'] as String,
-          memory:
-              r['memory'] as String? ??
-              roles.where((old) => old.id == r['id']).firstOrNull?.memory ??
-              '',
-          examples: (r['examples'] as List)
-              .map((e) => Map<String, String>.from(e as Map))
-              .toList(),
-        );
-      }).toList();
-      final restoredSchedules = (data['schedules'] as List?)?.map((item) {
-        final s = item as Map<String, dynamic>;
-        return ScheduleEntry(
-          id: s['id'] as String,
-          roleId: s['roleId'] as String,
-          activity: s['activity'] as String,
-          condition: s['condition'] as String,
-          ruleKind: ScheduleRuleKind.values
-              .where((k) => k.name == s['ruleKind'])
-              .firstOrNull,
-          dateFrom: s['dateFrom'] as String?,
-          dateUntil: s['dateUntil'] as String?,
-          annualMonth: s['annualMonth'] as int?,
-          annualDay: s['annualDay'] as int?,
-          weekdays: List<int>.from(s['weekdays'] as List? ?? []),
-          start: s['start'] as String,
-          end: s['end'] as String,
-          probability: (s['probability'] as num).toDouble(),
-          dateDetail: s['dateDetail'] as String? ?? '',
-        );
-      }).toList();
-      final restoredChats = (data['conversations'] as List).map((item) {
-        final c = item as Map<String, dynamic>;
-        return Conversation(
-          id: c['id'] as String,
-          name: c['name'] as String,
-          avatar: c['avatar'] as String?,
-          members: List<String>.from(c['members'] as List),
-          group: c['group'] as bool,
-          background: c['background'] as String? ?? '',
-          messages: conversations
-              .where((old) => old.id == c['id'])
-              .firstOrNull
-              ?.messages,
-        );
-      }).toList();
-      if (restoredChats.isEmpty) {
-        throw const FormatException('Missing conversations');
-      }
-      if (restoredSchedules != null) {
-        schedules
-          ..clear()
-          ..addAll(restoredSchedules);
-      }
-      roles
-        ..clear()
-        ..addAll(restoredRoles);
-      conversations
-        ..clear()
-        ..addAll(restoredChats);
-      if (!conversations.any((c) => c.id == selectedId)) {
-        selectedId = conversations.first.id;
-      }
-    } catch (_) {
-      persistenceError = '无法读取已保存资料，当前显示示例数据';
+    _persistence.restore(
+      apis: apis,
+      roles: roles,
+      schedules: schedules,
+      conversations: conversations,
+    );
+    if (!conversations.any((c) => c.id == selectedId)) {
+      selectedId = conversations.first.id;
     }
   }
 
-  final apis = [
-    ApiProfile(id: 'demo', name: '我的模型接口', url: 'https://api.example.com/v1'),
-  ];
-  final roles = [
-    RoleProfile(
-      id: 'lin',
-      name: '林间',
-      memory: '你喜欢安静的咖啡店，最好能坐在窗边。\n\n约好了周六下午和月白、夏芽一起去花店。',
-      identity: '你是林间，一个喜欢植物、散步和手写信的朋友。说话温和自然，留意生活里的细节。',
-      soul: '最近学会了不急着给每件事一个答案。比起计划好的旅程，更喜欢偶然遇到的小风景。',
-      examples: [
-        {'question': '今天有点累。', 'answer': '那就先把今天放一放吧。要不要一起坐在窗边，看一会儿树影？'},
-      ],
-    ),
-    RoleProfile(
-      id: 'moon',
-      name: '月白',
-      memory: '一起看电影的时候，喜欢留下片尾曲。',
-      identity: '你是月白，喜欢电影和城市夜晚的大学生。幽默、坦率，偶尔带一点诗意。',
-      soul: '觉得朋友之间最珍贵的，是可以安心地沉默。想把这座城市的深夜都记下来。',
-    ),
-    RoleProfile(
-      id: 'summer',
-      name: '夏芽',
-      identity: '你是夏芽，热爱咖啡、拍照和周末探店。表达活泼，但尊重朋友的节奏。',
-      soul: '想把每一个普通的周末变成值得期待的小冒险。',
-    ),
-  ];
-  final conversations = [
-    Conversation(
-      id: 'garden',
-      name: '周末小花园',
-
-      members: ['lin', 'moon', 'summer'],
-      group: true,
-      messages: [
-        ChatMessage(
-          id: 'm1',
-          roleId: 'lin',
-          text: '刚刚路过花店，发现第一批洋甘菊开了。\n这个周末，要不要一起去走走？',
-          time: '16:38',
-        ),
-        ChatMessage(
-          id: 'm1b',
-          roleId: 'lin',
-          text: '花店就在河边那条路上。',
-          time: '16:38',
-        ),
-        ChatMessage(id: 'm1c', roleId: 'lin', text: '走过去大概十分钟。', time: '16:38'),
-        ChatMessage(
-          id: 'm2',
-          roleId: 'summer',
-          text: '我要去！\n顺便找到一家有花园的咖啡店，窗边的位置特别好看。',
-          time: '16:39',
-        ),
-        ChatMessage(
-          id: 'm2b',
-          roleId: 'summer',
-          text: '我还想看看他们家的蛋糕。',
-          time: '16:39',
-        ),
-        ChatMessage(
-          id: 'm2c',
-          roleId: 'summer',
-          text: '到时候拍张照片给你们。',
-          time: '16:39',
-        ),
-        ChatMessage(id: 'm3', text: '听起来很棒。周六下午怎么样？', time: '16:40'),
-        ChatMessage(
-          id: 'm4',
-          roleId: 'moon',
-          text: '我带相机。希望那天有一点阳光，\n也有足够多的时间可以浪费。',
-          time: '16:41',
-          reply: const MessageReference(
-            messageId: 'm3',
-            text: '周六下午怎么样？',
-            senderName: '你',
-          ),
-        ),
-        ChatMessage(
-          id: 'm5',
-          roleId: 'lin',
-          text: '那就说好了。不用安排太满，\n我们慢慢走。',
-          time: '16:42',
-        ),
-      ],
-    ),
-    Conversation(
-      id: 'lin-chat',
-      name: '林间',
-
-      members: ['lin'],
-      messages: [
-        ChatMessage(
-          id: 'p1',
-          roleId: 'lin',
-          text: '今天给窗台的小植物换了个位置。\n它好像比昨天精神了一点。',
-          time: '15:20',
-        ),
-        ChatMessage(
-          id: 'p1b',
-          roleId: 'lin',
-          text: '现在下午的阳光正好能照到它。',
-          time: '15:20',
-        ),
-        ChatMessage(
-          id: 'p1c',
-          roleId: 'lin',
-          text: '等长出新叶子再给你看。',
-          time: '15:21',
-        ),
-      ],
-    ),
-    Conversation(
-      id: 'moon-chat',
-      name: '月白',
-
-      members: ['moon'],
-      messages: [
-        ChatMessage(
-          id: 'p2',
-          roleId: 'moon',
-          text: '留了一部电影，等你有空一起看。',
-          time: '昨天',
-        ),
-      ],
-    ),
-    Conversation(
-      id: 'summer-chat',
-      name: '夏芽',
-
-      members: ['summer'],
-      messages: [],
-    ),
-  ];
-  final schedules = [
-    ScheduleEntry(
-      id: 's1',
-      roleId: 'lin',
-      activity: '睡觉',
-      condition: '每天',
-      start: '23:00',
-      end: '08:00',
-      probability: 0,
-    ),
-    ScheduleEntry(
-      id: 's2',
-      roleId: 'lin',
-      activity: '上课',
-      condition: '每周一至周五',
-      start: '09:00',
-      end: '12:00',
-      probability: 20,
-    ),
-    ScheduleEntry(
-      id: 's3',
-      roleId: 'lin',
-      activity: '散步与聊天',
-      condition: '每天',
-      start: '16:00',
-      end: '19:00',
-      probability: 100,
-    ),
-  ];
+  final apis = PreviewData.apis();
+  final roles = PreviewData.roles();
+  final conversations = PreviewData.conversations();
+  final schedules = PreviewData.schedules();
 }
 
 extension on TimeOfDay {
