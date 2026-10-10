@@ -1,3 +1,4 @@
+import 'package:rolechat/shared/widgets/check_result_note.dart';
 import 'package:flutter/material.dart';
 
 class ApiConfigurationForm extends StatelessWidget {
@@ -65,16 +66,9 @@ class ApiConfigurationForm extends StatelessWidget {
         const SizedBox(height: 8),
         Align(
           alignment: Alignment.centerLeft,
-          child: Text(
-            checkMessage!,
-            style: TextStyle(
-              fontSize: 12,
-              color: checkSucceeded
-                  ? (Theme.of(context).brightness == Brightness.dark
-                        ? Colors.green.shade300
-                        : Colors.green.shade700)
-                  : Theme.of(context).colorScheme.error,
-            ),
+          child: CheckResultNote(
+            message: checkMessage!,
+            success: checkSucceeded,
           ),
         ),
       ],

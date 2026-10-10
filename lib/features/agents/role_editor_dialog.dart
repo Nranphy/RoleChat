@@ -1,3 +1,4 @@
+import 'package:rolechat/services/api_check_controller.dart';
 import 'package:rolechat/services/model_availability_checker.dart';
 import 'editing/schedule_draft.dart';
 import 'package:rolechat/shared/widgets/document_editor_tab.dart';
@@ -32,10 +33,7 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
   String? avatar, api;
   int tab = 0;
   bool saving = false;
-  String? modelCheckMessage;
-  bool modelCheckSucceeded = false;
-  bool checkingModel = false;
-  int modelCheckRevision = 0;
+  final modelCheck = ApiCheckController();
   final examples = <(TextEditingController, TextEditingController)>[];
 
   final schedules = <ScheduleDraft>[];
@@ -49,6 +47,7 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
   @override
   void initState() {
     super.initState();
+    modelCheck.addListener(refreshModelCheck);
     final r = widget.role;
     id = r?.id ?? widget.store.newId();
     name = text(r?.name ?? '');
@@ -68,6 +67,8 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
 
   @override
   void dispose() {
+    modelCheck.removeListener(refreshModelCheck);
+    modelCheck.dispose();
     for (final c in controllers) {
       c.dispose();
     }
@@ -99,19 +100,15 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
             for (final a in widget.store.apis) a.id: a.name,
           },
           onAvatarChanged: (v) => setState(() => avatar = v),
-          onApiChanged: (v) => setState(() {
-            api = v.isEmpty ? null : v;
-            modelCheckMessage = null;
-            modelCheckRevision++;
-          }),
+          onApiChanged: (v) {
+            setState(() => api = v.isEmpty ? null : v);
+            modelCheck.invalidate();
+          },
           onCheckModel: checkModel,
-          onModelChanged: (_) => setState(() {
-            modelCheckMessage = null;
-            modelCheckRevision++;
-          }),
-          checkingModel: checkingModel,
-          modelCheckMessage: modelCheckMessage,
-          modelCheckSucceeded: modelCheckSucceeded,
+          onModelChanged: (_) => modelCheck.invalidate(),
+          checkingModel: modelCheck.running,
+          modelCheckMessage: modelCheck.result?.message,
+          modelCheckSucceeded: modelCheck.result?.success ?? false,
           onNameChanged: () => setState(() {}),
           onNameCommitted: commitName,
         ),
@@ -160,38 +157,23 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
       ),
     ],
   );
-  Future<void> checkModel() async {
-    if (checkingModel) return;
+  void refreshModelCheck() {
+    if (mounted) setState(() {});
+  }
+
+  Future<void> checkModel() => modelCheck.run(() async {
     final configuration = widget.store.apis
         .where((a) => a.id == api)
         .firstOrNull;
     if (configuration == null) {
-      setState(() {
-        modelCheckSucceeded = false;
-        modelCheckMessage = '检测失败：请先选择 API 配置。';
-      });
-      return;
+      return const ModelCheckResult(false, '检测失败：请先选择 API 配置。');
     }
-    final revision = ++modelCheckRevision;
-    setState(() {
-      checkingModel = true;
-      modelCheckMessage = null;
-    });
-    final result = await (widget.modelChecker ?? ModelAvailabilityChecker())
-        .check(
-          address: configuration.url,
-          apiKey: configuration.key,
-          model: model.text,
-        );
-    if (!mounted) return;
-    setState(() {
-      checkingModel = false;
-      if (revision == modelCheckRevision) {
-        modelCheckSucceeded = result.success;
-        modelCheckMessage = result.message;
-      }
-    });
-  }
+    return (widget.modelChecker ?? ModelAvailabilityChecker()).check(
+      address: configuration.url,
+      apiKey: configuration.key,
+      model: model.text,
+    );
+  });
 
   void commitName(String value) {
     final role = widget.role;

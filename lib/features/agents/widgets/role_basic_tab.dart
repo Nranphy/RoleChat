@@ -1,3 +1,4 @@
+import 'package:rolechat/shared/widgets/check_result_note.dart';
 import 'package:flutter/material.dart';
 import 'package:rolechat/design/form_metrics.dart';
 import 'package:rolechat/shared/widgets/profile_identity_header.dart';
@@ -73,16 +74,9 @@ class RoleBasicTab extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
           child: Align(
             alignment: Alignment.centerLeft,
-            child: Text(
-              modelCheckMessage!,
-              style: TextStyle(
-                fontSize: 12,
-                color: modelCheckSucceeded
-                    ? (Theme.of(context).brightness == Brightness.dark
-                          ? Colors.green.shade300
-                          : Colors.green.shade700)
-                    : Theme.of(context).colorScheme.error,
-              ),
+            child: CheckResultNote(
+              message: modelCheckMessage!,
+              success: modelCheckSucceeded,
             ),
           ),
         ),
