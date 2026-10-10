@@ -5,6 +5,8 @@ import 'package:rolechat/app/preview_store.dart';
 import 'package:rolechat/main.dart';
 import 'package:rolechat/pages/editors.dart';
 import 'package:rolechat/pages/roles_page.dart';
+import 'package:rolechat/models/preview_models.dart';
+import 'package:rolechat/widgets/anchored_select.dart';
 
 void main() {
   Future<PreviewStore> setup(WidgetTester tester) async {
@@ -98,24 +100,56 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
-  testWidgets('schedule date details remain available when reopening editor', (
+  testWidgets('structured schedule and Memory.md persist after editing', (
     tester,
   ) async {
     final store = await setup(tester);
-    editSchedule(tester.element(find.byType(Scaffold)), store, 'lin');
+    store.schedules.clear();
+    store.schedules.add(
+      ScheduleEntry(
+        id: 'weekly',
+        roleId: 'lin',
+        activity: '上课',
+        condition: '每周',
+        weekdays: [1, 3],
+        start: '09:00',
+        end: '12:00',
+        probability: 20,
+      ),
+    );
+    editRole(
+      tester.element(find.byType(Scaffold)),
+      store,
+      role: store.roles.first,
+    );
     await tester.pumpAndSettle();
-    await tester.enterText(find.widgetWithText(TextFormField, '活动名称'), '生日');
-    await tester.tap(find.byType(DropdownButtonFormField<String>));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('具体日期').last);
+    await tester.ensureVisible(find.widgetWithText(ChoiceChip, '记忆'));
+    await tester.tap(find.widgetWithText(ChoiceChip, '记忆'));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, '具体日期'),
-      '2026-10-10',
+      find.widgetWithText(TextField, 'Memory.md'),
+      '# 记忆\n喜欢雨天。',
     );
+    await tester.ensureVisible(find.widgetWithText(ChoiceChip, '行程'));
+    await tester.tap(find.widgetWithText(ChoiceChip, '行程'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilterChip, '五'));
+    await tester.ensureVisible(
+      find.widgetWithText(AnchoredSelect<int>, '接收概率'),
+    );
+    await tester.tap(find.widgetWithText(AnchoredSelect<int>, '接收概率'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('35%').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('35%').last);
+    await tester.pumpAndSettle();
     await tester.tap(find.text('保存'));
     await tester.pumpAndSettle();
-    expect(store.schedules.last.dateDetail, '2026-10-10');
+    final restored = PreviewStore(store.preferences);
+    expect(restored.roles.first.memory, '# 记忆\n喜欢雨天。');
+    expect(restored.schedules.single.weekdays, [1, 3, 5]);
+    expect(restored.schedules.single.probability, 35);
+    expect(restored.schedules.single.start, '09:00');
     expect(tester.takeException(), isNull);
   });
 }

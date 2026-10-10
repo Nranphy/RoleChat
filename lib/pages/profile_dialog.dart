@@ -3,6 +3,8 @@ import '../app/preview_store.dart';
 import '../models/preview_models.dart';
 import '../widgets/avatar_field.dart';
 import '../widgets/common.dart';
+import '../widgets/anchored_select.dart';
+import '../widgets/schedule_rule_field.dart';
 
 class RoleEditorDialog extends StatefulWidget {
   const RoleEditorDialog({super.key, required this.store, this.role});
@@ -13,26 +15,22 @@ class RoleEditorDialog extends StatefulWidget {
 }
 
 class _RoleEditorDialogState extends State<RoleEditorDialog> {
-  final dateDetails = <TextEditingController, String>{};
   final form = GlobalKey<FormState>();
   final controllers = <TextEditingController>[];
-  late final TextEditingController name, description, model, identity, soul;
+  late final TextEditingController name,
+      description,
+      model,
+      identity,
+      soul,
+      memoryDocument;
   late String id;
   String? avatar, api;
   int tab = 0;
   bool saving = false;
   final examples = <(TextEditingController, TextEditingController)>[];
-  final memories = <(TextEditingController, String)>[];
-  final schedules =
-      <
-        (
-          TextEditingController,
-          TextEditingController,
-          TextEditingController,
-          String,
-          double,
-        )
-      >[];
+
+  final schedules = <ScheduleDraft>[];
+  final removedSchedules = <ScheduleDraft>[];
   TextEditingController text(String value) {
     final c = TextEditingController(text: value);
     controllers.add(c);
@@ -49,23 +47,14 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
     model = text(r?.model ?? 'gpt-4o');
     identity = text(r?.identity ?? '');
     soul = text(r?.soul ?? '');
+    memoryDocument = text(r?.memory ?? '');
     avatar = r?.avatar;
     api = r?.apiId;
     for (final e in r?.examples ?? <Map<String, String>>[]) {
       examples.add((text(e['question'] ?? ''), text(e['answer'] ?? '')));
     }
-    for (final m in widget.store.memories.where((m) => m.roleId == id)) {
-      memories.add((text(m.text), m.tag));
-    }
     for (final s in widget.store.schedules.where((s) => s.roleId == id)) {
-      schedules.add((
-        text(s.activity),
-        text(s.start),
-        text(s.end),
-        s.condition,
-        s.probability,
-      ));
-      dateDetails[schedules.last.$1] = s.dateDetail;
+      schedules.add(ScheduleDraft(s));
     }
   }
 
@@ -73,6 +62,9 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
   void dispose() {
     for (final c in controllers) {
       c.dispose();
+    }
+    for (final draft in [...schedules, ...removedSchedules]) {
+      draft.dispose();
     }
     super.dispose();
   }
@@ -133,7 +125,7 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
                       1 => document(identity, 'identity.md'),
                       2 => document(soul, 'soul.md'),
                       3 => qa(),
-                      4 => memory(),
+                      4 => document(memoryDocument, 'Memory.md'),
                       _ => schedule(),
                     },
                   ],
@@ -175,31 +167,25 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
         imageData: avatar,
         onChanged: (v) => setState(() => avatar = v),
       ),
-      const SizedBox(height: 16),
+      const SizedBox(height: 24),
       TextFormField(
         controller: name,
         decoration: const InputDecoration(labelText: '名称'),
         validator: (v) => v == null || v.trim().isEmpty ? '请填写角色名称' : null,
       ),
-      const SizedBox(height: 12),
+      const SizedBox(height: 20),
       TextField(
         controller: description,
         decoration: const InputDecoration(labelText: '简介（可选）'),
       ),
-      const SizedBox(height: 12),
-      DropdownButtonFormField<String>(
-        initialValue: api,
-        borderRadius: BorderRadius.circular(16),
-        decoration: const InputDecoration(labelText: 'API 配置（展示）'),
-        items: [
-          const DropdownMenuItem<String>(value: null, child: Text('暂不选择')),
-          ...widget.store.apis.map(
-            (a) => DropdownMenuItem(value: a.id, child: Text(a.name)),
-          ),
-        ],
-        onChanged: (v) => api = v,
+      const SizedBox(height: 20),
+      AnchoredSelect<String>(
+        label: 'API 配置（展示）',
+        value: api ?? '',
+        options: {'': '暂不选择', for (final a in widget.store.apis) a.id: a.name},
+        onChanged: (v) => setState(() => api = v.isEmpty ? null : v),
       ),
-      const SizedBox(height: 12),
+      const SizedBox(height: 20),
       TextField(
         controller: model,
         decoration: const InputDecoration(labelText: '模型'),
@@ -229,7 +215,7 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
         (e) => Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: SectionCard(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -239,63 +225,38 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
                     IconButton(
                       tooltip: '移除示例',
                       onPressed: () => setState(() => examples.removeAt(e.key)),
+                      visualDensity: VisualDensity.compact,
                       icon: const Icon(Icons.close, size: 18),
                     ),
                   ],
                 ),
                 TextField(
                   controller: e.value.$1,
-                  decoration: const InputDecoration(labelText: '用户说'),
+                  decoration: const InputDecoration(
+                    labelText: '用户说',
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 TextField(
                   controller: e.value.$2,
-                  minLines: 2,
+                  minLines: 1,
                   maxLines: 6,
-                  decoration: const InputDecoration(labelText: '角色回答'),
+                  decoration: const InputDecoration(
+                    labelText: '角色回答',
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                  ),
                 ),
               ],
             ),
-          ),
-        ),
-      ),
-    ],
-  );
-  Widget memory() => Column(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Row(
-        children: [
-          const Expanded(child: Text('记忆')),
-          TextButton.icon(
-            onPressed: () => setState(() => memories.add((text(''), '日常'))),
-            icon: const Icon(Icons.add),
-            label: const Text('添加'),
-          ),
-        ],
-      ),
-      if (memories.isEmpty)
-        const Padding(padding: EdgeInsets.all(16), child: Text('暂无记忆')),
-      ...memories.asMap().entries.map(
-        (e) => Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: e.value.$1,
-                  minLines: 2,
-                  maxLines: 6,
-                  decoration: InputDecoration(labelText: e.value.$2),
-                ),
-              ),
-              IconButton(
-                tooltip: '删除记忆',
-                onPressed: () => setState(() => memories.removeAt(e.key)),
-                icon: const Icon(Icons.delete_outline),
-              ),
-            ],
           ),
         ),
       ),
@@ -308,116 +269,24 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
         children: [
           const Expanded(child: Text('行程规则')),
           TextButton.icon(
-            onPressed: () => setState(
-              () => schedules.add((
-                text(''),
-                text('09:00'),
-                text('12:00'),
-                '每天',
-                80,
-              )),
-            ),
+            onPressed: () => setState(() => schedules.add(ScheduleDraft())),
             icon: const Icon(Icons.add),
             label: const Text('添加'),
           ),
         ],
       ),
       if (schedules.isEmpty)
-        const Padding(padding: EdgeInsets.all(16), child: Text('暂无行程')),
+        const Padding(padding: EdgeInsets.all(12), child: Text('暂无行程')),
       ...schedules.asMap().entries.map(
         (e) => Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: SectionCard(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Expanded(child: Text('规则 ${e.key + 1}')),
-                    IconButton(
-                      tooltip: '删除行程',
-                      onPressed: () =>
-                          setState(() => schedules.removeAt(e.key)),
-                      icon: const Icon(Icons.delete_outline),
-                    ),
-                  ],
-                ),
-                TextField(
-                  controller: e.value.$1,
-                  decoration: const InputDecoration(labelText: '活动'),
-                ),
-                const SizedBox(height: 10),
-                DropdownButtonFormField<String>(
-                  initialValue: e.value.$4,
-                  borderRadius: BorderRadius.circular(16),
-                  decoration: const InputDecoration(labelText: '日期条件'),
-                  items: ['每天', '每周一至周五', '每周六、日', '每年某一天', '具体日期', '日期范围']
-                      .map((v) => DropdownMenuItem(value: v, child: Text(v)))
-                      .toList(),
-                  onChanged: (v) => setState(
-                    () => schedules[e.key] = (
-                      e.value.$1,
-                      e.value.$2,
-                      e.value.$3,
-                      v!,
-                      e.value.$5,
-                    ),
-                  ),
-                ),
-                if (['每年某一天', '具体日期', '日期范围'].contains(e.value.$4)) ...[
-                  const SizedBox(height: 10),
-                  TextFormField(
-                    key: ValueKey(e.value.$1),
-                    initialValue: dateDetails[e.value.$1] ?? '',
-                    onChanged: (v) => dateDetails[e.value.$1] = v,
-                    decoration: InputDecoration(labelText: e.value.$4),
-                  ),
-                ],
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: e.value.$2,
-                        decoration: const InputDecoration(labelText: '开始时间'),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: TextField(
-                        controller: e.value.$3,
-                        decoration: const InputDecoration(labelText: '结束时间'),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    const Text('接收概率'),
-                    Expanded(
-                      child: Slider(
-                        value: e.value.$5,
-                        min: 0,
-                        max: 100,
-                        divisions: 20,
-                        onChanged: (v) => setState(
-                          () => schedules[e.key] = (
-                            e.value.$1,
-                            e.value.$2,
-                            e.value.$3,
-                            e.value.$4,
-                            v,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Text('${e.value.$5.round()}%'),
-                  ],
-                ),
-              ],
-            ),
+          padding: const EdgeInsets.only(bottom: 10),
+          child: ScheduleRuleField(
+            key: ObjectKey(e.value),
+            draft: e.value,
+            index: e.key,
+            onChanged: () => setState(() {}),
+            onDelete: () =>
+                setState(() => removedSchedules.add(schedules.removeAt(e.key))),
           ),
         ),
       ),
@@ -429,6 +298,16 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) form.currentState?.validate();
       });
+      return;
+    }
+    if (schedules.any(
+      (s) =>
+          s.activity.text.trim().isEmpty ||
+          (s.kind == ScheduleRuleKind.weekly && s.weekdays.isEmpty) ||
+          (s.kind == ScheduleRuleKind.range && s.until.isBefore(s.from)),
+    )) {
+      setState(() => tab = 5);
+      toast(context, '请填写活动，并检查星期和日期范围');
       return;
     }
     setState(() => saving = true);
@@ -447,6 +326,7 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
     r.model = model.text;
     r.identity = identity.text;
     r.soul = soul.text;
+    r.memory = memoryDocument.text;
     r.examples = examples
         .map((e) => {'question': e.$1.text, 'answer': e.$2.text})
         .toList();
@@ -460,32 +340,8 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
       }
       store.changed();
     }
-    store.memories.removeWhere((m) => m.roleId == id);
-    store.memories.addAll(
-      memories.map(
-        (m) => MemoryEntry(
-          id: store.newId(),
-          roleId: id,
-          text: m.$1.text,
-          tag: m.$2,
-        ),
-      ),
-    );
     store.schedules.removeWhere((s) => s.roleId == id);
-    store.schedules.addAll(
-      schedules.map(
-        (s) => ScheduleEntry(
-          id: store.newId(),
-          roleId: id,
-          activity: s.$1.text,
-          condition: s.$4,
-          start: s.$2.text,
-          end: s.$3.text,
-          probability: s.$5,
-          dateDetail: dateDetails[s.$1] ?? '',
-        ),
-      ),
-    );
+    store.schedules.addAll(schedules.map((s) => s.toEntry(id, store.newId())));
     if (!await store.saveProfiles()) {
       if (mounted) {
         setState(() => saving = false);

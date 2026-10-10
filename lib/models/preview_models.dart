@@ -12,10 +12,11 @@ class RoleProfile {
     this.apiId,
     this.identity = '',
     this.soul = '',
+    this.memory = '',
     List<Map<String, String>>? examples,
   }) : examples = examples ?? [];
   final String id;
-  String name, emoji, description, model, identity, soul;
+  String name, emoji, description, model, identity, soul, memory;
   String? apiId, avatar;
   Color color;
   List<Map<String, String>> examples;
@@ -67,6 +68,8 @@ class ApiProfile {
   String name, url, key;
 }
 
+enum ScheduleRuleKind { daily, weekly, annual, date, range }
+
 class ScheduleEntry {
   ScheduleEntry({
     required this.id,
@@ -77,20 +80,18 @@ class ScheduleEntry {
     required this.end,
     required this.probability,
     this.dateDetail = '',
+    this.weekdays = const [],
+    this.ruleKind,
+    this.dateFrom,
+    this.dateUntil,
+    this.annualMonth,
+    this.annualDay,
   });
   final String id, roleId;
   String activity, condition, start, end, dateDetail;
   double probability;
-}
-
-class MemoryEntry {
-  MemoryEntry({
-    required this.id,
-    required this.roleId,
-    required this.text,
-    this.tag = '日常',
-    this.date = '今天',
-  });
-  final String id, roleId;
-  String text, tag, date;
+  List<int> weekdays;
+  ScheduleRuleKind? ruleKind;
+  String? dateFrom, dateUntil;
+  int? annualMonth, annualDay;
 }

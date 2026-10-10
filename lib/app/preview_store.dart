@@ -121,7 +121,28 @@ class PreviewStore extends ChangeNotifier {
               'apiId': r.apiId,
               'identity': r.identity,
               'soul': r.soul,
+              'memory': r.memory,
               'examples': r.examples,
+            },
+          )
+          .toList(),
+      'schedules': schedules
+          .map(
+            (s) => {
+              'id': s.id,
+              'roleId': s.roleId,
+              'activity': s.activity,
+              'condition': s.condition,
+              'weekdays': s.weekdays,
+              'ruleKind': s.ruleKind?.name,
+              'dateFrom': s.dateFrom,
+              'dateUntil': s.dateUntil,
+              'annualMonth': s.annualMonth,
+              'annualDay': s.annualDay,
+              'start': s.start,
+              'end': s.end,
+              'probability': s.probability,
+              'dateDetail': s.dateDetail,
             },
           )
           .toList(),
@@ -176,9 +197,34 @@ class PreviewStore extends ChangeNotifier {
               : null,
           identity: r['identity'] as String,
           soul: r['soul'] as String,
+          memory:
+              r['memory'] as String? ??
+              roles.where((old) => old.id == r['id']).firstOrNull?.memory ??
+              '',
           examples: (r['examples'] as List)
               .map((e) => Map<String, String>.from(e as Map))
               .toList(),
+        );
+      }).toList();
+      final restoredSchedules = (data['schedules'] as List?)?.map((item) {
+        final s = item as Map<String, dynamic>;
+        return ScheduleEntry(
+          id: s['id'] as String,
+          roleId: s['roleId'] as String,
+          activity: s['activity'] as String,
+          condition: s['condition'] as String,
+          ruleKind: ScheduleRuleKind.values
+              .where((k) => k.name == s['ruleKind'])
+              .firstOrNull,
+          dateFrom: s['dateFrom'] as String?,
+          dateUntil: s['dateUntil'] as String?,
+          annualMonth: s['annualMonth'] as int?,
+          annualDay: s['annualDay'] as int?,
+          weekdays: List<int>.from(s['weekdays'] as List? ?? []),
+          start: s['start'] as String,
+          end: s['end'] as String,
+          probability: (s['probability'] as num).toDouble(),
+          dateDetail: s['dateDetail'] as String? ?? '',
         );
       }).toList();
       final restoredChats = (data['conversations'] as List).map((item) {
@@ -197,6 +243,11 @@ class PreviewStore extends ChangeNotifier {
       }).toList();
       if (restoredChats.isEmpty) {
         throw const FormatException('Missing conversations');
+      }
+      if (restoredSchedules != null) {
+        schedules
+          ..clear()
+          ..addAll(restoredSchedules);
       }
       roles
         ..clear()
@@ -219,6 +270,7 @@ class PreviewStore extends ChangeNotifier {
     RoleProfile(
       id: 'lin',
       name: '林间',
+      memory: '你喜欢安静的咖啡店，最好能坐在窗边。\n\n约好了周六下午和月白、夏芽一起去花店。',
       emoji: '🌱',
       color: const Color(0xffb8cfbb),
       description: '',
@@ -231,6 +283,7 @@ class PreviewStore extends ChangeNotifier {
     RoleProfile(
       id: 'moon',
       name: '月白',
+      memory: '一起看电影的时候，喜欢留下片尾曲。',
       emoji: '🌙',
       color: const Color(0xffd6c9e4),
       description: '',
@@ -317,26 +370,6 @@ class PreviewStore extends ChangeNotifier {
       emoji: '🍊',
       members: ['summer'],
       messages: [],
-    ),
-  ];
-  final memories = [
-    MemoryEntry(
-      id: 'mem1',
-      roleId: 'lin',
-      text: '你喜欢安静的咖啡店，最好能坐在窗边。',
-      tag: '偏好',
-    ),
-    MemoryEntry(
-      id: 'mem2',
-      roleId: 'lin',
-      text: '约好了周六下午和月白、夏芽一起去花店。',
-      tag: '约定',
-    ),
-    MemoryEntry(
-      id: 'mem3',
-      roleId: 'moon',
-      text: '一起看电影的时候，喜欢留下片尾曲。',
-      tag: '日常',
     ),
   ];
   final schedules = [
