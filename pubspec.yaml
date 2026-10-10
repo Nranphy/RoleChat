@@ -37,6 +37,7 @@ dependencies:
   shared_preferences: ^2.5.6
   file_selector: ^1.1.0
   crop_image: ^1.0.17
+  dart_openai: ^8.0.0
 
 dev_dependencies:
   flutter_test:
