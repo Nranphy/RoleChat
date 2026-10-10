@@ -19,6 +19,7 @@ abstract final class AppTheme {
       colorScheme: scheme,
       scaffoldBackgroundColor: scheme.surface,
       fontFamily: 'NotoSansSC',
+      fontFamilyFallback: const ['NotoColorEmoji'],
       appBarTheme: AppBarTheme(
         backgroundColor: scheme.surface,
         surfaceTintColor: Colors.transparent,

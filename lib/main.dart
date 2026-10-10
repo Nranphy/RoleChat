@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'app/preview_store.dart';
@@ -6,6 +8,14 @@ import 'pages/shell.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  LicenseRegistry.addLicense(() async* {
+    yield LicenseEntryWithLineBreaks([
+      'Noto Sans CJK',
+    ], await rootBundle.loadString('assets/fonts/OFL.txt'));
+    yield LicenseEntryWithLineBreaks([
+      'Noto Color Emoji',
+    ], await rootBundle.loadString('assets/fonts/OFL-emoji.txt'));
+  });
   final preferences = await SharedPreferences.getInstance();
   runApp(RoleChatApp(store: PreviewStore(preferences)));
 }

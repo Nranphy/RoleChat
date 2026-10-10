@@ -22,6 +22,7 @@ class _ShowcasePageState extends State<ShowcasePage> {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(28),
       child: Center(
+        heightFactor: 1,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1040),
           child: Column(

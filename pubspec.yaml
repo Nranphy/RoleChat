@@ -93,3 +93,9 @@ flutter:
     - family: NotoSansSC
       fonts:
         - asset: assets/fonts/NotoSansCJKsc-Regular.otf
+    - family: NotoColorEmoji
+      fonts:
+        - asset: assets/fonts/NotoColorEmoji.ttf
+  assets:
+    - assets/fonts/OFL.txt
+    - assets/fonts/OFL-emoji.txt

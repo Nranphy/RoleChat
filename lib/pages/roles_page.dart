@@ -11,6 +11,7 @@ class RolesPage extends StatelessWidget {
   Widget build(BuildContext context) => SingleChildScrollView(
     padding: const EdgeInsets.all(28),
     child: Center(
+      heightFactor: 1,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1100),
         child: Column(
