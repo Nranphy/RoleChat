@@ -21,8 +21,8 @@ void main() {
       store.selected.background = '保存的群背景';
       expect(await store.saveProfiles(), isTrue);
       final data =
-          jsonDecode(prefs.getString('profiles.v2')!) as Map<String, dynamic>;
-      expect(data['version'], 2);
+          jsonDecode(prefs.getString('profiles')!) as Map<String, dynamic>;
+      expect(data.containsKey('version'), isFalse);
       final rule = (data['schedules'] as List).first as Map;
       expect(rule.containsKey('condition'), isFalse);
       expect(rule.containsKey('dateDetail'), isFalse);

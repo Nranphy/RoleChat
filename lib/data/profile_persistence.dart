@@ -14,7 +14,6 @@ class ProfilePersistence {
     required List<Conversation> conversations,
   }) async {
     final snapshot = jsonEncode({
-      'version': 2,
       'roles': roles
           .map(
             (r) => {
@@ -62,7 +61,7 @@ class ProfilePersistence {
           .toList(),
     });
     final operation = _saveQueue.then((_) async {
-      if (!await preferences.setString('profiles.v2', snapshot)) {
+      if (!await preferences.setString('profiles', snapshot)) {
         throw StateError('Storage unavailable');
       }
     });
@@ -83,13 +82,10 @@ class ProfilePersistence {
     required List<ScheduleEntry> schedules,
     required List<Conversation> conversations,
   }) {
-    final raw = preferences.getString('profiles.v2');
+    final raw = preferences.getString('profiles');
     if (raw == null) return;
     try {
       final data = jsonDecode(raw) as Map<String, dynamic>;
-      if (data['version'] != 2) {
-        throw const FormatException('Unsupported data version');
-      }
       final restoredRoles = (data['roles'] as List).map((item) {
         final r = item as Map<String, dynamic>;
         return RoleProfile(
