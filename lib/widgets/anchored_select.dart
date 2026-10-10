@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../design/form_metrics.dart';
 
 /// Selectors anchor to the field bounds and scroll within the available space.
 class AnchoredSelect<T> extends StatelessWidget {
@@ -9,8 +10,10 @@ class AnchoredSelect<T> extends StatelessWidget {
     required this.value,
     required this.options,
     required this.onChanged,
+    this.compact = false,
   });
   final String label;
+  final bool compact;
   final T value;
   final Map<T, String> options;
   final ValueChanged<T> onChanged;
@@ -60,12 +63,13 @@ class AnchoredSelect<T> extends StatelessWidget {
           if (context.mounted && selected != null) onChanged(selected);
         },
         child: InputDecorator(
-          decoration: InputDecoration(labelText: label),
+          decoration: FormMetrics.decoration(label, compact: compact),
           child: Row(
             children: [
               Expanded(
                 child: Text(
                   options[value] ?? '',
+                  style: FormMetrics.textStyle,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

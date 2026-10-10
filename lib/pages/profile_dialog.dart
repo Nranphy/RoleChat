@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../design/form_metrics.dart';
 import '../app/preview_store.dart';
 import '../models/preview_models.dart';
 import '../widgets/avatar_field.dart';
@@ -196,7 +197,7 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
     children: [
       Row(
         children: [
-          const Expanded(child: Text('QA 对话示例')),
+          const Spacer(),
           TextButton.icon(
             onPressed: () => setState(() => examples.add((text(''), text('')))),
             icon: const Icon(Icons.add),
@@ -204,6 +205,7 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
           ),
         ],
       ),
+      const SizedBox(height: FormMetrics.sectionActionGap),
       ...examples.asMap().entries.map(
         (e) => Padding(
           padding: const EdgeInsets.only(bottom: 12),
@@ -226,14 +228,20 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
                 const SizedBox(height: 8),
                 TextField(
                   controller: e.value.$1,
-                  decoration: const InputDecoration(labelText: 'user'),
+                  style: FormMetrics.textStyle,
+                  expands: true,
+                  maxLines: null,
+                  textAlignVertical: TextAlignVertical.center,
+                  decoration: FormMetrics.decoration('user'),
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: e.value.$2,
-                  minLines: 1,
-                  maxLines: 6,
-                  decoration: const InputDecoration(labelText: 'assistant'),
+                  style: FormMetrics.textStyle,
+                  expands: true,
+                  maxLines: null,
+                  textAlignVertical: TextAlignVertical.center,
+                  decoration: FormMetrics.decoration('assistant'),
                 ),
               ],
             ),
@@ -247,7 +255,7 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
     children: [
       Row(
         children: [
-          const Expanded(child: Text('行程规则')),
+          const Spacer(),
           TextButton.icon(
             onPressed: () => setState(() => schedules.add(ScheduleDraft())),
             icon: const Icon(Icons.add),
@@ -255,6 +263,7 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
           ),
         ],
       ),
+      const SizedBox(height: FormMetrics.sectionActionGap),
       if (schedules.isEmpty)
         const Padding(padding: EdgeInsets.all(12), child: Text('暂无行程')),
       ...schedules.asMap().entries.map(

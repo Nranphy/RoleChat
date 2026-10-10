@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/preview_models.dart';
+import '../design/form_metrics.dart';
 import 'anchored_select.dart';
 import 'common.dart';
 
@@ -119,9 +120,10 @@ class ScheduleRuleField extends StatelessWidget {
             Expanded(
               child: TextFormField(
                 controller: draft.activity,
-                decoration: InputDecoration(
-                  labelText: '活动 ${index + 1}',
-                  isDense: true,
+                style: FormMetrics.textStyle,
+                decoration: FormMetrics.decoration(
+                  '活动 ${index + 1}',
+                  compact: true,
                 ),
                 validator: (v) =>
                     v == null || v.trim().isEmpty ? '请输入活动名称' : null,
@@ -138,6 +140,7 @@ class ScheduleRuleField extends StatelessWidget {
         const SizedBox(height: 10),
         AnchoredSelect<ScheduleRuleKind>(
           label: '日期条件',
+          compact: true,
           value: draft.kind,
           options: ruleLabels,
           onChanged: (v) {
@@ -196,6 +199,7 @@ class ScheduleRuleField extends StatelessWidget {
             );
             final probability = AnchoredSelect<int>(
               label: '接收概率',
+              compact: true,
               value: draft.probability.round(),
               options: {
                 for (var i = 0; i <= 100; i += 5) i: '$i%',
@@ -262,18 +266,21 @@ class ScheduleRuleField extends StatelessWidget {
         onChanged();
       },
       child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: annual
+        decoration: FormMetrics.decoration(
+          annual
               ? '月日'
               : last
               ? '结束日期'
               : '日期',
-          isDense: true,
+          compact: true,
         ),
         child: Row(
           children: [
             Expanded(
-              child: Text(ScheduleDraft.dateText(value, annual: annual)),
+              child: Text(
+                ScheduleDraft.dateText(value, annual: annual),
+                style: FormMetrics.textStyle,
+              ),
             ),
             const Icon(Icons.calendar_today_outlined, size: 18),
           ],
@@ -302,14 +309,14 @@ class ScheduleRuleField extends StatelessWidget {
       onChanged();
     },
     child: InputDecorator(
-      decoration: InputDecoration(
-        labelText: last ? '结束时间' : '开始时间',
-        isDense: true,
-      ),
+      decoration: FormMetrics.decoration(last ? '结束时间' : '开始时间', compact: true),
       child: Row(
         children: [
           Expanded(
-            child: Text(ScheduleDraft.timeText(last ? draft.end : draft.start)),
+            child: Text(
+              ScheduleDraft.timeText(last ? draft.end : draft.start),
+              style: FormMetrics.textStyle,
+            ),
           ),
           const Icon(Icons.schedule, size: 18),
         ],

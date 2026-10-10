@@ -61,6 +61,15 @@ void main() {
         .height;
     expect(userHeight, greaterThanOrEqualTo(48));
     expect(assistantHeight, userHeight);
+    await tester.enterText(
+      find.widgetWithText(TextField, 'assistant'),
+      '第一行\n第二行\n第三行',
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester.getSize(find.widgetWithText(TextField, 'assistant')).height,
+      userHeight,
+    );
     await tester.tap(find.text('取消'));
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('删除角色').first);
