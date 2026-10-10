@@ -56,6 +56,8 @@ class _ProfileNameState extends State<ProfileName> {
           ),
         )
       : InkWell(
+          overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+          splashFactory: NoSplash.splashFactory,
           onTap: () => setState(() => editing = true),
           borderRadius: BorderRadius.circular(9),
           child: Padding(
