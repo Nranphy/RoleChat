@@ -121,4 +121,24 @@ void main() {
       expect(calls, 1);
     },
   );
+
+  test(
+    'API check uses models endpoint and accepts an empty authorized list',
+    () async {
+      final checker = ModelAvailabilityChecker(
+        clientFactory: () => MockClient((request) async {
+          expect(request.method, 'GET');
+          expect(request.url.toString(), 'https://example.test/v1/models');
+          expect(request.headers['Authorization'], 'Bearer test-key');
+          return http.Response('{"object":"list","data":[]}', 200);
+        }),
+      );
+      final result = await checker.checkApi(
+        address: 'https://example.test/v1/',
+        apiKey: 'test-key',
+      );
+      expect(result.success, isTrue);
+      expect(result.message, contains('模型列表'));
+    },
+  );
 }

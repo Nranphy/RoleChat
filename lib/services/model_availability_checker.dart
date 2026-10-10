@@ -13,10 +13,21 @@ class ModelAvailabilityChecker {
     : clientFactory = clientFactory ?? http.Client.new;
   final http.Client Function() clientFactory;
 
+  Future<ModelCheckResult> checkApi({
+    required String address,
+    required String apiKey,
+  }) => _check(address: address, apiKey: apiKey);
+
   Future<ModelCheckResult> check({
     required String address,
     required String apiKey,
     required String model,
+  }) => _check(address: address, apiKey: apiKey, model: model);
+
+  Future<ModelCheckResult> _check({
+    required String address,
+    required String apiKey,
+    String? model,
   }) async {
     final uri = Uri.tryParse(address.trim());
     if (uri == null ||
@@ -28,7 +39,7 @@ class ModelAvailabilityChecker {
         uri.userInfo.isNotEmpty) {
       return const ModelCheckResult(false, '检测失败：请输入有效的 API 基础地址（不含查询参数）。');
     }
-    if (model.trim().isEmpty) {
+    if (model != null && model.trim().isEmpty) {
       return const ModelCheckResult(false, '检测失败：请输入模型名称。');
     }
     final base = address.trim().replaceFirst(RegExp(r'/+$'), '');
@@ -45,6 +56,12 @@ class ModelAvailabilityChecker {
         requestsTimeOut: const Duration(seconds: 30),
         retryPolicy: const OpenAIRetryPolicy(maxAttempts: 1),
       );
+      if (model == null) {
+        await sdk.model
+            .list(client: client)
+            .timeout(const Duration(seconds: 30));
+        return const ModelCheckResult(true, '检查成功：接口与 API Key 可访问模型列表。');
+      }
       final response = await sdk.chat
           .create(
             model: model.trim(),
@@ -75,10 +92,7 @@ class ModelAvailabilityChecker {
         '检测失败：无法连接接口。请检查网络、地址及浏览器跨域（CORS）限制。',
       );
     } catch (_) {
-      return const ModelCheckResult(
-        false,
-        '检测失败：接口响应格式不符合 OpenAI Chat Completions 协议。',
-      );
+      return const ModelCheckResult(false, '检测失败：接口响应格式不符合 OpenAI 协议。');
     } finally {
       client.close();
     }

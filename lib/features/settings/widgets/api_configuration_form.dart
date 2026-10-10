@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:rolechat/shared/widgets/common.dart';
 
 class ApiConfigurationForm extends StatelessWidget {
   const ApiConfigurationForm({
@@ -9,9 +8,14 @@ class ApiConfigurationForm extends StatelessWidget {
     required this.apiKey,
     required this.hidden,
     required this.onToggleVisibility,
+    this.onConnectionChanged,
+    this.checkMessage,
+    this.checkSucceeded = false,
   });
   final TextEditingController name, url, apiKey;
-  final bool hidden;
+  final bool hidden, checkSucceeded;
+  final String? checkMessage;
+  final ValueChanged<String>? onConnectionChanged;
   final VoidCallback onToggleVisibility;
   @override
   Widget build(BuildContext context) => Column(
@@ -25,6 +29,7 @@ class ApiConfigurationForm extends StatelessWidget {
       const SizedBox(height: 14),
       TextFormField(
         controller: url,
+        onChanged: onConnectionChanged,
         decoration: const InputDecoration(
           labelText: '接口地址',
           hintText: 'https://api.example.com/v1',
@@ -41,6 +46,7 @@ class ApiConfigurationForm extends StatelessWidget {
       const SizedBox(height: 14),
       TextField(
         controller: apiKey,
+        onChanged: onConnectionChanged,
         obscureText: hidden,
         decoration: InputDecoration(
           labelText: 'API Key',
@@ -55,8 +61,23 @@ class ApiConfigurationForm extends StatelessWidget {
           ),
         ),
       ),
-      const SizedBox(height: 16),
-      const PreviewNotice(text: '配置用于角色模型检测；保存后可在角色基础页发起检测。'),
+      if (checkMessage != null) ...[
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            checkMessage!,
+            style: TextStyle(
+              fontSize: 12,
+              color: checkSucceeded
+                  ? (Theme.of(context).brightness == Brightness.dark
+                        ? Colors.green.shade300
+                        : Colors.green.shade700)
+                  : Theme.of(context).colorScheme.error,
+            ),
+          ),
+        ),
+      ],
     ],
   );
 }
