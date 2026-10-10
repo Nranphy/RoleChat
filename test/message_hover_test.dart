@@ -32,7 +32,7 @@ void main() {
                       time: '16:38',
                     ),
                     name: '林间',
-                    emoji: '',
+
                     nextSame: true,
                     onReply: () => replies++,
                   ),
@@ -44,7 +44,7 @@ void main() {
                       time: '16:39',
                     ),
                     name: '林间',
-                    emoji: '',
+
                     previousSame: true,
                     onReply: () => replies++,
                   ),

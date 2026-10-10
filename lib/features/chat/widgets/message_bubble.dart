@@ -7,7 +7,6 @@ class MessageBubble extends StatefulWidget {
     super.key,
     required this.message,
     required this.name,
-    required this.emoji,
     this.avatar,
     this.onAvatarTap,
     this.onReply,
@@ -20,7 +19,7 @@ class MessageBubble extends StatefulWidget {
     this.nameColor,
   });
   final ChatMessage message;
-  final String name, emoji;
+  final String name;
   final String? avatar;
   final VoidCallback? onAvatarTap, onReply, onDelete, onCopy;
   final bool previousSame, nextSame, showName, highlighted;

@@ -1,12 +1,8 @@
-import 'package:flutter/material.dart';
-
 class RoleProfile {
   RoleProfile({
     required this.id,
     required this.name,
-    this.emoji = '',
     this.avatar,
-    required this.color,
     this.model = 'gpt-4o',
     this.apiId,
     this.identity = '',
@@ -15,9 +11,8 @@ class RoleProfile {
     List<Map<String, String>>? examples,
   }) : examples = examples ?? [];
   final String id;
-  String name, emoji, model, identity, soul, memory;
+  String name, model, identity, soul, memory;
   String? apiId, avatar;
-  Color color;
   List<Map<String, String>> examples;
 }
 
@@ -40,7 +35,6 @@ class Conversation {
   Conversation({
     required this.id,
     required this.name,
-    this.emoji = '',
     this.avatar,
     required this.members,
     this.group = false,
@@ -48,12 +42,11 @@ class Conversation {
     List<ChatMessage>? messages,
   }) : messages = messages ?? [];
   final String id;
-  String name, emoji, background;
+  String name, background;
   String? avatar;
   bool group;
   List<String> members;
   List<ChatMessage> messages;
-  int unread = 0;
 }
 
 class ApiProfile {

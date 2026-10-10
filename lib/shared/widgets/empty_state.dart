@@ -4,12 +4,11 @@ import 'role_avatar.dart';
 class EmptyState extends StatelessWidget {
   const EmptyState({
     super.key,
-    required this.emoji,
     required this.title,
     required this.subtitle,
     this.action,
   });
-  final String emoji, title, subtitle;
+  final String title, subtitle;
   final Widget? action;
   @override
   Widget build(BuildContext context) => Center(

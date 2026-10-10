@@ -20,7 +20,6 @@ class RolesPage extends StatelessWidget {
       children: [
         if (store.roles.isEmpty)
           EmptyState(
-            emoji: '',
             title: '还没有角色',
             subtitle: '点击新建角色。',
             action: FilledButton(

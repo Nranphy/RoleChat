@@ -171,13 +171,7 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
     }
     setState(() => saving = true);
     final store = widget.store;
-    final r =
-        widget.role ??
-        RoleProfile(
-          id: id,
-          name: name.text.trim(),
-          color: const Color(0xffb8cfbb),
-        );
+    final r = widget.role ?? RoleProfile(id: id, name: name.text.trim());
     r.name = name.text.trim();
     r.avatar = avatar;
     r.apiId = api;

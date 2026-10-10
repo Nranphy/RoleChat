@@ -39,17 +39,9 @@ class _ChatSearchDialogState extends State<ChatSearchDialog> {
             const SizedBox(height: 16),
             Expanded(
               child: query.isEmpty
-                  ? const EmptyState(
-                      emoji: '',
-                      title: '搜索消息',
-                      subtitle: '输入关键词搜索当前会话',
-                    )
+                  ? const EmptyState(title: '搜索消息', subtitle: '输入关键词搜索当前会话')
                   : results.isEmpty
-                  ? const EmptyState(
-                      emoji: '',
-                      title: '没有找到消息',
-                      subtitle: '换一个关键词试试',
-                    )
+                  ? const EmptyState(title: '没有找到消息', subtitle: '换一个关键词试试')
                   : ListView.builder(
                       itemCount: results.length,
                       itemBuilder: (context, index) {

@@ -115,11 +115,7 @@ class _ConversationListState extends State<ConversationList> {
         ),
         Expanded(
           child: chats.isEmpty
-              ? const EmptyState(
-                  emoji: '🔎',
-                  title: '没有找到会话',
-                  subtitle: '换一个关键词试试',
-                )
+              ? const EmptyState(title: '没有找到会话', subtitle: '换一个关键词试试')
               : ListView.separated(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   itemCount: chats.length,

@@ -99,7 +99,7 @@ class ChatTimelineState extends State<ChatTimeline> {
     return Container(
       color: scheme.surface,
       child: widget.c.messages.isEmpty
-          ? const EmptyState(emoji: '💬', title: '暂无消息', subtitle: '发送消息开始聊天。')
+          ? const EmptyState(title: '暂无消息', subtitle: '发送消息开始聊天。')
           : Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(
@@ -148,7 +148,7 @@ class ChatTimelineState extends State<ChatTimeline> {
                                   : .12,
                             ),
                       name: m.isUser ? '你' : role?.name ?? '已离开的角色',
-                      emoji: '',
+
                       avatar: role?.avatar,
                       onAvatarTap: role == null
                           ? null

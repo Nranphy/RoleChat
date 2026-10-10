@@ -85,9 +85,7 @@ class ConversationTile extends StatelessWidget {
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
                                       fontSize: 16,
-                                      fontWeight: c.unread > 0
-                                          ? FontWeight.w600
-                                          : FontWeight.normal,
+                                      fontWeight: FontWeight.normal,
                                     ),
                                   ),
                                 ),

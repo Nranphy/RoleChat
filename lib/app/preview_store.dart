@@ -41,7 +41,6 @@ class PreviewStore extends ChangeNotifier {
     selectedId = id;
     destination = 0;
     showChatOnMobile = true;
-    conversations.firstWhere((c) => c.id == id).unread = 0;
     notifyListeners();
   }
 
@@ -70,7 +69,7 @@ class PreviewStore extends ChangeNotifier {
       Conversation(
         id: 'private-${profile.id}',
         name: profile.name,
-        emoji: profile.emoji,
+
         members: [profile.id],
       ),
     );
@@ -121,7 +120,6 @@ class PreviewStore extends ChangeNotifier {
               'id': r.id,
               'name': r.name,
               'avatar': r.avatar,
-              'color': r.color.toARGB32(),
               'model': r.model,
               'apiId': r.apiId,
               'identity': r.identity,
@@ -195,7 +193,6 @@ class PreviewStore extends ChangeNotifier {
           id: r['id'] as String,
           name: r['name'] as String,
           avatar: r['avatar'] as String?,
-          color: Color(r['color'] as int),
           model: r['model'] as String,
           apiId: apis.any((a) => a.id == r['apiId'])
               ? r['apiId'] as String?
@@ -277,8 +274,6 @@ class PreviewStore extends ChangeNotifier {
       id: 'lin',
       name: '林间',
       memory: '你喜欢安静的咖啡店，最好能坐在窗边。\n\n约好了周六下午和月白、夏芽一起去花店。',
-      emoji: '🌱',
-      color: const Color(0xffb8cfbb),
       identity: '你是林间，一个喜欢植物、散步和手写信的朋友。说话温和自然，留意生活里的细节。',
       soul: '最近学会了不急着给每件事一个答案。比起计划好的旅程，更喜欢偶然遇到的小风景。',
       examples: [
@@ -289,16 +284,12 @@ class PreviewStore extends ChangeNotifier {
       id: 'moon',
       name: '月白',
       memory: '一起看电影的时候，喜欢留下片尾曲。',
-      emoji: '🌙',
-      color: const Color(0xffd6c9e4),
       identity: '你是月白，喜欢电影和城市夜晚的大学生。幽默、坦率，偶尔带一点诗意。',
       soul: '觉得朋友之间最珍贵的，是可以安心地沉默。想把这座城市的深夜都记下来。',
     ),
     RoleProfile(
       id: 'summer',
       name: '夏芽',
-      emoji: '🍊',
-      color: const Color(0xffead2ab),
       identity: '你是夏芽，热爱咖啡、拍照和周末探店。表达活泼，但尊重朋友的节奏。',
       soul: '想把每一个普通的周末变成值得期待的小冒险。',
     ),
@@ -307,7 +298,7 @@ class PreviewStore extends ChangeNotifier {
     Conversation(
       id: 'garden',
       name: '周末小花园',
-      emoji: '🌷',
+
       members: ['lin', 'moon', 'summer'],
       group: true,
       messages: [
@@ -361,7 +352,7 @@ class PreviewStore extends ChangeNotifier {
     Conversation(
       id: 'lin-chat',
       name: '林间',
-      emoji: '🌱',
+
       members: ['lin'],
       messages: [
         ChatMessage(
@@ -387,7 +378,7 @@ class PreviewStore extends ChangeNotifier {
     Conversation(
       id: 'moon-chat',
       name: '月白',
-      emoji: '🌙',
+
       members: ['moon'],
       messages: [
         ChatMessage(
@@ -401,7 +392,7 @@ class PreviewStore extends ChangeNotifier {
     Conversation(
       id: 'summer-chat',
       name: '夏芽',
-      emoji: '🍊',
+
       members: ['summer'],
       messages: [],
     ),

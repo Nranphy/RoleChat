@@ -43,7 +43,6 @@ class _ShowcasePageState extends State<ShowcasePage> {
                         time: '16:42',
                       ),
                       name: '林间',
-                      emoji: '🌱',
                     ),
                     MessageBubble(
                       message: ChatMessage(
@@ -53,7 +52,6 @@ class _ShowcasePageState extends State<ShowcasePage> {
                         time: '16:43',
                       ),
                       name: '你',
-                      emoji: '🙂',
                     ),
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -237,7 +235,6 @@ class _ShowcasePageState extends State<ShowcasePage> {
                       height: 260,
                       child: switch (state) {
                         '空状态' => const EmptyState(
-                          emoji: '🌱',
                           title: '暂无消息',
                           subtitle: '发送消息开始聊天。',
                         ),
@@ -252,7 +249,6 @@ class _ShowcasePageState extends State<ShowcasePage> {
                           ),
                         ),
                         '错误' => EmptyState(
-                          emoji: '☁️',
                           title: '暂时没能连接',
                           subtitle: '错误展示，不会真的发送请求。',
                           action: OutlinedButton(
@@ -261,7 +257,6 @@ class _ShowcasePageState extends State<ShowcasePage> {
                           ),
                         ),
                         _ => const EmptyState(
-                          emoji: '✨',
                           title: '一切准备好了',
                           subtitle: '选择上面的标签查看不同状态。',
                         ),
