@@ -65,7 +65,13 @@ class ChatTimeline extends StatelessWidget {
                           c.messages[i].roleId == m.roleId,
                       nameColor: role == null
                           ? null
-                          : RoleAvatar.backgroundColor(context, role.name),
+                          : Color.lerp(
+                              RoleAvatar.backgroundColor(context, role.name),
+                              Colors.black,
+                              Theme.of(context).brightness == Brightness.light
+                                  ? .38
+                                  : .12,
+                            ),
                       name: m.isUser ? '你' : role?.name ?? '已离开的角色',
                       emoji: '',
                       avatar: role?.avatar,
