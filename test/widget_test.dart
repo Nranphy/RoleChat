@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:rolechat/app/preview_store.dart';
@@ -31,6 +32,35 @@ void main() {
     await tester.pumpAndSettle();
     expect(store.selected.messages.last.text, '一起去看花吧');
     expect(find.text('一起去看花吧'), findsNWidgets(2));
+    expect(tester.takeException(), isNull);
+  });
+  testWidgets('Enter inserts newline and Ctrl Enter sends the draft', (
+    tester,
+  ) async {
+    final store = await setup(tester);
+    final field = find.widgetWithText(TextField, '输入消息');
+    await tester.tap(field);
+    await tester.enterText(field, '第一行');
+    final count = store.selected.messages.length;
+    expect(
+      tester.widget<TextField>(field).textInputAction,
+      TextInputAction.newline,
+    );
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+    expect(
+      tester.widget<TextField>(field).keyboardType,
+      TextInputType.multiline,
+    );
+    expect(store.selected.messages.length, count);
+    await tester.enterText(field, '第一行\n第二行');
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await tester.pumpAndSettle();
+    expect(store.selected.messages.length, count + 1);
+    expect(store.selected.messages.last.text, '第一行\n第二行');
+    expect(tester.widget<TextField>(field).controller!.text, isEmpty);
     expect(tester.takeException(), isNull);
   });
   testWidgets('role card edits initials and delete opens confirmation', (

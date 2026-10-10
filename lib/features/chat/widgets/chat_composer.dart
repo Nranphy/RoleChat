@@ -1,6 +1,7 @@
 import 'message_reference_preview.dart';
 import 'package:rolechat/models/preview_models.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:rolechat/design/app_theme.dart';
 
 class ChatComposer extends StatelessWidget {
@@ -75,24 +76,33 @@ class ChatComposer extends StatelessWidget {
                         ),
                       ),
                       Expanded(
-                        child: TextField(
-                          controller: input,
-                          minLines: 1,
-                          maxLines: 8,
-                          style: const TextStyle(fontSize: 16),
-                          textAlignVertical: TextAlignVertical.center,
-                          decoration: const InputDecoration(
-                            hintText: '输入消息',
-                            isDense: true,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 16,
+                        child: CallbackShortcuts(
+                          bindings: {
+                            const SingleActivator(
+                              LogicalKeyboardKey.enter,
+                              control: true,
+                            ): onSend,
+                          },
+                          child: TextField(
+                            controller: input,
+                            keyboardType: TextInputType.multiline,
+                            textInputAction: TextInputAction.newline,
+                            minLines: 1,
+                            maxLines: 8,
+                            style: const TextStyle(fontSize: 16),
+                            textAlignVertical: TextAlignVertical.center,
+                            decoration: const InputDecoration(
+                              hintText: '输入消息',
+                              isDense: true,
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 16,
+                              ),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
                             ),
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
                           ),
-                          onSubmitted: (_) => onSend(),
                         ),
                       ),
                       SizedBox(
