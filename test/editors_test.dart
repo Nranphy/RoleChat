@@ -3,10 +3,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:rolechat/app/preview_store.dart';
 import 'package:rolechat/main.dart';
-import 'package:rolechat/pages/editors.dart';
-import 'package:rolechat/pages/roles_page.dart';
+import 'package:rolechat/features/agents/agent_dialogs.dart';
+import 'package:rolechat/features/groups/group_dialogs.dart';
+import 'package:rolechat/features/settings/api_editor.dart';
+import 'package:rolechat/features/agents/roles_page.dart';
 import 'package:rolechat/models/preview_models.dart';
-import 'package:rolechat/widgets/anchored_select.dart';
+import 'package:rolechat/shared/widgets/anchored_select.dart';
 
 void main() {
   Future<PreviewStore> setup(WidgetTester tester) async {

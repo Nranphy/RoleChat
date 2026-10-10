@@ -6,8 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:rolechat/app/preview_store.dart';
 import 'package:rolechat/main.dart';
 import 'package:rolechat/models/preview_models.dart';
-import 'package:rolechat/widgets/avatar_field.dart';
-import 'package:rolechat/widgets/common.dart';
+import 'package:rolechat/shared/widgets/avatar_field.dart';
+import 'package:rolechat/shared/widgets/common.dart';
 
 void main() {
   testWidgets('avatar hover reveals an edit strip inside the avatar', (

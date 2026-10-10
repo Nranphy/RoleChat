@@ -4,9 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:rolechat/design/app_theme.dart';
 import 'package:rolechat/design/form_metrics.dart';
 import 'package:rolechat/models/preview_models.dart';
-import 'package:rolechat/widgets/anchored_select.dart';
-import 'package:rolechat/widgets/field_action.dart';
-import 'package:rolechat/widgets/schedule_rule_field.dart';
+import 'package:rolechat/shared/widgets/anchored_select.dart';
+import 'package:rolechat/shared/widgets/field_action.dart';
+import 'package:rolechat/features/agents/widgets/schedule_rule_field.dart';
 
 void main() {
   testWidgets('long selector stays below its field and scrolls', (

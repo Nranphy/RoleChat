@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rolechat/design/app_theme.dart';
 import 'package:rolechat/models/preview_models.dart';
-import 'package:rolechat/pages/chat_page.dart';
+import 'package:rolechat/features/chat/widgets/message_bubble.dart';
 
 void main() {
   testWidgets(

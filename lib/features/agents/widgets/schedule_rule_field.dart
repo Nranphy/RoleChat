@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../models/preview_models.dart';
-import '../design/form_metrics.dart';
-import 'anchored_select.dart';
-import '../shared/widgets/editor_section.dart';
-import 'field_action.dart';
+import 'package:rolechat/models/preview_models.dart';
+import 'package:rolechat/design/form_metrics.dart';
+import 'package:rolechat/shared/widgets/anchored_select.dart';
+import 'package:rolechat/shared/widgets/editor_section.dart';
+import 'package:rolechat/shared/widgets/field_action.dart';
 
 const ruleLabels = {
   ScheduleRuleKind.daily: '每天',

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'app/preview_store.dart';
 import 'design/app_theme.dart';
-import 'pages/shell.dart';
+import 'package:rolechat/app/app_shell.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

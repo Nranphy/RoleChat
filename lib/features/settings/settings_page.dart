@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../design/form_metrics.dart';
-import '../app/preview_store.dart';
-import '../design/app_theme.dart';
-import '../widgets/common.dart';
-import '../widgets/reference_page_body.dart';
-import 'editors.dart';
+import 'package:rolechat/design/form_metrics.dart';
+import 'package:rolechat/app/preview_store.dart';
+import 'package:rolechat/design/app_theme.dart';
+import 'package:rolechat/shared/widgets/common.dart';
+import 'package:rolechat/shared/widgets/reference_page_body.dart';
+import 'package:rolechat/features/settings/api_editor.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key, required this.store});

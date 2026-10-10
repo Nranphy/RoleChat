@@ -1,26 +1,8 @@
 import 'package:flutter/material.dart';
-import '../design/form_metrics.dart';
-import '../app/preview_store.dart';
-import '../models/preview_models.dart';
-import '../widgets/common.dart';
-import 'profile_dialog.dart';
-
-Future<void> editRole(
-  BuildContext context,
-  PreviewStore store, {
-  RoleProfile? role,
-}) => managedDialog<void>(
-  context: context,
-  builder: (_) => RoleEditorDialog(store: store, role: role),
-);
-Future<void> editGroup(
-  BuildContext context,
-  PreviewStore store, {
-  Conversation? group,
-}) => managedDialog<void>(
-  context: context,
-  builder: (_) => GroupEditorDialog(store: store, group: group),
-);
+import 'package:rolechat/design/form_metrics.dart';
+import 'package:rolechat/app/preview_store.dart';
+import 'package:rolechat/models/preview_models.dart';
+import 'package:rolechat/shared/widgets/common.dart';
 
 Future<void> editApi(
   BuildContext context,
@@ -119,45 +101,4 @@ Future<void> editApi(
   name.dispose();
   url.dispose();
   key.dispose();
-}
-
-Future<String?> editText(
-  BuildContext context,
-  String title,
-  String value, {
-  String label = '内容',
-}) async {
-  final controller = TextEditingController(text: value);
-  final result = await managedDialog<String>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text(title),
-      content: SizedBox(
-        width: 560,
-        child: TextField(
-          controller: controller,
-          minLines: 6,
-          maxLines: 14,
-          decoration: InputDecoration(
-            labelText: label,
-            alignLabelWithHint: true,
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          style: FormMetrics.dialogActionStyle,
-          onPressed: () => Navigator.pop(context),
-          child: const Text('取消'),
-        ),
-        FilledButton(
-          style: FormMetrics.dialogActionStyle,
-          onPressed: () => Navigator.pop(context, controller.text),
-          child: const Text('保存'),
-        ),
-      ],
-    ),
-  );
-  controller.dispose();
-  return result;
 }

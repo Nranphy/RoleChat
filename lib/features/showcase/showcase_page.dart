@@ -1,8 +1,8 @@
+import '../chat/widgets/message_bubble.dart';
 import 'package:flutter/material.dart';
-import '../app/preview_store.dart';
-import '../models/preview_models.dart';
-import '../widgets/common.dart';
-import 'chat_page.dart';
+import 'package:rolechat/app/preview_store.dart';
+import 'package:rolechat/models/preview_models.dart';
+import 'package:rolechat/shared/widgets/common.dart';
 
 class ShowcasePage extends StatefulWidget {
   const ShowcasePage({super.key, required this.store});

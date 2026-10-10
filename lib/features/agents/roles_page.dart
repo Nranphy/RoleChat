@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../app/preview_store.dart';
-import '../models/preview_models.dart';
-import '../widgets/common.dart';
-import '../widgets/reference_page_body.dart';
-import 'editors.dart';
+import 'package:rolechat/app/preview_store.dart';
+import 'package:rolechat/models/preview_models.dart';
+import 'package:rolechat/shared/widgets/common.dart';
+import 'package:rolechat/shared/widgets/reference_page_body.dart';
+import 'package:rolechat/features/agents/agent_dialogs.dart';
 
 class RolesPage extends StatelessWidget {
   const RolesPage({super.key, required this.store});
