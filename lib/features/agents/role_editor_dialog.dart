@@ -1,5 +1,5 @@
 import 'editing/schedule_draft.dart';
-import 'widgets/role_document_tab.dart';
+import 'package:rolechat/shared/widgets/document_editor_tab.dart';
 import 'widgets/role_examples_tab.dart';
 import 'widgets/role_schedule_tab.dart';
 import 'widgets/role_basic_tab.dart';
@@ -116,17 +116,17 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
               onAdd: () => setState(() => examples.add((text(''), text('')))),
               onDelete: (i) => setState(() => examples.removeAt(i)),
             ),
-            2 => RoleDocumentTab(
+            2 => DocumentEditorTab(
               controller: identity,
               title: 'identity.md',
               explanation: '声明 Agent 的身份。',
             ),
-            3 => RoleDocumentTab(
+            3 => DocumentEditorTab(
               controller: soul,
               title: 'soul.md',
               explanation: '控制 Agent 的性格和观念（会自主更新）。',
             ),
-            4 => RoleDocumentTab(
+            4 => DocumentEditorTab(
               controller: memoryDocument,
               title: 'memory.md',
               explanation: '记录 Agent 的记忆内容（会自主更新）。',

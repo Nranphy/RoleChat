@@ -1,3 +1,4 @@
+import 'package:rolechat/shared/widgets/document_editor_tab.dart';
 import 'widgets/group_basic_tab.dart';
 import 'widgets/group_members_tab.dart';
 import 'package:rolechat/shared/widgets/profile_dialog_frame.dart';
@@ -17,7 +18,7 @@ class GroupEditorDialog extends StatefulWidget {
 class _GroupEditorDialogState extends State<GroupEditorDialog>
     with SingleTickerProviderStateMixin {
   late final TabController tabs;
-  late final TextEditingController name;
+  late final TextEditingController name, background;
   late final Set<String> members;
   String? avatar;
   int tab = 0;
@@ -26,8 +27,9 @@ class _GroupEditorDialogState extends State<GroupEditorDialog>
   @override
   void initState() {
     super.initState();
-    tabs = TabController(length: 2, vsync: this);
+    tabs = TabController(length: 3, vsync: this);
     name = TextEditingController(text: widget.group?.name ?? '');
+    background = TextEditingController(text: widget.group?.background ?? '');
     members = {...widget.group?.members ?? []};
     avatar = widget.group?.avatar;
   }
@@ -35,6 +37,7 @@ class _GroupEditorDialogState extends State<GroupEditorDialog>
   @override
   void dispose() {
     name.dispose();
+    background.dispose();
     tabs.dispose();
     super.dispose();
   }
@@ -55,9 +58,16 @@ class _GroupEditorDialogState extends State<GroupEditorDialog>
       tabs: const [
         Tab(text: '基础'),
         Tab(text: '成员'),
+        Tab(text: '背景'),
       ],
     ),
-    child: tab == 0
+    child: tab == 2
+        ? DocumentEditorTab(
+            controller: background,
+            title: 'background.md',
+            explanation: '介绍群聊的背景。',
+          )
+        : tab == 0
         ? GroupBasicTab(
             name: name,
             avatar: avatar,
@@ -98,11 +108,17 @@ class _GroupEditorDialogState extends State<GroupEditorDialog>
         widget.group ??
         store.conversations.where((c) => c.id == createdId).firstOrNull;
     if (group == null) {
-      store.addGroup(name.text.trim(), members.toList(), avatar: avatar);
+      store.addGroup(
+        name.text.trim(),
+        members.toList(),
+        avatar: avatar,
+        background: background.text,
+      );
       createdId = store.selected.id;
     } else {
       group.name = name.text.trim();
       group.avatar = avatar;
+      group.background = background.text;
       group.members = members.toList();
       store.changed();
     }

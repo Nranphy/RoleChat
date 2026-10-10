@@ -85,7 +85,12 @@ class PreviewStore extends ChangeNotifier {
     changed();
   }
 
-  void addGroup(String name, List<String> members, {String? avatar}) {
+  void addGroup(
+    String name,
+    List<String> members, {
+    String? avatar,
+    String background = '',
+  }) {
     final id = newId();
     conversations.insert(
       0,
@@ -93,6 +98,7 @@ class PreviewStore extends ChangeNotifier {
         id: id,
         name: name,
         avatar: avatar,
+        background: background,
         members: members,
         group: true,
       ),
@@ -153,6 +159,7 @@ class PreviewStore extends ChangeNotifier {
               'avatar': c.group ? c.avatar : null,
               'members': c.members,
               'group': c.group,
+              'background': c.background,
             },
           )
           .toList(),
@@ -233,6 +240,7 @@ class PreviewStore extends ChangeNotifier {
           avatar: c['avatar'] as String?,
           members: List<String>.from(c['members'] as List),
           group: c['group'] as bool,
+          background: c['background'] as String? ?? '',
           messages: conversations
               .where((old) => old.id == c['id'])
               .firstOrNull

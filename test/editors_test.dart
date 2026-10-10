@@ -34,6 +34,13 @@ void main() {
         find.byKey(const ValueKey('profile-name-input')),
         '雨天茶会',
       );
+      await tester.tap(find.widgetWithText(Tab, '背景'));
+      await tester.pumpAndSettle();
+      expect(find.text('介绍群聊的背景。'), findsOneWidget);
+      await tester.enterText(
+        find.widgetWithText(TextField, 'background.md'),
+        '# 背景\n雨天的茶馆。',
+      );
       await tester.tap(find.widgetWithText(Tab, '成员'));
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(CheckboxListTile, '林间'));
@@ -43,6 +50,25 @@ void main() {
       expect(store.selected.name, '雨天茶会');
       expect(store.selected.members, ['lin', 'moon']);
       expect(store.selected.messages, isEmpty);
+      expect(store.selected.background, '# 背景\n雨天的茶馆。');
+      final restored = PreviewStore(store.preferences);
+      final group = restored.conversations.firstWhere((c) => c.name == '雨天茶会');
+      expect(group.background, '# 背景\n雨天的茶馆。');
+      editGroup(
+        tester.element(find.byType(Scaffold)),
+        store,
+        group: store.selected,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(Tab, '背景'));
+      await tester.pumpAndSettle();
+      final field = find.widgetWithText(TextField, 'background.md');
+      expect(tester.widget<TextField>(field).controller!.text, '# 背景\n雨天的茶馆。');
+      await tester.enterText(field, '不应保存的草稿');
+      await tester.tap(find.text('取消'));
+      await tester.pumpAndSettle();
+      expect(store.selected.background, '# 背景\n雨天的茶馆。');
+
       expect(tester.takeException(), isNull);
     },
   );

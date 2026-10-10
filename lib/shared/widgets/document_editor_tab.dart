@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:rolechat/shared/widgets/editor_section.dart';
 
-class RoleDocumentTab extends StatelessWidget {
-  const RoleDocumentTab({
+class DocumentEditorTab extends StatelessWidget {
+  const DocumentEditorTab({
     super.key,
     required this.controller,
     required this.title,

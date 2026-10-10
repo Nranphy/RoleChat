@@ -44,10 +44,11 @@ class Conversation {
     this.avatar,
     required this.members,
     this.group = false,
+    this.background = '',
     List<ChatMessage>? messages,
   }) : messages = messages ?? [];
   final String id;
-  String name, emoji;
+  String name, emoji, background;
   String? avatar;
   bool group;
   List<String> members;
