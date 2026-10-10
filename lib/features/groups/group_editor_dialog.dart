@@ -1,9 +1,9 @@
+import 'widgets/group_basic_tab.dart';
+import 'widgets/group_members_tab.dart';
 import 'package:rolechat/shared/widgets/profile_dialog_frame.dart';
 import 'package:flutter/material.dart';
 import 'package:rolechat/app/preview_store.dart';
 import 'package:rolechat/models/preview_models.dart';
-import 'package:rolechat/shared/widgets/avatar_field.dart';
-import 'package:rolechat/shared/widgets/profile_name.dart';
 import 'package:rolechat/shared/widgets/common.dart';
 
 class GroupEditorDialog extends StatefulWidget {
@@ -55,53 +55,27 @@ class _GroupEditorDialogState extends State<GroupEditorDialog>
         Tab(text: '成员'),
       ],
     ),
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: tab == 0
-          ? [
-              AvatarField(
-                group: true,
-                name: name.text,
-                imageData: avatar,
-                onChanged: (v) => setState(() => avatar = v),
-                trailing: ProfileName(
-                  controller: name,
-                  onChanged: () => setState(() {}),
-                  onCommitted: (value) {
-                    if (widget.group != null) {
-                      widget.group!.name = value.isEmpty ? '未命名' : value;
-                      widget.store.changed();
-                    }
-                    setState(() {});
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text('${members.length + 1} 位成员'),
-            ]
-          : widget.store.roles
-                .map(
-                  (r) => CheckboxListTile(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-                    secondary: RoleAvatar(
-                      r.name,
-                      size: 38,
-                      imageData: r.avatar,
-                    ),
-                    title: Text(r.name),
-                    value: members.contains(r.id),
-                    onChanged: (v) => setState(
-                      () =>
-                          v == true ? members.add(r.id) : members.remove(r.id),
-                    ),
-                  ),
-                )
-                .toList(),
-    ),
+    child: tab == 0
+        ? GroupBasicTab(
+            name: name,
+            avatar: avatar,
+            memberCount: members.length,
+            onAvatarChanged: (v) => setState(() => avatar = v),
+            onNameChanged: () => setState(() {}),
+            onNameCommitted: (value) {
+              if (widget.group != null) {
+                widget.group!.name = value.isEmpty ? '未命名' : value;
+                widget.store.changed();
+              }
+              setState(() {});
+            },
+          )
+        : GroupMembersTab(
+            roles: widget.store.roles,
+            members: members,
+            onMemberChanged: (id, v) =>
+                setState(() => v ? members.add(id) : members.remove(id)),
+          ),
   );
   Future<void> save() async {
     if (name.text.trim().isEmpty) {

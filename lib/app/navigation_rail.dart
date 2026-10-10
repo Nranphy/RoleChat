@@ -1,28 +1,36 @@
-import 'app_shell.dart';
 import 'package:flutter/material.dart';
-import 'package:rolechat/app/preview_store.dart';
 import 'package:rolechat/design/app_theme.dart';
 
 class RoleNavigationRail extends StatefulWidget {
-  const RoleNavigationRail({super.key, required this.store});
-  final PreviewStore store;
+  const RoleNavigationRail({
+    super.key,
+    required this.selectedIndex,
+    required this.labels,
+    required this.icons,
+    required this.onSelected,
+    required this.onToggleTheme,
+  });
+  final int selectedIndex;
+  final List<String> labels;
+  final List<IconData> icons;
+  final ValueChanged<int> onSelected;
+  final VoidCallback onToggleTheme;
   @override
-  State<RoleNavigationRail> createState() => RoleNavigationRailState();
+  State<RoleNavigationRail> createState() => _RoleNavigationRailState();
 }
 
-class RoleNavigationRailState extends State<RoleNavigationRail> {
+class _RoleNavigationRailState extends State<RoleNavigationRail> {
   int? hoveredIndex;
   @override
   Widget build(BuildContext context) {
-    final store = widget.store;
     final colors = Theme.of(context).colorScheme;
     return SizedBox(
       width: AppTheme.railWidth,
       child: Column(
         children: [
           const SizedBox(height: 4),
-          ...List.generate(AppShell.labels.length, (i) {
-            final selected = store.destination == i;
+          ...List.generate(widget.labels.length, (i) {
+            final selected = widget.selectedIndex == i;
             return SizedBox(
               height: 64,
               child: Stack(
@@ -44,7 +52,7 @@ class RoleNavigationRailState extends State<RoleNavigationRail> {
                     ),
                   Center(
                     child: Tooltip(
-                      message: AppShell.labels[i],
+                      message: widget.labels[i],
                       child: MouseRegion(
                         onEnter: (_) => setState(() => hoveredIndex = i),
                         onExit: (_) => setState(() {
@@ -68,12 +76,12 @@ class RoleNavigationRailState extends State<RoleNavigationRail> {
                             borderRadius: BorderRadius.circular(
                               AppTheme.cornerRadius,
                             ),
-                            onTap: () => store.navigate(i),
+                            onTap: () => widget.onSelected(i),
                             child: SizedBox(
                               width: 48,
                               height: 48,
                               child: Icon(
-                                AppShell.icons[i],
+                                widget.icons[i],
                                 color: selected
                                     ? colors.onSecondaryContainer
                                     : colors.onSurfaceVariant,
@@ -98,11 +106,7 @@ class RoleNavigationRailState extends State<RoleNavigationRail> {
           ),
           IconButton(
             tooltip: '切换浅色 / 深色',
-            onPressed: () => store.setMode(
-              Theme.of(context).brightness == Brightness.dark
-                  ? ThemeMode.light
-                  : ThemeMode.dark,
-            ),
+            onPressed: widget.onToggleTheme,
             icon: const Icon(Icons.contrast),
           ),
           const SizedBox(height: 12),

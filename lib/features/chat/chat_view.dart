@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:rolechat/app/preview_store.dart';
 import 'package:rolechat/shared/widgets/common.dart';
-import 'package:rolechat/features/agents/roles_page.dart';
+import 'package:rolechat/features/agents/agent_dialogs.dart';
 
 class ChatView extends StatefulWidget {
   const ChatView({super.key, required this.store, required this.wide});

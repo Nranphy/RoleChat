@@ -3,7 +3,7 @@ import 'package:rolechat/app/preview_store.dart';
 import 'package:rolechat/models/preview_models.dart';
 import 'package:rolechat/shared/widgets/common.dart';
 import 'package:rolechat/features/groups/group_dialogs.dart';
-import 'package:rolechat/features/agents/roles_page.dart';
+import 'package:rolechat/features/agents/agent_dialogs.dart';
 
 void showChatSearch(BuildContext context, Conversation c) {
   var query = '';

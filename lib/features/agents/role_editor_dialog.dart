@@ -1,3 +1,4 @@
+import 'editing/schedule_draft.dart';
 import 'widgets/role_document_tab.dart';
 import 'widgets/role_examples_tab.dart';
 import 'widgets/role_schedule_tab.dart';
@@ -7,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:rolechat/app/preview_store.dart';
 import 'package:rolechat/models/preview_models.dart';
 import 'package:rolechat/shared/widgets/common.dart';
-import 'package:rolechat/features/agents/widgets/schedule_rule_field.dart';
 
 class RoleEditorDialog extends StatefulWidget {
   const RoleEditorDialog({super.key, required this.store, this.role});

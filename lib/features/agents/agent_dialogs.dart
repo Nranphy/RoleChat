@@ -12,3 +12,9 @@ Future<void> editRole(
   context: context,
   builder: (_) => RoleEditorDialog(store: store, role: role),
 );
+
+void showRoleDetail(
+  BuildContext context,
+  PreviewStore store,
+  RoleProfile role,
+) => editRole(context, store, role: role);

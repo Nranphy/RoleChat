@@ -32,7 +32,18 @@ class AppShell extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (wide) RoleNavigationRail(store: store),
+              if (wide)
+                RoleNavigationRail(
+                  selectedIndex: store.destination,
+                  labels: labels,
+                  icons: icons,
+                  onSelected: store.navigate,
+                  onToggleTheme: () => store.setMode(
+                    Theme.of(context).brightness == Brightness.dark
+                        ? ThemeMode.light
+                        : ThemeMode.dark,
+                  ),
+                ),
               Expanded(child: page),
             ],
           ),
