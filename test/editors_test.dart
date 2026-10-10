@@ -228,7 +228,7 @@ void main() {
         id: 'weekly',
         roleId: 'lin',
         activity: '上课',
-        condition: '每周',
+        ruleKind: ScheduleRuleKind.weekly,
         weekdays: [1, 3],
         start: '09:00',
         end: '12:00',

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/preview_models.dart';
 
-/// Keeps the existing profiles.v1 format and serializes local writes.
+/// Stores the current structured profile schema and serializes local writes.
 class ProfilePersistence {
   ProfilePersistence(this.preferences);
   final SharedPreferences preferences;
@@ -14,7 +14,7 @@ class ProfilePersistence {
     required List<Conversation> conversations,
   }) async {
     final snapshot = jsonEncode({
-      'version': 1,
+      'version': 2,
       'roles': roles
           .map(
             (r) => {
@@ -36,9 +36,8 @@ class ProfilePersistence {
               'id': s.id,
               'roleId': s.roleId,
               'activity': s.activity,
-              'condition': s.condition,
               'weekdays': s.weekdays,
-              'ruleKind': s.ruleKind?.name,
+              'ruleKind': s.ruleKind.name,
               'dateFrom': s.dateFrom,
               'dateUntil': s.dateUntil,
               'annualMonth': s.annualMonth,
@@ -46,7 +45,6 @@ class ProfilePersistence {
               'start': s.start,
               'end': s.end,
               'probability': s.probability,
-              'dateDetail': s.dateDetail,
             },
           )
           .toList(),
@@ -64,7 +62,7 @@ class ProfilePersistence {
           .toList(),
     });
     final operation = _saveQueue.then((_) async {
-      if (!await preferences.setString('profiles.v1', snapshot)) {
+      if (!await preferences.setString('profiles.v2', snapshot)) {
         throw StateError('Storage unavailable');
       }
     });
@@ -85,11 +83,11 @@ class ProfilePersistence {
     required List<ScheduleEntry> schedules,
     required List<Conversation> conversations,
   }) {
-    final raw = preferences.getString('profiles.v1');
+    final raw = preferences.getString('profiles.v2');
     if (raw == null) return;
     try {
       final data = jsonDecode(raw) as Map<String, dynamic>;
-      if (data['version'] != 1) {
+      if (data['version'] != 2) {
         throw const FormatException('Unsupported data version');
       }
       final restoredRoles = (data['roles'] as List).map((item) {
@@ -104,34 +102,29 @@ class ProfilePersistence {
               : null,
           identity: r['identity'] as String,
           soul: r['soul'] as String,
-          memory:
-              r['memory'] as String? ??
-              roles.where((old) => old.id == r['id']).firstOrNull?.memory ??
-              '',
+          memory: r['memory'] as String,
           examples: (r['examples'] as List)
               .map((e) => Map<String, String>.from(e as Map))
               .toList(),
         );
       }).toList();
-      final restoredSchedules = (data['schedules'] as List?)?.map((item) {
+      final restoredSchedules = (data['schedules'] as List).map((item) {
         final s = item as Map<String, dynamic>;
         return ScheduleEntry(
           id: s['id'] as String,
           roleId: s['roleId'] as String,
           activity: s['activity'] as String,
-          condition: s['condition'] as String,
-          ruleKind: ScheduleRuleKind.values
-              .where((k) => k.name == s['ruleKind'])
-              .firstOrNull,
+          ruleKind: ScheduleRuleKind.values.firstWhere(
+            (k) => k.name == s['ruleKind'],
+          ),
           dateFrom: s['dateFrom'] as String?,
           dateUntil: s['dateUntil'] as String?,
           annualMonth: s['annualMonth'] as int?,
           annualDay: s['annualDay'] as int?,
-          weekdays: List<int>.from(s['weekdays'] as List? ?? []),
+          weekdays: List<int>.from(s['weekdays'] as List),
           start: s['start'] as String,
           end: s['end'] as String,
           probability: (s['probability'] as num).toDouble(),
-          dateDetail: s['dateDetail'] as String? ?? '',
         );
       }).toList();
       final restoredChats = (data['conversations'] as List).map((item) {
@@ -142,7 +135,7 @@ class ProfilePersistence {
           avatar: c['avatar'] as String?,
           members: List<String>.from(c['members'] as List),
           group: c['group'] as bool,
-          background: c['background'] as String? ?? '',
+          background: c['background'] as String,
           messages: conversations
               .where((old) => old.id == c['id'])
               .firstOrNull
@@ -152,11 +145,9 @@ class ProfilePersistence {
       if (restoredChats.isEmpty) {
         throw const FormatException('Missing conversations');
       }
-      if (restoredSchedules != null) {
-        schedules
-          ..clear()
-          ..addAll(restoredSchedules);
-      }
+      schedules
+        ..clear()
+        ..addAll(restoredSchedules);
       roles
         ..clear()
         ..addAll(restoredRoles);

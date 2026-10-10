@@ -17,32 +17,12 @@ class ScheduleDraft {
       start = parseTime(entry?.start ?? '09:00'),
       end = parseTime(entry?.end ?? '12:00'),
       probability = entry?.probability ?? 80 {
-    final condition = entry?.condition ?? '每天';
-    kind =
-        entry?.ruleKind ??
-        (condition.startsWith('每周')
-            ? ScheduleRuleKind.weekly
-            : ruleLabels.entries
-                      .where((e) => e.value == condition)
-                      .firstOrNull
-                      ?.key ??
-                  ScheduleRuleKind.daily);
+    kind = entry?.ruleKind ?? ScheduleRuleKind.daily;
     weekdays = {...entry?.weekdays ?? []};
-    if (kind == ScheduleRuleKind.weekly && weekdays.isEmpty) {
-      weekdays = condition == '每周六、日' ? {6, 7} : {1, 2, 3, 4, 5};
-    }
-    final parts = (entry?.dateDetail ?? '').split(' ~ ');
-    from = entry?.annualMonth != null && entry?.annualDay != null
-        ? DateTime(2024, entry!.annualMonth!, entry.annualDay!)
-        : parseDate(
-            entry?.dateFrom ?? parts.first,
-            kind == ScheduleRuleKind.annual,
-          );
-    until = entry?.dateUntil != null
-        ? parseDate(entry!.dateUntil!, false)
-        : parts.length > 1
-        ? parseDate(parts.last, false)
-        : from;
+    from = kind == ScheduleRuleKind.annual
+        ? DateTime(2024, entry?.annualMonth ?? 1, entry?.annualDay ?? 1)
+        : DateTime.tryParse(entry?.dateFrom ?? '') ?? DateTime.now();
+    until = DateTime.tryParse(entry?.dateUntil ?? '') ?? from;
   }
   final String? id;
   final TextEditingController activity;
@@ -59,8 +39,6 @@ class ScheduleDraft {
     );
   }
 
-  static DateTime parseDate(String text, bool annual) =>
-      DateTime.tryParse(annual ? '2024-$text' : text) ?? DateTime.now();
   static String dateText(DateTime date, {bool annual = false}) {
     final monthDay =
         '${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
@@ -73,7 +51,6 @@ class ScheduleDraft {
     id: id ?? newId,
     roleId: roleId,
     activity: activity.text.trim(),
-    condition: ruleLabels[kind]!,
     ruleKind: kind,
     dateFrom: [ScheduleRuleKind.date, ScheduleRuleKind.range].contains(kind)
         ? dateText(from)
@@ -85,12 +62,6 @@ class ScheduleDraft {
     start: timeText(start),
     end: timeText(end),
     probability: probability,
-    dateDetail: switch (kind) {
-      ScheduleRuleKind.annual => dateText(from, annual: true),
-      ScheduleRuleKind.date => dateText(from),
-      ScheduleRuleKind.range => '${dateText(from)} ~ ${dateText(until)}',
-      _ => '',
-    },
   );
   void dispose() => activity.dispose();
 }

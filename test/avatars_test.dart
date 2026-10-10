@@ -12,35 +12,28 @@ import 'package:rolechat/shared/widgets/common.dart';
 
 void main() {
   test(
-    'legacy profile fields are ignored without losing current data',
+    'structured profiles round-trip without legacy schedule fields',
     () async {
       SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();
       final store = PreviewStore(prefs);
-      store.roles.first.identity = '保留的身份';
-      store.selected.background = '保留的群背景';
+      store.roles.first.identity = '保存的身份';
+      store.selected.background = '保存的群背景';
       expect(await store.saveProfiles(), isTrue);
       final data =
-          jsonDecode(prefs.getString('profiles.v1')!) as Map<String, dynamic>;
-      for (final role in data['roles'] as List) {
-        role['color'] = 0xffb8cfbb;
-        role['emoji'] = '旧头像';
-      }
-      for (final chat in data['conversations'] as List) {
-        chat['emoji'] = '旧群头像';
-        chat['unread'] = 10;
-      }
-      await prefs.setString('profiles.v1', jsonEncode(data));
+          jsonDecode(prefs.getString('profiles.v2')!) as Map<String, dynamic>;
+      expect(data['version'], 2);
+      final rule = (data['schedules'] as List).first as Map;
+      expect(rule.containsKey('condition'), isFalse);
+      expect(rule.containsKey('dateDetail'), isFalse);
       final restored = PreviewStore(prefs);
       expect(restored.persistenceError, isNull);
-      expect(restored.roles.first.identity, '保留的身份');
-      expect(restored.selected.background, '保留的群背景');
-      expect(restored.roles.length, store.roles.length);
+      expect(restored.roles.first.identity, '保存的身份');
+      expect(restored.selected.background, '保存的群背景');
       expect(restored.schedules.length, store.schedules.length);
-      expect(await restored.saveProfiles(), isTrue);
-      final cleaned =
-          jsonDecode(prefs.getString('profiles.v1')!) as Map<String, dynamic>;
-      expect((cleaned['roles'] as List).first.containsKey('color'), isFalse);
+      expect(restored.schedules[1].weekdays, [1, 2, 3, 4, 5]);
+      store.dispose();
+      restored.dispose();
     },
   );
   testWidgets('avatar hover reveals an edit strip inside the avatar', (

@@ -79,23 +79,21 @@ class ScheduleEntry {
     required this.id,
     required this.roleId,
     required this.activity,
-    required this.condition,
     required this.start,
     required this.end,
     required this.probability,
-    this.dateDetail = '',
     this.weekdays = const [],
-    this.ruleKind,
+    this.ruleKind = ScheduleRuleKind.daily,
     this.dateFrom,
     this.dateUntil,
     this.annualMonth,
     this.annualDay,
   });
   final String id, roleId;
-  String activity, condition, start, end, dateDetail;
+  String activity, start, end;
   double probability;
   List<int> weekdays;
-  ScheduleRuleKind? ruleKind;
+  ScheduleRuleKind ruleKind;
   String? dateFrom, dateUntil;
   int? annualMonth, annualDay;
 }
