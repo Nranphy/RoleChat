@@ -20,7 +20,7 @@ class AnchoredSelect<T> extends StatelessWidget {
       button: true,
       label: '$label：${options[value] ?? ''}',
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(9),
         onTap: () async {
           final field = fieldContext.findRenderObject()! as RenderBox;
           final overlay =

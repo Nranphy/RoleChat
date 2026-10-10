@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 
 class RoleAvatar extends StatelessWidget {
   const RoleAvatar(
-    this.emoji, {
+    this.name, {
     super.key,
     this.color,
     this.size = 48,
     this.imageData,
     this.icon = Icons.person_outline,
   });
-  final String emoji;
+  final String name;
   final String? imageData;
   final IconData icon;
   final Color? color;
@@ -21,17 +21,38 @@ class RoleAvatar extends StatelessWidget {
     height: size,
     decoration: BoxDecoration(
       color: color ?? Theme.of(context).colorScheme.secondaryContainer,
-      borderRadius: BorderRadius.circular(size * .36),
+      borderRadius: BorderRadius.circular(size / 2),
     ),
     alignment: Alignment.center,
     child: ClipRRect(
-      borderRadius: BorderRadius.circular(size * .36),
+      borderRadius: BorderRadius.circular(size / 2),
       child: imageData == null
-          ? Icon(
-              icon,
-              size: size * .48,
-              color: Theme.of(context).colorScheme.onSecondaryContainer,
-            )
+          ? name.isNotEmpty &&
+                    RegExp(r'[\p{L}\p{N}]', unicode: true).hasMatch(name) &&
+                    icon == Icons.person_outline
+                ? Text(
+                    name.characters.first.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: size / 2.5,
+                      fontWeight: FontWeight.w500,
+                      color: color == null
+                          ? Theme.of(context).colorScheme.onSecondaryContainer
+                          : ThemeData.estimateBrightnessForColor(color!) ==
+                                Brightness.light
+                          ? Colors.black87
+                          : Colors.white,
+                    ),
+                  )
+                : Icon(
+                    icon,
+                    size: size * .48,
+                    color: color == null
+                        ? Theme.of(context).colorScheme.onSecondaryContainer
+                        : ThemeData.estimateBrightnessForColor(color!) ==
+                              Brightness.light
+                        ? Colors.black87
+                        : Colors.white,
+                  )
           : Image.memory(
               base64Decode(imageData!),
               width: size,
@@ -64,7 +85,7 @@ class PageHeading extends StatelessWidget {
   final Widget? action;
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 26),
+    padding: const EdgeInsets.only(bottom: 16),
     child: Wrap(
       alignment: WrapAlignment.spaceBetween,
       crossAxisAlignment: WrapCrossAlignment.center,
@@ -74,12 +95,7 @@ class PageHeading extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: Theme.of(
-                context,
-              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
-            ),
+            Text(title, style: Theme.of(context).textTheme.titleLarge),
             if (subtitle.isNotEmpty) const SizedBox(height: 8),
             if (subtitle.isNotEmpty)
               Text(
@@ -204,14 +220,7 @@ class SettingsRow extends StatelessWidget {
   Widget build(BuildContext context) => ListTile(
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-    leading: Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.secondaryContainer,
-        borderRadius: BorderRadius.circular(13),
-      ),
-      child: Icon(icon, size: 20),
-    ),
+    leading: Icon(icon, size: 24),
     title: Text(title),
     subtitle: subtitle == null ? null : Text(subtitle!),
     trailing: trailing ?? const Icon(Icons.chevron_right),
@@ -227,4 +236,21 @@ Future<T?> managedDialog<T>({
   final result = await Navigator.of(context, rootNavigator: true).push(route);
   await route.completed;
   return result;
+}
+
+class SettingsSection extends StatelessWidget {
+  const SettingsSection({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.all(8),
+  });
+  final Widget child;
+  final EdgeInsets padding;
+  @override
+  Widget build(BuildContext context) => Material(
+    color: Theme.of(context).colorScheme.surface,
+    borderRadius: BorderRadius.circular(18),
+    clipBehavior: Clip.antiAlias,
+    child: Padding(padding: padding, child: child),
+  );
 }

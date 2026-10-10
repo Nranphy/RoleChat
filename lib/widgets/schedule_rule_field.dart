@@ -239,7 +239,7 @@ class ScheduleRuleField extends StatelessWidget {
     final annual = draft.kind == ScheduleRuleKind.annual;
     final value = last ? draft.until : draft.from;
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(9),
       onTap: () async {
         final selected = await showDatePicker(
           context: context,
@@ -283,7 +283,7 @@ class ScheduleRuleField extends StatelessWidget {
   }
 
   Widget timeButton(BuildContext context, bool last) => InkWell(
-    borderRadius: BorderRadius.circular(16),
+    borderRadius: BorderRadius.circular(9),
     onTap: () async {
       final selected = await showTimePicker(
         context: context,
