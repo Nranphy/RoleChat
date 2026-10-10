@@ -13,7 +13,9 @@ class PreviewStore extends ChangeNotifier {
   int destination = 0;
   String selectedId = 'garden';
   bool showChatOnMobile = false;
-  ThemeMode get mode => ThemeMode.values[preferences.getInt('themeMode') ?? 0];
+  ThemeMode get mode =>
+      ThemeMode.values[preferences.getInt('themeMode') ??
+          ThemeMode.system.index];
   Color get seed =>
       Color(preferences.getInt('seed') ?? AppTheme.seeds.first.toARGB32());
   Future<void> setMode(ThemeMode value) async {

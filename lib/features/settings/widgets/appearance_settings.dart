@@ -97,8 +97,6 @@ class AppearanceSettings extends StatelessWidget {
           icon: const Icon(Icons.palette_outlined),
           label: const Text('自定义颜色'),
         ),
-        const Divider(height: 28),
-        const Text('颜色与明暗选择会保存在当前浏览器。', style: TextStyle(fontSize: 12)),
       ],
     ),
   );
