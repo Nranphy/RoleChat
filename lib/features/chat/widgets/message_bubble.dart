@@ -16,13 +16,14 @@ class MessageBubble extends StatefulWidget {
     this.previousSame = false,
     this.nextSame = false,
     this.showName = true,
+    this.highlighted = false,
     this.nameColor,
   });
   final ChatMessage message;
   final String name, emoji;
   final String? avatar;
   final VoidCallback? onAvatarTap, onReply, onDelete, onCopy;
-  final bool previousSame, nextSame, showName;
+  final bool previousSame, nextSame, showName, highlighted;
   final Color? nameColor;
   @override
   State<MessageBubble> createState() => _MessageBubbleState();
@@ -126,7 +127,11 @@ class _MessageBubbleState extends State<MessageBubble> {
                                     borderRadius: shape,
                                     color: Color.alphaBlend(
                                       foreground.withValues(
-                                        alpha: hovered ? .06 : 0,
+                                        alpha: widget.highlighted
+                                            ? .18
+                                            : hovered
+                                            ? .06
+                                            : 0,
                                       ),
                                       mine
                                           ? (dark

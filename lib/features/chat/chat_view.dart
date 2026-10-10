@@ -19,6 +19,7 @@ class ChatView extends StatefulWidget {
 class _ChatViewState extends State<ChatView> {
   final input = TextEditingController();
   final scroll = ScrollController();
+  final timelineKey = GlobalKey<ChatTimelineState>();
   String? reply;
   bool showTyping = false;
   @override
@@ -26,6 +27,17 @@ class _ChatViewState extends State<ChatView> {
     input.dispose();
     scroll.dispose();
     super.dispose();
+  }
+
+  Future<void> searchMessages() async {
+    final id = await showChatSearch(
+      context,
+      widget.store.selected,
+      widget.store.roles,
+    );
+    if (!mounted || id == null) return;
+    final found = await timelineKey.currentState?.scrollToMessage(id) ?? false;
+    if (mounted && !found) toast(context, '这条消息已不在当前会话中');
   }
 
   void send() {
@@ -59,7 +71,7 @@ class _ChatViewState extends State<ChatView> {
             store.changed();
           },
           onInfo: () => showInfo(context, store, c),
-          onSearch: () => showChatSearch(context, c),
+          onSearch: searchMessages,
           onMenuSelected: (v) async {
             if (v == 'info') showInfo(context, store, c);
             if (v == 'typing') setState(() => showTyping = !showTyping);
@@ -78,6 +90,7 @@ class _ChatViewState extends State<ChatView> {
         const Divider(height: 1),
         Expanded(
           child: ChatTimeline(
+            key: timelineKey,
             c: c,
             roles: store.roles,
             scroll: scroll,
