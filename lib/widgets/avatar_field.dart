@@ -58,6 +58,8 @@ class _AvatarButtonState extends State<_AvatarButton> {
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
+          overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+          splashFactory: NoSplash.splashFactory,
           onTap: () async {
             final avatar = await selectAvatar(context);
             if (mounted && avatar != null) widget.field.onChanged(avatar);

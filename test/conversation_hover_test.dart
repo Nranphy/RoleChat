@@ -68,6 +68,26 @@ void main() {
         expect(await pixel(sample), colors.secondaryContainer.toARGB32());
         await mouse.removePointer();
         await tester.pumpAndSettle();
+        final navigation = find.byKey(const ValueKey(1));
+        final navBounds = tester.getRect(navigation);
+        final navSample = Offset(navBounds.left + 4, navBounds.center.dy);
+        final navMouse = await tester.createGesture(
+          kind: ui.PointerDeviceKind.mouse,
+        );
+        await navMouse.addPointer(location: Offset.zero);
+        await navMouse.moveTo(navBounds.center);
+        await tester.pumpAndSettle();
+        expect(await pixel(navSample), colors.surfaceContainerHigh.toARGB32());
+        await navMouse.down(navBounds.center);
+        await navMouse.up();
+        await tester.pumpAndSettle();
+        expect(store.destination, 1);
+        expect(await pixel(navSample), colors.secondaryContainer.toARGB32());
+        await navMouse.moveTo(Offset.zero);
+        await tester.pumpAndSettle();
+        expect(await pixel(navSample), colors.secondaryContainer.toARGB32());
+        await navMouse.removePointer();
+        await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
       }
     },

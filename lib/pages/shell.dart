@@ -304,11 +304,18 @@ class _ConversationListState extends State<ConversationList> {
   }
 }
 
-class _RoleNavigationRail extends StatelessWidget {
+class _RoleNavigationRail extends StatefulWidget {
   const _RoleNavigationRail({required this.store});
   final PreviewStore store;
   @override
+  State<_RoleNavigationRail> createState() => _RoleNavigationRailState();
+}
+
+class _RoleNavigationRailState extends State<_RoleNavigationRail> {
+  int? hoveredIndex;
+  @override
   Widget build(BuildContext context) {
+    final store = widget.store;
     final colors = Theme.of(context).colorScheme;
     return SizedBox(
       width: AppTheme.railWidth,
@@ -339,26 +346,39 @@ class _RoleNavigationRail extends StatelessWidget {
                   Center(
                     child: Tooltip(
                       message: AppShell.labels[i],
-                      child: Material(
-                        color: selected
-                            ? colors.secondaryContainer
-                            : colors.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(
-                          AppTheme.cornerRadius,
-                        ),
-                        child: InkWell(
+                      child: MouseRegion(
+                        onEnter: (_) => setState(() => hoveredIndex = i),
+                        onExit: (_) => setState(() {
+                          if (hoveredIndex == i) hoveredIndex = null;
+                        }),
+                        child: Material(
+                          key: ValueKey(i),
+                          color: selected
+                              ? colors.secondaryContainer
+                              : hoveredIndex == i
+                              ? colors.surfaceContainerHigh
+                              : colors.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(
                             AppTheme.cornerRadius,
                           ),
-                          onTap: () => store.navigate(i),
-                          child: SizedBox(
-                            width: 48,
-                            height: 48,
-                            child: Icon(
-                              AppShell.icons[i],
-                              color: selected
-                                  ? colors.onSecondaryContainer
-                                  : colors.onSurfaceVariant,
+                          child: InkWell(
+                            overlayColor: const WidgetStatePropertyAll(
+                              Colors.transparent,
+                            ),
+                            splashFactory: NoSplash.splashFactory,
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.cornerRadius,
+                            ),
+                            onTap: () => store.navigate(i),
+                            child: SizedBox(
+                              width: 48,
+                              height: 48,
+                              child: Icon(
+                                AppShell.icons[i],
+                                color: selected
+                                    ? colors.onSecondaryContainer
+                                    : colors.onSurfaceVariant,
+                              ),
                             ),
                           ),
                         ),
