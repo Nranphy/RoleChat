@@ -21,11 +21,7 @@ void showRoleChatAbout(BuildContext context) => showAboutDialog(
   applicationName: 'RoleChat',
   applicationVersion: 'UI Preview 0.1',
   applicationIcon: const RoleAvatar('', icon: Icons.chat_bubble_outline),
-  children: [
-    const Text(
-      '界面风格借鉴 FluffyChat，独立实现 Flutter Web 组件。\n\n本版本用于 UI 验收，不连接模型接口。',
-    ),
-  ],
+  children: [const Text('本版本用于 UI 验收，不连接模型接口。')],
 );
 
 Future<void> editThemeColor(
