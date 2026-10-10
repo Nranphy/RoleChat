@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import '../app/preview_store.dart';
 import '../models/preview_models.dart';
@@ -210,7 +211,10 @@ class _ChatViewState extends State<ChatView> {
                             store.changed();
                           }
                         },
-                        onCopy: () => toast(context, '请在消息文本中选择并复制'),
+                        onCopy: () async {
+                          await Clipboard.setData(ClipboardData(text: m.text));
+                          if (context.mounted) toast(context, '已复制消息');
+                        },
                       );
                     },
                   ),

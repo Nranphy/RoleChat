@@ -493,7 +493,7 @@ class _RoleDetailState extends State<RoleDetail> {
                     ],
                   ),
                   Text(
-                    '${s.condition} · ${s.start} — ${s.end}',
+                    '${s.condition} ${s.dateDetail} · ${s.start} — ${s.end}',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                   const SizedBox(height: 16),
@@ -569,6 +569,7 @@ Future<void> editSchedule(
   ScheduleEntry? entry,
 }) async {
   final name = TextEditingController(text: entry?.activity ?? '');
+  final dateDetail = TextEditingController(text: entry?.dateDetail ?? '');
   var condition = entry?.condition ?? '每天';
   var probability = entry?.probability ?? 80;
   var start = entry?.start ?? '09:00';
@@ -606,6 +607,7 @@ Future<void> editSchedule(
                   if (['每年某一天', '具体日期', '日期范围'].contains(condition)) ...[
                     const SizedBox(height: 14),
                     TextField(
+                      controller: dateDetail,
                       decoration: InputDecoration(
                         labelText: condition,
                         hintText: condition == '每年某一天'
@@ -705,6 +707,7 @@ Future<void> editSchedule(
                   );
               s.activity = name.text;
               s.condition = condition;
+              s.dateDetail = dateDetail.text;
               s.start = start;
               s.end = end;
               s.probability = probability;
@@ -719,4 +722,5 @@ Future<void> editSchedule(
     ),
   );
   name.dispose();
+  dateDetail.dispose();
 }

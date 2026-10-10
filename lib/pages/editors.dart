@@ -12,6 +12,7 @@ Future<void> editRole(
   final description = TextEditingController(text: role?.description ?? '');
   final model = TextEditingController(text: role?.model ?? 'gpt-4o');
   final identity = TextEditingController(text: role?.identity ?? '');
+  final retiredControllers = <TextEditingController>[];
   var emoji = role?.emoji ?? '🌱';
   var api = role?.apiId;
   final form = GlobalKey<FormState>();
@@ -170,9 +171,15 @@ Future<void> editRole(
                                       ),
                                       IconButton(
                                         tooltip: '移除示例',
-                                        onPressed: () => setLocal(
-                                          () => examples.removeAt(entry.key),
-                                        ),
+                                        onPressed: () => setLocal(() {
+                                          final removed = examples.removeAt(
+                                            entry.key,
+                                          );
+                                          retiredControllers.addAll([
+                                            removed.$1,
+                                            removed.$2,
+                                          ]);
+                                        }),
                                         icon: const Icon(Icons.close, size: 18),
                                       ),
                                     ],
@@ -269,6 +276,7 @@ Future<void> editRole(
     model,
     identity,
     ...examples.expand((e) => [e.$1, e.$2]),
+    ...retiredControllers,
   ]) {
     c.dispose();
   }

@@ -52,7 +52,7 @@ void main() {
     expect(find.byType(NavigationBar), findsOneWidget);
     await tester.tap(find.text('设置').last);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('深色'));
+    await tester.tap(find.widgetWithText(ChoiceChip, '深色'));
     await tester.pumpAndSettle();
     expect(store.mode, ThemeMode.dark);
     expect(store.preferences.getInt('themeMode'), ThemeMode.dark.index);

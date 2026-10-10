@@ -73,9 +73,10 @@ class ScheduleEntry {
     required this.start,
     required this.end,
     required this.probability,
+    this.dateDetail = '',
   });
   final String id, roleId;
-  String activity, condition, start, end;
+  String activity, condition, start, end, dateDetail;
   double probability;
 }
 
