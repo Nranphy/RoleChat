@@ -21,20 +21,25 @@ abstract final class AppTheme {
       ),
       colorScheme: scheme,
       scaffoldBackgroundColor: scheme.surface,
-      fontFamily: 'NotoSansSC',
-      textTheme: ThemeData(brightness: brightness).textTheme.copyWith(
-        bodyMedium: const TextStyle(
-          fontSize: 15,
-          height: 1.5,
-          letterSpacing: .1,
-        ),
-        bodyLarge: const TextStyle(
-          fontSize: 16,
-          height: 1.5,
-          letterSpacing: .1,
-        ),
-      ),
-      fontFamilyFallback: const ['NotoColorEmoji'],
+      fontFamily: 'RoleChatRoboto',
+      textTheme: ThemeData(brightness: brightness).textTheme
+          .copyWith(
+            bodyMedium: const TextStyle(
+              fontSize: 15,
+              height: 1.5,
+              letterSpacing: .1,
+            ),
+            bodyLarge: const TextStyle(
+              fontSize: 16,
+              height: 1.5,
+              letterSpacing: .1,
+            ),
+          )
+          .apply(
+            fontFamily: 'RoleChatRoboto',
+            fontFamilyFallback: const ['NotoSansSC', 'NotoColorEmoji'],
+          ),
+      fontFamilyFallback: const ['NotoSansSC', 'NotoColorEmoji'],
       appBarTheme: AppBarTheme(
         backgroundColor: scheme.surface,
         surfaceTintColor: Colors.transparent,

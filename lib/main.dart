@@ -10,6 +10,9 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   LicenseRegistry.addLicense(() async* {
     yield LicenseEntryWithLineBreaks([
+      'Roboto',
+    ], await rootBundle.loadString('assets/fonts/LICENSE-Roboto.txt'));
+    yield LicenseEntryWithLineBreaks([
       'Noto Sans CJK',
     ], await rootBundle.loadString('assets/fonts/OFL.txt'));
     yield LicenseEntryWithLineBreaks([

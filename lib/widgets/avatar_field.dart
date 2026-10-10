@@ -23,7 +23,7 @@ class AvatarField extends StatelessWidget {
       RoleAvatar(
         '',
         imageData: imageData,
-        size: 72,
+        size: 96,
         icon: group ? Icons.group_outlined : Icons.person_outline,
       ),
       const SizedBox(width: 16),

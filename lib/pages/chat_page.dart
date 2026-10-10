@@ -106,7 +106,7 @@ class _ChatViewState extends State<ChatView> {
                         children: [
                           RoleAvatar(
                             c.name,
-                            size: 46,
+                            size: 56,
                             imageData: store.avatarFor(c),
                             icon: c.group
                                 ? Icons.group_outlined
@@ -148,6 +148,8 @@ class _ChatViewState extends State<ChatView> {
                 icon: const Icon(Icons.search),
               ),
               PopupMenuButton<String>(
+                position: PopupMenuPosition.under,
+                offset: const Offset(0, 6),
                 tooltip: '会话菜单',
                 onSelected: (v) async {
                   if (v == 'info') showInfo(context, store, c);
@@ -416,7 +418,7 @@ class MessageBubble extends StatelessWidget {
                 onTap: onAvatarTap,
                 child: MouseRegion(
                   cursor: SystemMouseCursors.click,
-                  child: RoleAvatar(name, size: 34, imageData: avatar),
+                  child: RoleAvatar(name, size: 40, imageData: avatar),
                 ),
               ),
               const SizedBox(width: 10),

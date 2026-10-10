@@ -241,6 +241,7 @@ class _ConversationListState extends State<ConversationList> {
                           child: RoleAvatar(
                             c.name,
                             imageData: store.avatarFor(c),
+                            size: 56,
                             icon: c.group
                                 ? Icons.group_outlined
                                 : Icons.person_outline,

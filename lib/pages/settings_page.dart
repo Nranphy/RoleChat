@@ -163,6 +163,8 @@ class _SettingsPageState extends State<SettingsPage> {
                         subtitle: a.url,
                         onTap: () => editApi(context, store, profile: a),
                         trailing: PopupMenuButton<String>(
+                          position: PopupMenuPosition.under,
+                          offset: const Offset(0, 6),
                           tooltip: '配置操作',
                           onSelected: (v) async {
                             if (v == 'edit') {
