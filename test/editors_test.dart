@@ -45,6 +45,29 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+  testWidgets(
+    'empty examples show a placeholder and update when adding or removing',
+    (tester) async {
+      final store = await setup(tester);
+      showRoleDetail(
+        tester.element(find.byType(Scaffold)),
+        store,
+        store.roles[1],
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(Tab, '样例'));
+      await tester.pumpAndSettle();
+      expect(find.text('暂无样例'), findsOneWidget);
+      await tester.tap(find.widgetWithText(TextButton, '添加'));
+      await tester.pumpAndSettle();
+      expect(find.text('暂无样例'), findsNothing);
+      expect(find.widgetWithText(TextField, 'user'), findsOneWidget);
+      await tester.tap(find.byTooltip('移除示例'));
+      await tester.pumpAndSettle();
+      expect(find.text('暂无样例'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
   testWidgets('role detail tabs and document edit survive modal dismissal', (
     tester,
   ) async {

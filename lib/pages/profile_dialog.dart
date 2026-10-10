@@ -206,6 +206,30 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
     setState(() {});
   }
 
+  Widget note(String explanation, {VoidCallback? onAdd}) => Padding(
+    padding: const EdgeInsets.only(bottom: FormMetrics.sectionActionGap),
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 40),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              explanation,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+          if (onAdd != null)
+            TextButton.icon(
+              onPressed: onAdd,
+              icon: const Icon(Icons.add),
+              label: const Text('添加'),
+            ),
+        ],
+      ),
+    ),
+  );
+  Widget emptyTab(String text) =>
+      Padding(padding: const EdgeInsets.all(12), child: Text(text));
   Widget document(
     TextEditingController controller,
     String title,
@@ -213,8 +237,7 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
   ) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      Text(explanation, style: Theme.of(context).textTheme.bodySmall),
-      const SizedBox(height: 8),
+      note(explanation),
       TextField(
         controller: controller,
         minLines: 10,
@@ -226,22 +249,11 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
   Widget qa() => Column(
     mainAxisSize: MainAxisSize.min,
     children: [
-      Row(
-        children: [
-          Expanded(
-            child: Text(
-              '供 Agent 参考对话风格。',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ),
-          TextButton.icon(
-            onPressed: () => setState(() => examples.add((text(''), text('')))),
-            icon: const Icon(Icons.add),
-            label: const Text('添加'),
-          ),
-        ],
+      note(
+        '供 Agent 参考对话风格。',
+        onAdd: () => setState(() => examples.add((text(''), text('')))),
       ),
-      const SizedBox(height: FormMetrics.sectionActionGap),
+      if (examples.isEmpty) emptyTab('暂无样例'),
       ...examples.asMap().entries.map(
         (e) => Padding(
           padding: const EdgeInsets.only(bottom: 12),
@@ -289,24 +301,11 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
   Widget schedule() => Column(
     mainAxisSize: MainAxisSize.min,
     children: [
-      Row(
-        children: [
-          Expanded(
-            child: Text(
-              '用于 Agent 的角色扮演。',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ),
-          TextButton.icon(
-            onPressed: () => setState(() => schedules.add(ScheduleDraft())),
-            icon: const Icon(Icons.add),
-            label: const Text('添加'),
-          ),
-        ],
+      note(
+        '用于 Agent 的角色扮演。',
+        onAdd: () => setState(() => schedules.add(ScheduleDraft())),
       ),
-      const SizedBox(height: FormMetrics.sectionActionGap),
-      if (schedules.isEmpty)
-        const Padding(padding: EdgeInsets.all(12), child: Text('暂无行程')),
+      if (schedules.isEmpty) emptyTab('暂无行程'),
       ...schedules.asMap().entries.map(
         (e) => Padding(
           padding: const EdgeInsets.only(bottom: 10),
