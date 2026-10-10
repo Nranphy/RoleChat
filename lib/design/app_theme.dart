@@ -18,7 +18,7 @@ abstract final class AppTheme {
       useMaterial3: true,
       colorScheme: scheme,
       scaffoldBackgroundColor: scheme.surface,
-      fontFamily: 'Microsoft YaHei',
+      fontFamily: 'NotoSansSC',
       appBarTheme: AppBarTheme(
         backgroundColor: scheme.surface,
         surfaceTintColor: Colors.transparent,
