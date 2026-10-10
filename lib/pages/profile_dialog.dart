@@ -1,3 +1,5 @@
+import '../shared/widgets/profile_dialog_frame.dart';
+import '../shared/widgets/editor_section.dart';
 import 'package:flutter/material.dart';
 import '../design/form_metrics.dart';
 import '../app/preview_store.dart';
@@ -70,96 +72,43 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
   }
 
   @override
-  Widget build(BuildContext context) => Dialog(
-    child: ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 720, maxHeight: 780),
+  Widget build(BuildContext context) => ProfileDialogFrame(
+    title: widget.role == null ? '新建角色' : '角色资料',
+    saving: saving,
+    onSave: save,
+    saveLabel: widget.role == null ? '创建角色' : '保存',
+    tabs: TabBar(
+      controller: tabs,
+      isScrollable: true,
+      tabAlignment: TabAlignment.start,
+      onTap: (i) => setState(() => tab = i),
+      tabs: [
+        '基础',
+        '样例',
+        '身份',
+        '灵魂',
+        '记忆',
+        '行程',
+      ].map((label) => Tab(text: label)).toList(),
+    ),
+    child: Form(
+      key: form,
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 12, 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    widget.role == null ? '新建角色' : '角色资料',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ),
-                IconButton(
-                  tooltip: '关闭',
-                  onPressed: saving ? null : () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
-                ),
-              ],
+          switch (tab) {
+            0 => basic(),
+            1 => qa(),
+            2 => document(identity, 'identity.md', '声明 Agent 的身份。'),
+            3 => document(soul, 'soul.md', '控制 Agent 的性格和观念（会自主更新）。'),
+            4 => document(
+              memoryDocument,
+              'memory.md',
+              '记录 Agent 的记忆内容（会自主更新）。',
             ),
-          ),
-          TabBar(
-            controller: tabs,
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            onTap: (i) => setState(() => tab = i),
-            tabs: [
-              '基础',
-              '样例',
-              '身份',
-              '灵魂',
-              '记忆',
-              '行程',
-            ].map((label) => Tab(text: label)).toList(),
-          ),
-          const SizedBox(height: 6),
-          Flexible(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-              child: Form(
-                key: form,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    switch (tab) {
-                      0 => basic(),
-                      1 => qa(),
-                      2 => document(identity, 'identity.md', '声明 Agent 的身份。'),
-                      3 => document(soul, 'soul.md', '控制 Agent 的性格和观念（会自主更新）。'),
-                      4 => document(
-                        memoryDocument,
-                        'memory.md',
-                        '记录 Agent 的记忆内容（会自主更新）。',
-                      ),
-                      _ => schedule(),
-                    },
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  style: FormMetrics.dialogActionStyle,
-                  onPressed: saving ? null : () => Navigator.pop(context),
-                  child: const Text('取消'),
-                ),
-                const SizedBox(width: 8),
-                FilledButton(
-                  style: FormMetrics.dialogActionStyle,
-                  onPressed: saving ? null : save,
-                  child: Text(
-                    saving
-                        ? '保存中…'
-                        : widget.role == null
-                        ? '创建角色'
-                        : '保存',
-                  ),
-                ),
-              ],
-            ),
-          ),
+            _ => schedule(),
+          },
         ],
       ),
     ),
@@ -206,30 +155,9 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
     setState(() {});
   }
 
-  Widget note(String explanation, {VoidCallback? onAdd}) => Padding(
-    padding: const EdgeInsets.only(bottom: FormMetrics.sectionActionGap),
-    child: ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 40),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              explanation,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ),
-          if (onAdd != null)
-            TextButton.icon(
-              onPressed: onAdd,
-              icon: const Icon(Icons.add),
-              label: const Text('添加'),
-            ),
-        ],
-      ),
-    ),
-  );
-  Widget emptyTab(String text) =>
-      Padding(padding: const EdgeInsets.all(12), child: Text(text));
+  Widget note(String explanation, {VoidCallback? onAdd}) =>
+      EditorSectionNote(explanation, onAdd: onAdd);
+  Widget emptyTab(String text) => EditorEmptyState(text);
   Widget document(
     TextEditingController controller,
     String title,
@@ -257,42 +185,29 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
       ...examples.asMap().entries.map(
         (e) => Padding(
           padding: const EdgeInsets.only(bottom: 12),
-          child: SectionCard(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Expanded(child: Text('示例 ${e.key + 1}')),
-                    IconButton(
-                      tooltip: '移除示例',
-                      onPressed: () => setState(() => examples.removeAt(e.key)),
-                      visualDensity: VisualDensity.compact,
-                      icon: const Icon(Icons.close, size: 18),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: e.value.$1,
-                  style: FormMetrics.textStyle,
-                  expands: true,
-                  maxLines: null,
-                  textAlignVertical: TextAlignVertical.center,
-                  decoration: FormMetrics.decoration('user'),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: e.value.$2,
-                  style: FormMetrics.textStyle,
-                  expands: true,
-                  maxLines: null,
-                  textAlignVertical: TextAlignVertical.center,
-                  decoration: FormMetrics.decoration('assistant'),
-                ),
-              ],
-            ),
+          child: EditableEntryCard(
+            title: '示例 ${e.key + 1}',
+            deleteTooltip: '移除示例',
+            onDelete: () => setState(() => examples.removeAt(e.key)),
+            children: [
+              TextField(
+                controller: e.value.$1,
+                style: FormMetrics.textStyle,
+                expands: true,
+                maxLines: null,
+                textAlignVertical: TextAlignVertical.center,
+                decoration: FormMetrics.decoration('user'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: e.value.$2,
+                style: FormMetrics.textStyle,
+                expands: true,
+                maxLines: null,
+                textAlignVertical: TextAlignVertical.center,
+                decoration: FormMetrics.decoration('assistant'),
+              ),
+            ],
           ),
         ),
       ),
@@ -417,117 +332,67 @@ class _GroupEditorDialogState extends State<GroupEditorDialog>
   }
 
   @override
-  Widget build(BuildContext context) => Dialog(
-    child: ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 640, maxHeight: 680),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 12, 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    widget.group == null ? '新建群聊' : '群聊资料',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
+  Widget build(BuildContext context) => ProfileDialogFrame(
+    title: widget.group == null ? '新建群聊' : '群聊资料',
+    saving: saving,
+    onSave: save,
+    maxWidth: 640,
+    maxHeight: 680,
+    tabGap: 12,
+    tabs: TabBar(
+      controller: tabs,
+      onTap: (i) => setState(() => tab = i),
+      tabs: const [
+        Tab(text: '基础'),
+        Tab(text: '成员'),
+      ],
+    ),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: tab == 0
+          ? [
+              AvatarField(
+                group: true,
+                name: name.text,
+                imageData: avatar,
+                onChanged: (v) => setState(() => avatar = v),
+                trailing: ProfileName(
+                  controller: name,
+                  onChanged: () => setState(() {}),
+                  onCommitted: (value) {
+                    if (widget.group != null) {
+                      widget.group!.name = value.isEmpty ? '未命名' : value;
+                      widget.store.changed();
+                    }
+                    setState(() {});
+                  },
                 ),
-                IconButton(
-                  tooltip: '关闭',
-                  onPressed: saving ? null : () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
-                ),
-              ],
-            ),
-          ),
-          TabBar(
-            controller: tabs,
-            onTap: (i) => setState(() => tab = i),
-            tabs: const [
-              Tab(text: '基础'),
-              Tab(text: '成员'),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Flexible(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: tab == 0
-                    ? [
-                        AvatarField(
-                          group: true,
-                          name: name.text,
-                          imageData: avatar,
-                          onChanged: (v) => setState(() => avatar = v),
-                          trailing: ProfileName(
-                            controller: name,
-                            onChanged: () => setState(() {}),
-                            onCommitted: (value) {
-                              if (widget.group != null) {
-                                widget.group!.name = value.isEmpty
-                                    ? '未命名'
-                                    : value;
-                                widget.store.changed();
-                              }
-                              setState(() {});
-                            },
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text('${members.length + 1} 位成员'),
-                      ]
-                    : widget.store.roles
-                          .map(
-                            (r) => CheckboxListTile(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                              ),
-                              secondary: RoleAvatar(
-                                r.name,
-                                size: 38,
-                                imageData: r.avatar,
-                              ),
-                              title: Text(r.name),
-                              value: members.contains(r.id),
-                              onChanged: (v) => setState(
-                                () => v == true
-                                    ? members.add(r.id)
-                                    : members.remove(r.id),
-                              ),
-                            ),
-                          )
-                          .toList(),
               ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  style: FormMetrics.dialogActionStyle,
-                  onPressed: saving ? null : () => Navigator.pop(context),
-                  child: const Text('取消'),
-                ),
-                const SizedBox(width: 8),
-                FilledButton(
-                  style: FormMetrics.dialogActionStyle,
-                  onPressed: saving ? null : save,
-                  child: Text(saving ? '保存中…' : '保存'),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+              const SizedBox(height: 16),
+              Text('${members.length + 1} 位成员'),
+            ]
+          : widget.store.roles
+                .map(
+                  (r) => CheckboxListTile(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                    secondary: RoleAvatar(
+                      r.name,
+                      size: 38,
+                      imageData: r.avatar,
+                    ),
+                    title: Text(r.name),
+                    value: members.contains(r.id),
+                    onChanged: (v) => setState(
+                      () =>
+                          v == true ? members.add(r.id) : members.remove(r.id),
+                    ),
+                  ),
+                )
+                .toList(),
     ),
   );
   Future<void> save() async {

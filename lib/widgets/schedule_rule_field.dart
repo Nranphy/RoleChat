@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/preview_models.dart';
 import '../design/form_metrics.dart';
 import 'anchored_select.dart';
-import 'common.dart';
+import '../shared/widgets/editor_section.dart';
 import 'field_action.dart';
 
 const ruleLabels = {
@@ -111,130 +111,113 @@ class ScheduleRuleField extends StatelessWidget {
   final int index;
   final VoidCallback onChanged, onDelete;
   @override
-  Widget build(BuildContext context) => SectionCard(
-    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Expanded(child: Text('活动 ${index + 1}')),
-            IconButton(
-              tooltip: '删除行程',
-              onPressed: onDelete,
-              visualDensity: VisualDensity.compact,
-              icon: const Icon(Icons.close, size: 18),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: draft.activity,
-          style: FormMetrics.textStyle,
-          decoration: FormMetrics.decoration('活动内容', compact: true),
-          validator: (v) => v == null || v.trim().isEmpty ? '请输入活动名称' : null,
-        ),
-        const SizedBox(height: 10),
-        AnchoredSelect<ScheduleRuleKind>(
-          label: '日期条件',
-          compact: true,
-          value: draft.kind,
-          options: ruleLabels,
-          onChanged: (v) {
-            draft.kind = v;
-            onChanged();
-          },
-        ),
-        if (draft.kind == ScheduleRuleKind.weekly)
-          Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Wrap(
-              spacing: 4,
-              runSpacing: 2,
-              children: List.generate(
-                7,
-                (i) => FilterChip(
-                  label: Text(['一', '二', '三', '四', '五', '六', '日'][i]),
-                  selected: draft.weekdays.contains(i + 1),
-                  visualDensity: VisualDensity.compact,
-                  onSelected: (v) {
-                    v
-                        ? draft.weekdays.add(i + 1)
-                        : draft.weekdays.remove(i + 1);
-                    onChanged();
-                  },
-                ),
+  Widget build(BuildContext context) => EditableEntryCard(
+    title: '活动 ${index + 1}',
+    deleteTooltip: '删除行程',
+    onDelete: onDelete,
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      TextFormField(
+        controller: draft.activity,
+        style: FormMetrics.textStyle,
+        decoration: FormMetrics.decoration('活动内容', compact: true),
+        validator: (v) => v == null || v.trim().isEmpty ? '请输入活动名称' : null,
+      ),
+      const SizedBox(height: 10),
+      AnchoredSelect<ScheduleRuleKind>(
+        label: '日期条件',
+        compact: true,
+        value: draft.kind,
+        options: ruleLabels,
+        onChanged: (v) {
+          draft.kind = v;
+          onChanged();
+        },
+      ),
+      if (draft.kind == ScheduleRuleKind.weekly)
+        Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Wrap(
+            spacing: 4,
+            runSpacing: 2,
+            children: List.generate(
+              7,
+              (i) => FilterChip(
+                label: Text(['一', '二', '三', '四', '五', '六', '日'][i]),
+                selected: draft.weekdays.contains(i + 1),
+                visualDensity: VisualDensity.compact,
+                onSelected: (v) {
+                  v ? draft.weekdays.add(i + 1) : draft.weekdays.remove(i + 1);
+                  onChanged();
+                },
               ),
             ),
           ),
-        if ([
-          ScheduleRuleKind.annual,
-          ScheduleRuleKind.date,
-          ScheduleRuleKind.range,
-        ].contains(draft.kind))
-          Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: Row(
-              children: [
-                Expanded(child: dateButton(context, false)),
-                if (draft.kind == ScheduleRuleKind.range) ...[
-                  const SizedBox(width: 8),
-                  Expanded(child: dateButton(context, true)),
-                ],
-              ],
-            ),
-          ),
-        const SizedBox(height: 10),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final timeRange = Row(
-              children: [
-                Expanded(child: timeButton(context, false)),
-                const SizedBox(width: 8),
-                Expanded(child: timeButton(context, true)),
-              ],
-            );
-            final probability = AnchoredSelect<int>(
-              label: '接收概率',
-              compact: true,
-              value: draft.probability.round(),
-              options: {
-                for (var i = 0; i <= 100; i += 5) i: '$i%',
-                draft.probability.round(): '${draft.probability.round()}%',
-              },
-              onChanged: (v) {
-                draft.probability = v.toDouble();
-                onChanged();
-              },
-            );
-            return constraints.maxWidth >= 480
-                ? Row(
-                    children: [
-                      Expanded(flex: 2, child: timeRange),
-                      const SizedBox(width: 8),
-                      Expanded(child: probability),
-                    ],
-                  )
-                : Column(
-                    children: [
-                      timeRange,
-                      const SizedBox(height: 10),
-                      probability,
-                    ],
-                  );
-          },
         ),
-        if (draft.end.hour * 60 + draft.end.minute <=
-            draft.start.hour * 60 + draft.start.minute)
-          Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Text(
-              '结束时间属于次日',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+      if ([
+        ScheduleRuleKind.annual,
+        ScheduleRuleKind.date,
+        ScheduleRuleKind.range,
+      ].contains(draft.kind))
+        Padding(
+          padding: const EdgeInsets.only(top: 10),
+          child: Row(
+            children: [
+              Expanded(child: dateButton(context, false)),
+              if (draft.kind == ScheduleRuleKind.range) ...[
+                const SizedBox(width: 8),
+                Expanded(child: dateButton(context, true)),
+              ],
+            ],
           ),
-      ],
-    ),
+        ),
+      const SizedBox(height: 10),
+      LayoutBuilder(
+        builder: (context, constraints) {
+          final timeRange = Row(
+            children: [
+              Expanded(child: timeButton(context, false)),
+              const SizedBox(width: 8),
+              Expanded(child: timeButton(context, true)),
+            ],
+          );
+          final probability = AnchoredSelect<int>(
+            label: '接收概率',
+            compact: true,
+            value: draft.probability.round(),
+            options: {
+              for (var i = 0; i <= 100; i += 5) i: '$i%',
+              draft.probability.round(): '${draft.probability.round()}%',
+            },
+            onChanged: (v) {
+              draft.probability = v.toDouble();
+              onChanged();
+            },
+          );
+          return constraints.maxWidth >= 480
+              ? Row(
+                  children: [
+                    Expanded(flex: 2, child: timeRange),
+                    const SizedBox(width: 8),
+                    Expanded(child: probability),
+                  ],
+                )
+              : Column(
+                  children: [
+                    timeRange,
+                    const SizedBox(height: 10),
+                    probability,
+                  ],
+                );
+        },
+      ),
+      if (draft.end.hour * 60 + draft.end.minute <=
+          draft.start.hour * 60 + draft.start.minute)
+        Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Text('结束时间属于次日', style: Theme.of(context).textTheme.bodySmall),
+        ),
+    ],
   );
   Widget dateButton(BuildContext context, bool last) {
     final annual = draft.kind == ScheduleRuleKind.annual;
