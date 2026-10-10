@@ -46,13 +46,26 @@ class _ProfileNameState extends State<ProfileName> {
           onChanged: (_) => widget.onChanged(),
           onSubmitted: (_) => focus.unfocus(),
           onTapOutside: (_) => focus.unfocus(),
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             hintText: '未命名',
-            border: UnderlineInputBorder(),
-            enabledBorder: UnderlineInputBorder(),
-            focusedBorder: UnderlineInputBorder(),
+            border: UnderlineInputBorder(
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.outline,
+              ),
+            ),
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.outline,
+              ),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+                width: 2,
+              ),
+            ),
             filled: false,
-            contentPadding: EdgeInsets.symmetric(vertical: 8),
+            contentPadding: const EdgeInsets.symmetric(vertical: 8),
           ),
         )
       : InkWell(
