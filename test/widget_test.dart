@@ -48,11 +48,27 @@ void main() {
     );
     expect(tester.widget<RoleAvatar>(dialogAvatar).name, '林间');
     expect(find.text('简介（可选）'), findsNothing);
-    await tester.enterText(find.widgetWithText(TextFormField, '名称'), '青禾');
+    await tester.tap(
+      find.descendant(of: find.byType(Dialog), matching: find.text('林间')).first,
+    );
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('profile-name-input')),
+      '青禾',
+    );
     await tester.pumpAndSettle();
     expect(tester.widget<RoleAvatar>(dialogAvatar).name, '青禾');
-    await tester.tap(find.widgetWithText(Tab, '对话示例'));
+    await tester.tap(find.widgetWithText(Tab, '样例'));
     await tester.pumpAndSettle();
+    expect(store.role('lin').name, '青禾');
+    expect(
+      store.conversations.firstWhere((c) => c.id == 'lin-chat').name,
+      '青禾',
+    );
+    await store.saveProfiles();
+    final restoredName = PreviewStore(store.preferences);
+    expect(restoredName.role('lin').name, '青禾');
+    restoredName.dispose();
     final userHeight = tester
         .getSize(find.widgetWithText(TextField, 'user'))
         .height;
@@ -74,7 +90,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('删除角色').first);
     await tester.pumpAndSettle();
-    expect(find.text('删除 林间？'), findsOneWidget);
+    expect(find.text('删除 青禾？'), findsOneWidget);
     expect(store.roles.length, 3);
     await tester.tap(find.text('取消'));
     await tester.pumpAndSettle();
@@ -106,7 +122,12 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('新建角色'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.widgetWithText(TextFormField, '名称'), '小雪');
+    await tester.tap(find.text('未命名'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('profile-name-input')),
+      '小雪',
+    );
     await tester.tap(find.text('创建角色'));
     await tester.pumpAndSettle();
     expect(store.roles.last.name, '小雪');
@@ -163,7 +184,10 @@ void main() {
     await tester.pumpAndSettle();
     semantics.dispose();
     expect(find.byType(Dialog), findsOneWidget);
-    expect(find.text('群聊名称'), findsOneWidget);
+    expect(
+      find.descendant(of: find.byType(Dialog), matching: find.text('周末小花园')),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
   testWidgets('consecutive role messages share one sender heading and avatar', (

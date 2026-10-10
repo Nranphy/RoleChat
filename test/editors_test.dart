@@ -27,8 +27,10 @@ void main() {
       final store = await setup(tester);
       editGroup(tester.element(find.byType(Scaffold)), store);
       await tester.pumpAndSettle();
+      await tester.tap(find.text('未命名'));
+      await tester.pumpAndSettle();
       await tester.enterText(
-        find.widgetWithText(TextFormField, '群聊名称'),
+        find.byKey(const ValueKey('profile-name-input')),
         '雨天茶会',
       );
       await tester.tap(find.widgetWithText(Tab, '成员'));
@@ -60,12 +62,16 @@ void main() {
       find.widgetWithText(TextField, 'soul.md'),
       '喜欢在雨天听故事。',
     );
-    for (final label in ['记忆', '行程', '对话示例']) {
+    for (final label in ['记忆', '行程', '样例']) {
       await tester.ensureVisible(find.widgetWithText(Tab, label));
       await tester.tap(find.widgetWithText(Tab, label));
       await tester.pumpAndSettle();
       expect(find.byType(Dialog), findsOneWidget);
-      if (label == '对话示例') {
+      if (label == '行程') {
+        expect(find.text('用于 Agent 的角色扮演。'), findsOneWidget);
+      }
+      if (label == '样例') {
+        expect(find.text('供 Agent 参考对话风格。'), findsOneWidget);
         expect(find.widgetWithText(TextField, 'user'), findsOneWidget);
         expect(find.widgetWithText(TextField, 'assistant'), findsOneWidget);
       }
@@ -104,7 +110,7 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
-  testWidgets('structured schedule and Memory.md persist after editing', (
+  testWidgets('structured schedule and memory.md persist after editing', (
     tester,
   ) async {
     final store = await setup(tester);
@@ -131,7 +137,7 @@ void main() {
     await tester.tap(find.widgetWithText(Tab, '记忆'));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, 'Memory.md'),
+      find.widgetWithText(TextField, 'memory.md'),
       '# 记忆\n喜欢雨天。',
     );
     await tester.ensureVisible(find.widgetWithText(Tab, '行程'));

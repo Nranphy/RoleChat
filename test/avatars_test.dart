@@ -10,6 +10,33 @@ import 'package:rolechat/widgets/avatar_field.dart';
 import 'package:rolechat/widgets/common.dart';
 
 void main() {
+  testWidgets('avatar hover reveals an edit strip inside the avatar', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AvatarField(name: '林间', imageData: null, onChanged: (_) {}),
+        ),
+      ),
+    );
+    expect(find.text('上传头像'), findsNothing);
+    final strip = find.byType(AnimatedPositioned);
+    expect(tester.widget<AnimatedPositioned>(strip).bottom, -32);
+    final mouse = await tester.createGesture(kind: ui.PointerDeviceKind.mouse);
+    await mouse.addPointer(location: const Offset(300, 200));
+    await mouse.moveTo(tester.getCenter(find.byType(RoleAvatar)));
+    await tester.pumpAndSettle();
+    expect(tester.widget<AnimatedPositioned>(strip).bottom, 0);
+    final avatarBounds = tester.getRect(find.byType(RoleAvatar));
+    expect(
+      tester.getRect(find.text('编辑')).bottom,
+      lessThanOrEqualTo(avatarBounds.bottom),
+    );
+    await mouse.removePointer();
+    await tester.pumpAndSettle();
+    expect(tester.widget<AnimatedPositioned>(strip).bottom, -32);
+  });
   Future<String> image(WidgetTester tester) async =>
       (await tester.runAsync(() async {
         final recorder = ui.PictureRecorder();

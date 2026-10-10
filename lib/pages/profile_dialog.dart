@@ -3,6 +3,7 @@ import '../design/form_metrics.dart';
 import '../app/preview_store.dart';
 import '../models/preview_models.dart';
 import '../widgets/avatar_field.dart';
+import '../widgets/profile_name.dart';
 import '../widgets/common.dart';
 import '../widgets/anchored_select.dart';
 import '../widgets/schedule_rule_field.dart';
@@ -99,15 +100,15 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
             tabAlignment: TabAlignment.start,
             onTap: (i) => setState(() => tab = i),
             tabs: [
-              '基础信息',
+              '基础',
+              '样例',
               '身份',
               '灵魂',
-              '对话示例',
               '记忆',
               '行程',
             ].map((label) => Tab(text: label)).toList(),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 6),
           Flexible(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
@@ -119,10 +120,14 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
                   children: [
                     switch (tab) {
                       0 => basic(),
-                      1 => document(identity, 'identity.md'),
-                      2 => document(soul, 'soul.md'),
-                      3 => qa(),
-                      4 => document(memoryDocument, 'Memory.md'),
+                      1 => qa(),
+                      2 => document(identity, 'identity.md', '声明 Agent 的身份。'),
+                      3 => document(soul, 'soul.md', '控制 Agent 的性格和观念（会自主更新）。'),
+                      4 => document(
+                        memoryDocument,
+                        'memory.md',
+                        '记录 Agent 的记忆内容（会自主更新）。',
+                      ),
                       _ => schedule(),
                     },
                   ],
@@ -164,15 +169,13 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
         name: name.text,
         imageData: avatar,
         onChanged: (v) => setState(() => avatar = v),
+        trailing: ProfileName(
+          controller: name,
+          onChanged: () => setState(() {}),
+          onCommitted: commitName,
+        ),
       ),
       const SizedBox(height: 24),
-      TextFormField(
-        controller: name,
-        onChanged: (_) => setState(() {}),
-        decoration: const InputDecoration(labelText: '名称'),
-        validator: (v) => v == null || v.trim().isEmpty ? '请填写角色名称' : null,
-      ),
-      const SizedBox(height: 20),
       AnchoredSelect<String>(
         label: 'API 配置（展示）',
         value: api ?? '',
@@ -182,22 +185,53 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
       const SizedBox(height: 20),
       TextField(
         controller: model,
-        decoration: const InputDecoration(labelText: '模型'),
+        style: FormMetrics.textStyle,
+        decoration: FormMetrics.decoration('模型'),
       ),
     ],
   );
-  Widget document(TextEditingController controller, String title) => TextField(
-    controller: controller,
-    minLines: 10,
-    maxLines: 20,
-    decoration: InputDecoration(labelText: title, alignLabelWithHint: true),
+  void commitName(String value) {
+    final role = widget.role;
+    if (role != null) {
+      role.name = value.isEmpty ? '未命名' : value;
+      for (final c in widget.store.conversations.where(
+        (c) => !c.group && c.members.contains(role.id),
+      )) {
+        c.name = role.name;
+      }
+      widget.store.changed();
+    }
+    setState(() {});
+  }
+
+  Widget document(
+    TextEditingController controller,
+    String title,
+    String explanation,
+  ) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Text(explanation, style: Theme.of(context).textTheme.bodySmall),
+      const SizedBox(height: 8),
+      TextField(
+        controller: controller,
+        minLines: 10,
+        maxLines: 20,
+        decoration: InputDecoration(labelText: title, alignLabelWithHint: true),
+      ),
+    ],
   );
   Widget qa() => Column(
     mainAxisSize: MainAxisSize.min,
     children: [
       Row(
         children: [
-          const Spacer(),
+          Expanded(
+            child: Text(
+              '供 Agent 参考对话风格。',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
           TextButton.icon(
             onPressed: () => setState(() => examples.add((text(''), text('')))),
             icon: const Icon(Icons.add),
@@ -255,7 +289,12 @@ class _RoleEditorDialogState extends State<RoleEditorDialog>
     children: [
       Row(
         children: [
-          const Spacer(),
+          Expanded(
+            child: Text(
+              '用于 Agent 的角色扮演。',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
           TextButton.icon(
             onPressed: () => setState(() => schedules.add(ScheduleDraft())),
             icon: const Icon(Icons.add),
@@ -405,7 +444,7 @@ class _GroupEditorDialogState extends State<GroupEditorDialog>
             controller: tabs,
             onTap: (i) => setState(() => tab = i),
             tabs: const [
-              Tab(text: '基础信息'),
+              Tab(text: '基础'),
               Tab(text: '成员'),
             ],
           ),
@@ -423,11 +462,19 @@ class _GroupEditorDialogState extends State<GroupEditorDialog>
                           name: name.text,
                           imageData: avatar,
                           onChanged: (v) => setState(() => avatar = v),
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: name,
-                          decoration: const InputDecoration(labelText: '群聊名称'),
+                          trailing: ProfileName(
+                            controller: name,
+                            onChanged: () => setState(() {}),
+                            onCommitted: (value) {
+                              if (widget.group != null) {
+                                widget.group!.name = value.isEmpty
+                                    ? '未命名'
+                                    : value;
+                                widget.store.changed();
+                              }
+                              setState(() {});
+                            },
+                          ),
                         ),
                         const SizedBox(height: 16),
                         Text('${members.length + 1} 位成员'),
