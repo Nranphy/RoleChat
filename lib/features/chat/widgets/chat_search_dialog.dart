@@ -18,7 +18,7 @@ class _ChatSearchDialogState extends State<ChatSearchDialog> {
   String query = '';
   @override
   Widget build(BuildContext context) {
-    final results = widget.conversation.messages
+    final results = widget.conversation.messages.reversed
         .where((m) => m.text.contains(query))
         .toList();
     return AlertDialog(

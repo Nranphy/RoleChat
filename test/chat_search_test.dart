@@ -43,6 +43,16 @@ void main() {
         await tester.pumpAndSettle();
       }
 
+      await search('命中消息');
+      expect(
+        tester
+            .widgetList<ListTile>(find.byType(ListTile))
+            .map((tile) => (tile.subtitle! as Text).data)
+            .toList(),
+        ['远处命中消息', '开头命中消息'],
+      );
+      await tester.tap(find.text('关闭'));
+      await tester.pumpAndSettle();
       await search('远处命中');
       expect(find.widgetWithText(ListTile, '林间'), findsOneWidget);
       await tester.tap(find.widgetWithText(ListTile, '远处命中消息'));
