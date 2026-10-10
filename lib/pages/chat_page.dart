@@ -87,31 +87,55 @@ class _ChatViewState extends State<ChatView> {
                   },
                   icon: const Icon(Icons.arrow_back),
                 ),
-              RoleAvatar(c.emoji, size: 46),
-              const SizedBox(width: 14),
               Expanded(
-                child: InkWell(
-                  onTap: () => showInfo(context, store, c),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        c.name,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                child: Material(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(16),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: () => showInfo(context, store, c),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 8,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        c.group
-                            ? '你和 ${c.members.length} 位角色 · 一个悠闲的下午'
-                            : '私聊 · ${c.members.isEmpty ? '角色已离开' : '展示角色'}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: scheme.onSurfaceVariant,
-                        ),
+                      child: Row(
+                        children: [
+                          RoleAvatar(
+                            c.name,
+                            size: 46,
+                            imageData: store.avatarFor(c),
+                            icon: c.group
+                                ? Icons.group_outlined
+                                : Icons.person_outline,
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  c.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                                if (c.group)
+                                  Text(
+                                    '${c.members.length + 1} 位成员',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: scheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -170,8 +194,8 @@ class _ChatViewState extends State<ChatView> {
             child: c.messages.isEmpty
                 ? const EmptyState(
                     emoji: '💬',
-                    title: '故事从这里开始',
-                    subtitle: '写下第一句话吧。\n新建的角色不会自动发送初始消息。',
+                    title: '暂无消息',
+                    subtitle: '发送消息开始聊天。',
                   )
                 : ListView.builder(
                     controller: scroll,
@@ -199,7 +223,8 @@ class _ChatViewState extends State<ChatView> {
                       return MessageBubble(
                         message: m,
                         name: m.isUser ? '你' : role?.name ?? '已离开的角色',
-                        emoji: role?.emoji ?? '🌱',
+                        emoji: '',
+                        avatar: role?.avatar,
                         onReply: () => setState(() => reply = m.text),
                         onDelete: () async {
                           if (await confirm(
@@ -284,9 +309,7 @@ class _ChatViewState extends State<ChatView> {
                       controller: input,
                       minLines: 1,
                       maxLines: 5,
-                      decoration: const InputDecoration(
-                        hintText: '说点什么，让故事继续…',
-                      ),
+                      decoration: const InputDecoration(hintText: '输入消息'),
                       onSubmitted: (_) => send(),
                     ),
                   ),
@@ -340,7 +363,10 @@ class _ChatViewState extends State<ChatView> {
                         input.text += e;
                         Navigator.pop(context);
                       },
-                      child: RoleAvatar(e),
+                      child: Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: Text(e, style: const TextStyle(fontSize: 24)),
+                      ),
                     ),
                   )
                   .toList(),
@@ -359,9 +385,11 @@ class MessageBubble extends StatelessWidget {
     this.onReply,
     this.onDelete,
     this.onCopy,
+    this.avatar,
   });
   final ChatMessage message;
   final String name, emoji;
+  final String? avatar;
   final VoidCallback? onReply, onDelete, onCopy;
   @override
   Widget build(BuildContext context) {
@@ -376,7 +404,7 @@ class MessageBubble extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (!mine) ...[
-              RoleAvatar(emoji, size: 34),
+              RoleAvatar(name, size: 34, imageData: avatar),
               const SizedBox(width: 10),
             ],
             Flexible(
@@ -521,7 +549,7 @@ void showSearch(BuildContext context, Conversation c) {
               TextField(
                 autofocus: true,
                 decoration: const InputDecoration(
-                  hintText: '搜索这段故事',
+                  hintText: '搜索聊天记录',
                   prefixIcon: Icon(Icons.search),
                 ),
                 onChanged: (v) => setLocal(() => query = v),
@@ -531,7 +559,7 @@ void showSearch(BuildContext context, Conversation c) {
                 child: query.isEmpty
                     ? const EmptyState(
                         emoji: '🔎',
-                        title: '找回某句话',
+                        title: '搜索消息',
                         subtitle: '输入关键词搜索当前会话',
                       )
                     : ListView(
@@ -581,7 +609,14 @@ void showInfo(BuildContext context, PreviewStore store, Conversation c) {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Center(child: RoleAvatar(c.emoji, size: 80)),
+                  Center(
+                    child: RoleAvatar(
+                      c.name,
+                      size: 80,
+                      imageData: store.avatarFor(c),
+                      icon: Icons.group_outlined,
+                    ),
+                  ),
                   const SizedBox(height: 18),
                   Center(
                     child: Text(
@@ -610,7 +645,11 @@ void showInfo(BuildContext context, PreviewStore store, Conversation c) {
                     final r = store.roles.where((r) => r.id == id).firstOrNull;
                     if (r == null) return const SizedBox.shrink();
                     return ListTile(
-                      leading: RoleAvatar(r.emoji, size: 38),
+                      leading: RoleAvatar(
+                        r.name,
+                        size: 38,
+                        imageData: r.avatar,
+                      ),
                       title: Text(r.name),
                       subtitle: Text(r.description),
                       trailing: const Icon(Icons.chevron_right),

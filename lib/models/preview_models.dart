@@ -4,7 +4,8 @@ class RoleProfile {
   RoleProfile({
     required this.id,
     required this.name,
-    required this.emoji,
+    this.emoji = '',
+    this.avatar,
     required this.color,
     this.description = '',
     this.model = 'gpt-4o',
@@ -15,7 +16,7 @@ class RoleProfile {
   }) : examples = examples ?? [];
   final String id;
   String name, emoji, description, model, identity, soul;
-  String? apiId;
+  String? apiId, avatar;
   Color color;
   List<Map<String, String>> examples;
 }
@@ -39,13 +40,15 @@ class Conversation {
   Conversation({
     required this.id,
     required this.name,
-    required this.emoji,
+    this.emoji = '',
+    this.avatar,
     required this.members,
     this.group = false,
     List<ChatMessage>? messages,
   }) : messages = messages ?? [];
   final String id;
   String name, emoji;
+  String? avatar;
   bool group;
   List<String> members;
   List<ChatMessage> messages;

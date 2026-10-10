@@ -1,10 +1,14 @@
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../design/app_theme.dart';
 import '../models/preview_models.dart';
 
 class PreviewStore extends ChangeNotifier {
-  PreviewStore(this.preferences);
+  PreviewStore(this.preferences) {
+    restoreProfiles();
+  }
   final SharedPreferences preferences;
   int destination = 0;
   String selectedId = 'garden';
@@ -22,7 +26,11 @@ class PreviewStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  void changed() => notifyListeners();
+  void changed() {
+    notifyListeners();
+    unawaited(saveProfiles());
+  }
+
   void navigate(int value) {
     destination = value;
     showChatOnMobile = false;
@@ -66,7 +74,7 @@ class PreviewStore extends ChangeNotifier {
         members: [profile.id],
       ),
     );
-    notifyListeners();
+    changed();
   }
 
   void removeRole(String id) {
@@ -74,22 +82,134 @@ class PreviewStore extends ChangeNotifier {
     for (final c in conversations) {
       c.members.remove(id);
     }
-    notifyListeners();
+    changed();
   }
 
-  void addGroup(String name, List<String> members) {
+  void addGroup(String name, List<String> members, {String? avatar}) {
     final id = newId();
     conversations.insert(
       0,
       Conversation(
         id: id,
         name: name,
-        emoji: '🌿',
+        avatar: avatar,
         members: members,
         group: true,
       ),
     );
     select(id);
+    changed();
+  }
+
+  String? persistenceError;
+  Future<void> _saveQueue = Future.value();
+  String? avatarFor(Conversation c) => c.group
+      ? c.avatar
+      : roles.where((r) => c.members.contains(r.id)).firstOrNull?.avatar;
+  Future<bool> saveProfiles() async {
+    final snapshot = jsonEncode({
+      'version': 1,
+      'roles': roles
+          .map(
+            (r) => {
+              'id': r.id,
+              'name': r.name,
+              'avatar': r.avatar,
+              'color': r.color.toARGB32(),
+              'description': r.description,
+              'model': r.model,
+              'apiId': r.apiId,
+              'identity': r.identity,
+              'soul': r.soul,
+              'examples': r.examples,
+            },
+          )
+          .toList(),
+      'conversations': conversations
+          .map(
+            (c) => {
+              'id': c.id,
+              'name': c.name,
+              'avatar': c.group ? c.avatar : null,
+              'members': c.members,
+              'group': c.group,
+            },
+          )
+          .toList(),
+    });
+    final operation = _saveQueue.then((_) async {
+      if (!await preferences.setString('profiles.v1', snapshot)) {
+        throw StateError('Storage unavailable');
+      }
+    });
+    _saveQueue = operation.catchError((Object _) {});
+    try {
+      await operation;
+      persistenceError = null;
+      return true;
+    } catch (_) {
+      persistenceError = '本地保存失败，请检查浏览器存储空间';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  void restoreProfiles() {
+    final raw = preferences.getString('profiles.v1');
+    if (raw == null) return;
+    try {
+      final data = jsonDecode(raw) as Map<String, dynamic>;
+      if (data['version'] != 1) {
+        throw const FormatException('Unsupported data version');
+      }
+      final restoredRoles = (data['roles'] as List).map((item) {
+        final r = item as Map<String, dynamic>;
+        return RoleProfile(
+          id: r['id'] as String,
+          name: r['name'] as String,
+          avatar: r['avatar'] as String?,
+          color: Color(r['color'] as int),
+          description: r['description'] as String,
+          model: r['model'] as String,
+          apiId: apis.any((a) => a.id == r['apiId'])
+              ? r['apiId'] as String?
+              : null,
+          identity: r['identity'] as String,
+          soul: r['soul'] as String,
+          examples: (r['examples'] as List)
+              .map((e) => Map<String, String>.from(e as Map))
+              .toList(),
+        );
+      }).toList();
+      final restoredChats = (data['conversations'] as List).map((item) {
+        final c = item as Map<String, dynamic>;
+        return Conversation(
+          id: c['id'] as String,
+          name: c['name'] as String,
+          avatar: c['avatar'] as String?,
+          members: List<String>.from(c['members'] as List),
+          group: c['group'] as bool,
+          messages: conversations
+              .where((old) => old.id == c['id'])
+              .firstOrNull
+              ?.messages,
+        );
+      }).toList();
+      if (restoredChats.isEmpty) {
+        throw const FormatException('Missing conversations');
+      }
+      roles
+        ..clear()
+        ..addAll(restoredRoles);
+      conversations
+        ..clear()
+        ..addAll(restoredChats);
+      if (!conversations.any((c) => c.id == selectedId)) {
+        selectedId = conversations.first.id;
+      }
+    } catch (_) {
+      persistenceError = '无法读取已保存资料，当前显示示例数据';
+    }
   }
 
   final apis = [
@@ -101,7 +221,7 @@ class PreviewStore extends ChangeNotifier {
       name: '林间',
       emoji: '🌱',
       color: const Color(0xffb8cfbb),
-      description: '植物爱好者 · 慢慢生活',
+      description: '',
       identity: '你是林间，一个喜欢植物、散步和手写信的朋友。说话温和自然，留意生活里的细节。',
       soul: '最近学会了不急着给每件事一个答案。比起计划好的旅程，更喜欢偶然遇到的小风景。',
       examples: [
@@ -113,7 +233,7 @@ class PreviewStore extends ChangeNotifier {
       name: '月白',
       emoji: '🌙',
       color: const Color(0xffd6c9e4),
-      description: '夜猫子 · 收集电影与故事',
+      description: '',
       identity: '你是月白，喜欢电影和城市夜晚的大学生。幽默、坦率，偶尔带一点诗意。',
       soul: '觉得朋友之间最珍贵的，是可以安心地沉默。想把这座城市的深夜都记下来。',
     ),
@@ -122,7 +242,7 @@ class PreviewStore extends ChangeNotifier {
       name: '夏芽',
       emoji: '🍊',
       color: const Color(0xffead2ab),
-      description: '元气满满 · 周末探店搭子',
+      description: '',
       identity: '你是夏芽，热爱咖啡、拍照和周末探店。表达活泼，但尊重朋友的节奏。',
       soul: '想把每一个普通的周末变成值得期待的小冒险。',
     ),
@@ -144,7 +264,7 @@ class PreviewStore extends ChangeNotifier {
         ChatMessage(
           id: 'm2',
           roleId: 'summer',
-          text: '我要去！🌼\n顺便找到一家有花园的咖啡店，窗边的位置特别好看。',
+          text: '我要去！\n顺便找到一家有花园的咖啡店，窗边的位置特别好看。',
           time: '16:39',
         ),
         ChatMessage(id: 'm3', text: '听起来很棒。周六下午怎么样？', time: '16:40'),

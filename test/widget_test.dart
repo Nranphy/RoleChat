@@ -24,10 +24,7 @@ void main() {
     tester,
   ) async {
     final store = await setup(tester);
-    await tester.enterText(
-      find.widgetWithText(TextField, '说点什么，让故事继续…'),
-      '一起去看花吧',
-    );
+    await tester.enterText(find.widgetWithText(TextField, '输入消息'), '一起去看花吧');
     await tester.tap(find.byTooltip('发送消息'));
     await tester.pumpAndSettle();
     expect(store.selected.messages.last.text, '一起去看花吧');

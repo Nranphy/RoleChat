@@ -18,8 +18,8 @@ class RolesPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             PageHeading(
-              '故事里的朋友',
-              '每一个角色，都有自己的小小世界。',
+              '角色',
+              '',
               action: FilledButton.icon(
                 onPressed: () => editRole(context, store),
                 icon: const Icon(Icons.person_add_alt),
@@ -32,7 +32,7 @@ class RolesPage extends StatelessWidget {
               EmptyState(
                 emoji: '🌱',
                 title: '还没有角色',
-                subtitle: '创建第一位朋友，开启你的故事。',
+                subtitle: '点击新建角色。',
                 action: FilledButton(
                   onPressed: () => editRole(context, store),
                   child: const Text('新建角色'),
@@ -60,7 +60,8 @@ class RolesPage extends StatelessWidget {
                                 Row(
                                   children: [
                                     RoleAvatar(
-                                      r.emoji,
+                                      r.name,
+                                      imageData: r.avatar,
                                       color: r.color,
                                       size: 64,
                                     ),
@@ -110,16 +111,15 @@ class RolesPage extends StatelessWidget {
                                       ?.copyWith(fontWeight: FontWeight.bold),
                                 ),
                                 const SizedBox(height: 7),
-                                Text(
-                                  r.description.isEmpty
-                                      ? '等待写下属于自己的故事'
-                                      : r.description,
-                                  style: TextStyle(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
+                                if (r.description.isNotEmpty)
+                                  Text(
+                                    r.description,
+                                    style: TextStyle(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
                                   ),
-                                ),
                                 const SizedBox(height: 18),
                                 Wrap(
                                   spacing: 8,
@@ -221,7 +221,12 @@ class _RoleDetailState extends State<RoleDetail> {
             padding: const EdgeInsets.fromLTRB(24, 8, 16, 18),
             child: Row(
               children: [
-                RoleAvatar(r.emoji, color: r.color, size: 52),
+                RoleAvatar(
+                  r.name,
+                  imageData: r.avatar,
+                  color: r.color,
+                  size: 52,
+                ),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
@@ -353,8 +358,8 @@ class _RoleDetailState extends State<RoleDetail> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         PageHeading(
-          '记忆碎片',
-          '那些值得留下的小事。',
+          '记忆',
+          '',
           action: TextButton.icon(
             onPressed: () async {
               final text = await editText(context, '添加记忆', '');
@@ -372,7 +377,7 @@ class _RoleDetailState extends State<RoleDetail> {
         if (entries.isEmpty)
           const EmptyState(
             emoji: '🫙',
-            title: '记忆罐还是空的',
+            title: '暂无记忆',
             subtitle: '在这里展示属于这个角色的记忆。',
           ),
         ...entries.map(
@@ -440,8 +445,8 @@ class _RoleDetailState extends State<RoleDetail> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         PageHeading(
-          '一天的节奏',
-          '每段日常，都有不同的心情。',
+          '行程',
+          '',
           action: TextButton.icon(
             onPressed: () => editSchedule(context, store, r.id),
             icon: const Icon(Icons.add),
@@ -451,11 +456,7 @@ class _RoleDetailState extends State<RoleDetail> {
         const PreviewNotice(text: '规则与接收概率仅供预览，不执行定时检查或自动更新。'),
         const SizedBox(height: 18),
         if (entries.isEmpty)
-          const EmptyState(
-            emoji: '🗓️',
-            title: '还没有行程',
-            subtitle: '为角色安排一段日常吧。',
-          ),
+          const EmptyState(emoji: '🗓️', title: '还没有行程', subtitle: '点击添加规则。'),
         ...entries.map(
           (s) => Padding(
             padding: const EdgeInsets.only(bottom: 14),
@@ -525,7 +526,7 @@ class _RoleDetailState extends State<RoleDetail> {
     children: [
       PageHeading(
         '对话示例',
-        '让角色找到自己的表达方式。',
+        '',
         action: TextButton(
           onPressed: () => editRole(context, store, role: r),
           child: const Text('编辑'),

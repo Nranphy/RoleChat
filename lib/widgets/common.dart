@@ -1,8 +1,18 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 
 class RoleAvatar extends StatelessWidget {
-  const RoleAvatar(this.emoji, {super.key, this.color, this.size = 48});
+  const RoleAvatar(
+    this.emoji, {
+    super.key,
+    this.color,
+    this.size = 48,
+    this.imageData,
+    this.icon = Icons.person_outline,
+  });
   final String emoji;
+  final String? imageData;
+  final IconData icon;
   final Color? color;
   final double size;
   @override
@@ -14,7 +24,22 @@ class RoleAvatar extends StatelessWidget {
       borderRadius: BorderRadius.circular(size * .36),
     ),
     alignment: Alignment.center,
-    child: Text(emoji, style: TextStyle(fontSize: size * .48)),
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(size * .36),
+      child: imageData == null
+          ? Icon(
+              icon,
+              size: size * .48,
+              color: Theme.of(context).colorScheme.onSecondaryContainer,
+            )
+          : Image.memory(
+              base64Decode(imageData!),
+              width: size,
+              height: size,
+              fit: BoxFit.cover,
+              errorBuilder: (_, error, stack) => Icon(icon, size: size * .48),
+            ),
+    ),
   );
 }
 
@@ -54,13 +79,14 @@ class PageHeading extends StatelessWidget {
                 context,
               ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
-            const SizedBox(height: 8),
-            Text(
-              subtitle,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+            if (subtitle.isNotEmpty) const SizedBox(height: 8),
+            if (subtitle.isNotEmpty)
+              Text(
+                subtitle,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
-            ),
           ],
         ),
         ?action,
@@ -86,7 +112,7 @@ class EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          RoleAvatar(emoji, size: 88),
+          RoleAvatar('', size: 88, icon: Icons.inbox_outlined),
           const SizedBox(height: 24),
           Text(title, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 10),

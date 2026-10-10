@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../app/preview_store.dart';
 import '../models/preview_models.dart';
 import '../widgets/common.dart';
+import '../widgets/avatar_field.dart';
 
 Future<void> editRole(
   BuildContext context,
@@ -13,7 +14,7 @@ Future<void> editRole(
   final model = TextEditingController(text: role?.model ?? 'gpt-4o');
   final identity = TextEditingController(text: role?.identity ?? '');
   final retiredControllers = <TextEditingController>[];
-  var emoji = role?.emoji ?? '🌱';
+  String? avatar = role?.avatar;
   var api = role?.apiId;
   final form = GlobalKey<FormState>();
   final examples = (role?.examples ?? [])
@@ -59,35 +60,9 @@ Future<void> editRole(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Wrap(
-                          spacing: 10,
-                          runSpacing: 10,
-                          children:
-                              ['🌱', '🌙', '🍊', '🌸', '🦊', '🐈', '🪻', '☀️']
-                                  .map(
-                                    (e) => InkWell(
-                                      onTap: () => setLocal(() => emoji = e),
-                                      borderRadius: BorderRadius.circular(20),
-                                      child: Container(
-                                        padding: const EdgeInsets.all(3),
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                            color: emoji == e
-                                                ? Theme.of(
-                                                    context,
-                                                  ).colorScheme.primary
-                                                : Colors.transparent,
-                                            width: 2,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            21,
-                                          ),
-                                        ),
-                                        child: RoleAvatar(e, size: 44),
-                                      ),
-                                    ),
-                                  )
-                                  .toList(),
+                        AvatarField(
+                          imageData: avatar,
+                          onChanged: (value) => setLocal(() => avatar = value),
                         ),
                         const SizedBox(height: 20),
                         TextFormField(
@@ -103,6 +78,7 @@ Future<void> editRole(
                         ),
                         const SizedBox(height: 14),
                         DropdownButtonFormField<String>(
+                          borderRadius: BorderRadius.circular(16),
                           initialValue: api,
                           decoration: const InputDecoration(
                             labelText: 'API 配置（展示）',
@@ -204,7 +180,7 @@ Future<void> editRole(
                             ),
                           ),
                         ),
-                        const PreviewNotice(text: '仅编辑本次预览数据，不会调用模型。'),
+                        const PreviewNotice(text: '资料保存在当前浏览器，不会调用模型。'),
                         const SizedBox(height: 12),
                       ],
                     ),
@@ -222,18 +198,18 @@ Future<void> editRole(
                     ),
                     const SizedBox(width: 10),
                     FilledButton(
-                      onPressed: () {
+                      onPressed: () async {
                         if (!form.currentState!.validate()) return;
                         final profile =
                             role ??
                             RoleProfile(
                               id: store.newId(),
                               name: name.text.trim(),
-                              emoji: emoji,
+                              avatar: avatar,
                               color: const Color(0xffb8cfbb),
                             );
                         profile.name = name.text.trim();
-                        profile.emoji = emoji;
+                        profile.avatar = avatar;
                         profile.description = description.text;
                         profile.model = model.text;
                         profile.apiId = api;
@@ -257,7 +233,13 @@ Future<void> editRole(
                           }
                           store.changed();
                         }
-                        Navigator.pop(context);
+                        if (!await store.saveProfiles()) {
+                          if (context.mounted) {
+                            toast(context, store.persistenceError!);
+                          }
+                          return;
+                        }
+                        if (context.mounted) Navigator.pop(context);
                       },
                       child: Text(role == null ? '创建角色' : '保存'),
                     ),
@@ -288,6 +270,7 @@ Future<void> editGroup(
   Conversation? group,
 }) async {
   final name = TextEditingController(text: group?.name ?? '');
+  String? avatar = group?.avatar;
   final members = {...group?.members ?? []};
   final form = GlobalKey<FormState>();
   await managedDialog<void>(
@@ -304,6 +287,12 @@ Future<void> editGroup(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  AvatarField(
+                    group: true,
+                    imageData: avatar,
+                    onChanged: (v) => setLocal(() => avatar = v),
+                  ),
+                  const SizedBox(height: 20),
                   TextFormField(
                     controller: name,
                     decoration: const InputDecoration(labelText: '群聊名称'),
@@ -316,7 +305,11 @@ Future<void> editGroup(
                   ...store.roles.map(
                     (r) => CheckboxListTile(
                       contentPadding: EdgeInsets.zero,
-                      secondary: RoleAvatar(r.emoji, size: 38),
+                      secondary: RoleAvatar(
+                        r.name,
+                        size: 38,
+                        imageData: r.avatar,
+                      ),
                       title: Text(r.name),
                       value: members.contains(r.id),
                       onChanged: (v) => setLocal(
@@ -337,20 +330,29 @@ Future<void> editGroup(
             child: const Text('取消'),
           ),
           FilledButton(
-            onPressed: () {
+            onPressed: () async {
               if (!form.currentState!.validate()) return;
               if (members.isEmpty) {
                 toast(context, '至少选择一个角色');
                 return;
               }
               if (group == null) {
-                store.addGroup(name.text.trim(), members.toList());
+                store.addGroup(
+                  name.text.trim(),
+                  members.toList(),
+                  avatar: avatar,
+                );
               } else {
                 group.name = name.text.trim();
+                group.avatar = avatar;
                 group.members = members.toList();
                 store.changed();
               }
-              Navigator.pop(context);
+              if (!await store.saveProfiles()) {
+                if (context.mounted) toast(context, store.persistenceError!);
+                return;
+              }
+              if (context.mounted) Navigator.pop(context);
             },
             child: const Text('保存'),
           ),

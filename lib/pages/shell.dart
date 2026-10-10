@@ -43,7 +43,11 @@ class AppShell extends StatelessWidget {
                   child: Column(
                     children: [
                       const SizedBox(height: 24),
-                      const RoleAvatar('✳', size: 44),
+                      const RoleAvatar(
+                        '',
+                        size: 44,
+                        icon: Icons.chat_bubble_outline,
+                      ),
                       const SizedBox(height: 34),
                       ...List.generate(
                         4,
@@ -148,18 +152,15 @@ class _ConversationListState extends State<ConversationList> {
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 5),
-                    Text(
-                      '把日常，聊成故事。',
-                      style: TextStyle(
-                        color: scheme.onSurfaceVariant,
-                        fontSize: 12,
-                      ),
-                    ),
                   ],
                 ),
               ),
               PopupMenuButton<String>(
+                position: PopupMenuPosition.under,
+                offset: const Offset(0, 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 tooltip: '新建',
                 icon: const Icon(Icons.add_circle_outline),
                 onSelected: (v) => v == 'role'
@@ -226,7 +227,13 @@ class _ConversationListState extends State<ConversationList> {
                           horizontal: 12,
                           vertical: 7,
                         ),
-                        leading: RoleAvatar(c.emoji),
+                        leading: RoleAvatar(
+                          c.name,
+                          imageData: store.avatarFor(c),
+                          icon: c.group
+                              ? Icons.group_outlined
+                              : Icons.person_outline,
+                        ),
                         title: Row(
                           children: [
                             Expanded(
@@ -255,7 +262,7 @@ class _ConversationListState extends State<ConversationList> {
                           padding: const EdgeInsets.only(top: 5),
                           child: Text(
                             c.messages.isEmpty
-                                ? '还没有消息，开始一个故事吧'
+                                ? '暂无消息'
                                 : c.messages.last.text.replaceAll('\n', ' '),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
