@@ -49,6 +49,8 @@ class _GroupEditorDialogState extends State<GroupEditorDialog>
     tabGap: 12,
     tabs: TabBar(
       controller: tabs,
+      isScrollable: true,
+      tabAlignment: TabAlignment.start,
       onTap: (i) => setState(() => tab = i),
       tabs: const [
         Tab(text: '基础'),
