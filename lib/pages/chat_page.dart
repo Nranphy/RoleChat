@@ -333,7 +333,7 @@ class _ChatViewState extends State<ChatView> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           SizedBox(
                             width: 48,
@@ -353,9 +353,14 @@ class _ChatViewState extends State<ChatView> {
                               minLines: 1,
                               maxLines: 8,
                               style: const TextStyle(fontSize: 16),
+                              textAlignVertical: TextAlignVertical.center,
                               decoration: const InputDecoration(
                                 hintText: '输入消息',
-                                contentPadding: EdgeInsets.fromLTRB(6, 3, 6, 6),
+                                isDense: true,
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 16,
+                                ),
                                 border: InputBorder.none,
                                 enabledBorder: InputBorder.none,
                                 focusedBorder: InputBorder.none,

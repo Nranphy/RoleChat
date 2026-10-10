@@ -205,6 +205,7 @@ class _ConversationListState extends State<ConversationList> {
                             Expanded(
                               child: InkWell(
                                 onTap: () => store.select(c.id),
+                                hoverColor: Colors.transparent,
                                 borderRadius: BorderRadius.circular(9),
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
