@@ -3,6 +3,7 @@ import '../models/preview_models.dart';
 import '../design/form_metrics.dart';
 import 'anchored_select.dart';
 import 'common.dart';
+import 'field_action.dart';
 
 const ruleLabels = {
   ScheduleRuleKind.daily: '每天',
@@ -111,31 +112,27 @@ class ScheduleRuleField extends StatelessWidget {
   final VoidCallback onChanged, onDelete;
   @override
   Widget build(BuildContext context) => SectionCard(
-    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
           children: [
-            Expanded(
-              child: TextFormField(
-                controller: draft.activity,
-                style: FormMetrics.textStyle,
-                decoration: FormMetrics.decoration(
-                  '活动 ${index + 1}',
-                  compact: true,
-                ),
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? '请输入活动名称' : null,
-              ),
-            ),
+            Expanded(child: Text('活动 ${index + 1}')),
             IconButton(
               tooltip: '删除行程',
               onPressed: onDelete,
               visualDensity: VisualDensity.compact,
-              icon: const Icon(Icons.delete_outline, size: 20),
+              icon: const Icon(Icons.close, size: 18),
             ),
           ],
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: draft.activity,
+          style: FormMetrics.textStyle,
+          decoration: FormMetrics.decoration('活动内容', compact: true),
+          validator: (v) => v == null || v.trim().isEmpty ? '请输入活动名称' : null,
         ),
         const SizedBox(height: 10),
         AnchoredSelect<ScheduleRuleKind>(
@@ -242,8 +239,15 @@ class ScheduleRuleField extends StatelessWidget {
   Widget dateButton(BuildContext context, bool last) {
     final annual = draft.kind == ScheduleRuleKind.annual;
     final value = last ? draft.until : draft.from;
-    return InkWell(
-      borderRadius: BorderRadius.circular(9),
+    return FieldAction(
+      decoration: FormMetrics.decoration(
+        annual
+            ? '月日'
+            : last
+            ? '结束日期'
+            : '日期',
+        compact: true,
+      ),
       onTap: () async {
         final selected = await showDatePicker(
           context: context,
@@ -265,35 +269,26 @@ class ScheduleRuleField extends StatelessWidget {
         }
         onChanged();
       },
-      child: InputDecorator(
-        decoration: FormMetrics.decoration(
-          annual
-              ? '月日'
-              : last
-              ? '结束日期'
-              : '日期',
-          compact: true,
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                ScheduleDraft.dateText(value, annual: annual),
-                style: FormMetrics.textStyle,
-              ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              ScheduleDraft.dateText(value, annual: annual),
+              style: FormMetrics.textStyle,
             ),
-            const Icon(Icons.calendar_today_outlined, size: 18),
-          ],
-        ),
+          ),
+          const Icon(Icons.calendar_today_outlined, size: 18),
+        ],
       ),
     );
   }
 
-  Widget timeButton(BuildContext context, bool last) => InkWell(
-    borderRadius: BorderRadius.circular(9),
+  Widget timeButton(BuildContext context, bool last) => FieldAction(
+    decoration: FormMetrics.decoration(last ? '结束时间' : '开始时间', compact: true),
     onTap: () async {
       final selected = await showTimePicker(
         context: context,
+        initialEntryMode: TimePickerEntryMode.inputOnly,
         initialTime: last ? draft.end : draft.start,
         builder: (context, child) => MediaQuery(
           data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
@@ -308,19 +303,16 @@ class ScheduleRuleField extends StatelessWidget {
       }
       onChanged();
     },
-    child: InputDecorator(
-      decoration: FormMetrics.decoration(last ? '结束时间' : '开始时间', compact: true),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              ScheduleDraft.timeText(last ? draft.end : draft.start),
-              style: FormMetrics.textStyle,
-            ),
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(
+            ScheduleDraft.timeText(last ? draft.end : draft.start),
+            style: FormMetrics.textStyle,
           ),
-          const Icon(Icons.schedule, size: 18),
-        ],
-      ),
+        ),
+        const Icon(Icons.schedule, size: 18),
+      ],
     ),
   );
 }

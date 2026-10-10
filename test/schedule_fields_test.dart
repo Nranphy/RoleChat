@@ -1,9 +1,11 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rolechat/design/app_theme.dart';
 import 'package:rolechat/design/form_metrics.dart';
 import 'package:rolechat/models/preview_models.dart';
 import 'package:rolechat/widgets/anchored_select.dart';
+import 'package:rolechat/widgets/field_action.dart';
 import 'package:rolechat/widgets/schedule_rule_field.dart';
 
 void main() {
@@ -55,11 +57,16 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     final draft = ScheduleDraft()..kind = ScheduleRuleKind.date;
     addTearDown(draft.dispose);
-    for (final width in [390.0, 900.0]) {
+    for (final (width, brightness) in [
+      (390.0, Brightness.light),
+      (900.0, Brightness.light),
+      (390.0, Brightness.dark),
+      (900.0, Brightness.dark),
+    ]) {
       tester.view.physicalSize = Size(width, 900);
       await tester.pumpWidget(
         MaterialApp(
-          theme: AppTheme.build(AppTheme.seeds.first, Brightness.light),
+          theme: AppTheme.build(AppTheme.seeds.first, brightness),
           home: Scaffold(
             body: ScheduleRuleField(
               draft: draft,
@@ -91,6 +98,83 @@ void main() {
       expect(borderHeights.toSet().length, 1);
       expect(tester.takeException(), isNull);
     }
+  });
+  testWidgets(
+    'field hover uses the outlined container without changing bounds',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: SizedBox(
+                width: 300,
+                child: AnchoredSelect<int>(
+                  label: '接口',
+                  value: 0,
+                  options: const {0: '默认'},
+                  onChanged: (_) {},
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      final decorator = find.byType(InputDecorator);
+      final before = tester.getRect(decorator);
+      final mouse = await tester.createGesture(
+        kind: ui.PointerDeviceKind.mouse,
+      );
+      await mouse.addPointer(location: Offset.zero);
+      await mouse.moveTo(tester.getCenter(decorator));
+      await tester.pumpAndSettle();
+      expect(tester.widget<InputDecorator>(decorator).decoration.filled, true);
+      expect(
+        tester.widget<InputDecorator>(decorator).decoration.fillColor,
+        isNot(Colors.transparent),
+      );
+      expect(tester.getRect(decorator), before);
+      await mouse.removePointer();
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<InputDecorator>(decorator).decoration.fillColor,
+        Colors.transparent,
+      );
+    },
+  );
+  testWidgets('time picker opens as numeric input and saves the time', (
+    tester,
+  ) async {
+    final draft = ScheduleDraft();
+    addTearDown(draft.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ScheduleRuleField(
+            draft: draft,
+            index: 0,
+            onChanged: () {},
+            onDelete: () {},
+          ),
+        ),
+      ),
+    );
+    await tester.tap(
+      find.byWidgetPredicate(
+        (w) => w is FieldAction && w.decoration.labelText == '开始时间',
+      ),
+    );
+    await tester.pumpAndSettle();
+    final inputs = find.descendant(
+      of: find.byType(TimePickerDialog),
+      matching: find.byType(TextField),
+    );
+    expect(inputs, findsNWidgets(2));
+    await tester.enterText(inputs.first, '14');
+    await tester.enterText(inputs.last, '30');
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+    expect(draft.start, const TimeOfDay(hour: 14, minute: 30));
+    expect(tester.takeException(), isNull);
   });
   test('annual and date range rules retain structured conditions', () {
     final annual = ScheduleDraft(

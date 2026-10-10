@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../design/form_metrics.dart';
+import 'field_action.dart';
 
 /// Selectors anchor to the field bounds and scroll within the available space.
 class AnchoredSelect<T> extends StatelessWidget {
@@ -22,8 +23,8 @@ class AnchoredSelect<T> extends StatelessWidget {
     builder: (fieldContext) => Semantics(
       button: true,
       label: '$label：${options[value] ?? ''}',
-      child: InkWell(
-        borderRadius: BorderRadius.circular(9),
+      child: FieldAction(
+        decoration: FormMetrics.decoration(label, compact: compact),
         onTap: () async {
           final field = fieldContext.findRenderObject()! as RenderBox;
           final overlay =
@@ -62,21 +63,18 @@ class AnchoredSelect<T> extends StatelessWidget {
           );
           if (context.mounted && selected != null) onChanged(selected);
         },
-        child: InputDecorator(
-          decoration: FormMetrics.decoration(label, compact: compact),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  options[value] ?? '',
-                  style: FormMetrics.textStyle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                options[value] ?? '',
+                style: FormMetrics.textStyle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              const Icon(Icons.expand_more, size: 20),
-            ],
-          ),
+            ),
+            const Icon(Icons.expand_more, size: 20),
+          ],
         ),
       ),
     ),
