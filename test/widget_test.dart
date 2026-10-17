@@ -90,14 +90,23 @@ void main() {
     expect(tester.widget<RoleAvatar>(dialogAvatar).name, '青禾');
     await tester.tap(find.widgetWithText(Tab, '样例'));
     await tester.pumpAndSettle();
-    expect(store.role('lin').name, '青禾');
+    expect(store.role('11111111-1111-4111-8111-111111111111').name, '青禾');
     expect(
-      store.conversations.firstWhere((c) => c.id == 'lin-chat').name,
+      store.conversations
+          .firstWhere((c) => c.id == '66666666-6666-4666-8666-666666666666')
+          .name,
       '青禾',
     );
     await store.saveProfiles();
-    final restoredName = PreviewStore(store.preferences);
-    expect(restoredName.role('lin').name, '青禾');
+    final restoredName = PreviewStore(
+      store.preferences,
+      storage: store.storage,
+    );
+    await restoredName.initialize();
+    expect(
+      restoredName.role('11111111-1111-4111-8111-111111111111').name,
+      '青禾',
+    );
     restoredName.dispose();
     final userHeight = tester
         .getSize(find.widgetWithText(TextField, 'user'))
@@ -233,8 +242,16 @@ void main() {
   ) async {
     final store = await setup(tester);
     store.selected.messages = [
-      ChatMessage(id: 'a', roleId: 'lin', text: '第一条'),
-      ChatMessage(id: 'b', roleId: 'lin', text: '第二条'),
+      ChatMessage(
+        id: 'a',
+        roleId: '11111111-1111-4111-8111-111111111111',
+        text: '第一条',
+      ),
+      ChatMessage(
+        id: 'b',
+        roleId: '11111111-1111-4111-8111-111111111111',
+        text: '第二条',
+      ),
     ];
     store.changed();
     await tester.pumpAndSettle();

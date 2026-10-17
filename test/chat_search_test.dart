@@ -22,7 +22,7 @@ void main() {
         store.selected.messages.add(
           ChatMessage(
             id: 'search-$i',
-            roleId: i == 0 ? null : 'lin',
+            roleId: i == 0 ? null : '11111111-1111-4111-8111-111111111111',
             text: i == 145
                 ? '远处命中消息'
                 : i == 0

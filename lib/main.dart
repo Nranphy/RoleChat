@@ -1,3 +1,4 @@
+import 'data/open_workspace.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +21,37 @@ Future<void> main() async {
     ], await rootBundle.loadString('assets/fonts/OFL-emoji.txt'));
   });
   final preferences = await SharedPreferences.getInstance();
-  runApp(RoleChatApp(store: PreviewStore(preferences)));
+  try {
+    final store = PreviewStore(preferences, storage: await openWorkspace());
+    try {
+      await store.initialize();
+    } catch (_) {
+      store.dispose();
+      rethrow;
+    }
+    runApp(RoleChatApp(store: store));
+  } catch (e) {
+    runApp(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('无法打开本地数据'),
+                  const SizedBox(height: 12),
+                  Text('$e'),
+                  const Text('请使用支持OPFS的浏览器，确认没有其他RoleChat标签页运行后刷新。'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class RoleChatApp extends StatelessWidget {

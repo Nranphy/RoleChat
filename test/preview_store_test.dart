@@ -26,12 +26,31 @@ void main() {
       final preferences = await SharedPreferences.getInstance();
       final store = PreviewStore(preferences);
       expect(store.mode, ThemeMode.system);
-      store.removeRole('lin');
-      expect(store.schedules.where((s) => s.roleId == 'lin'), isEmpty);
+      store.deleteRole(
+        '11111111-1111-4111-8111-111111111111',
+        keepHistory: true,
+      );
+      expect(
+        store.schedules.where(
+          (s) => s.roleId == '11111111-1111-4111-8111-111111111111',
+        ),
+        isEmpty,
+      );
       expect(await store.saveProfiles(), isTrue);
-      final restored = PreviewStore(preferences);
-      expect(restored.roles.where((r) => r.id == 'lin'), isEmpty);
-      expect(restored.schedules.where((s) => s.roleId == 'lin'), isEmpty);
+      final restored = PreviewStore(preferences, storage: store.storage);
+      await restored.initialize();
+      expect(
+        restored.roles.where(
+          (r) => r.id == '11111111-1111-4111-8111-111111111111',
+        ),
+        isEmpty,
+      );
+      expect(
+        restored.schedules.where(
+          (s) => s.roleId == '11111111-1111-4111-8111-111111111111',
+        ),
+        isEmpty,
+      );
       store.dispose();
       restored.dispose();
     },

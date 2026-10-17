@@ -106,10 +106,14 @@ void main() {
       await tester.tap(find.text('保存'));
       await tester.pumpAndSettle();
       expect(store.selected.name, '雨天茶会');
-      expect(store.selected.members, ['lin', 'moon']);
+      expect(store.selected.members, [
+        '11111111-1111-4111-8111-111111111111',
+        '22222222-2222-4222-8222-222222222222',
+      ]);
       expect(store.selected.messages, isEmpty);
       expect(store.selected.background, '# 背景\n雨天的茶馆。');
-      final restored = PreviewStore(store.preferences);
+      final restored = PreviewStore(store.preferences, storage: store.storage);
+      await restored.initialize();
       final group = restored.conversations.firstWhere((c) => c.name == '雨天茶会');
       expect(group.background, '# 背景\n雨天的茶馆。');
       editGroup(
@@ -226,7 +230,7 @@ void main() {
     store.schedules.add(
       ScheduleEntry(
         id: 'weekly',
-        roleId: 'lin',
+        roleId: '11111111-1111-4111-8111-111111111111',
         activity: '上课',
         ruleKind: ScheduleRuleKind.weekly,
         weekdays: [1, 3],
@@ -263,7 +267,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('保存'));
     await tester.pumpAndSettle();
-    final restored = PreviewStore(store.preferences);
+    final restored = PreviewStore(store.preferences, storage: store.storage);
+    await restored.initialize();
     expect(restored.roles.first.memory, '# 记忆\n喜欢雨天。');
     expect(restored.schedules.single.weekdays, [1, 3, 5]);
     expect(restored.schedules.single.probability, 35);

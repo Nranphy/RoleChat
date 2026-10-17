@@ -45,7 +45,9 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        final row = find.byKey(const ValueKey('moon-chat'));
+        final row = find.byKey(
+          const ValueKey('77777777-7777-4777-8777-777777777777'),
+        );
         final bounds = tester.getRect(row);
         final sample = Offset(bounds.center.dx, bounds.bottom - 8);
         final colors = Theme.of(tester.element(row)).colorScheme;
@@ -71,7 +73,7 @@ void main() {
         await tester.pump();
         await mouse.up();
         await tester.pumpAndSettle();
-        expect(store.selectedId, 'moon-chat');
+        expect(store.selectedId, '77777777-7777-4777-8777-777777777777');
         expect(await pixel(sample), colors.secondaryContainer.toARGB32());
         await mouse.moveTo(Offset.zero);
         await tester.pumpAndSettle();

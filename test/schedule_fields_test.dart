@@ -181,7 +181,7 @@ void main() {
     final annual = ScheduleDraft(
       ScheduleEntry(
         id: 'annual',
-        roleId: 'lin',
+        roleId: '11111111-1111-4111-8111-111111111111',
         activity: '生日',
         ruleKind: ScheduleRuleKind.annual,
         annualMonth: 2,
@@ -191,7 +191,10 @@ void main() {
         probability: 5,
       ),
     );
-    final saved = annual.toEntry('lin', 'unused');
+    final saved = annual.toEntry(
+      '11111111-1111-4111-8111-111111111111',
+      'unused',
+    );
     expect(saved.ruleKind, ScheduleRuleKind.annual);
     expect(saved.annualMonth, 2);
     expect(saved.annualDay, 29);
@@ -202,7 +205,9 @@ void main() {
       ..kind = ScheduleRuleKind.range
       ..from = DateTime(2026, 10, 11)
       ..until = DateTime(2026, 10, 15);
-    final copy = ScheduleDraft(range.toEntry('lin', 'range'));
+    final copy = ScheduleDraft(
+      range.toEntry('11111111-1111-4111-8111-111111111111', 'range'),
+    );
     expect(copy.from, DateTime(2026, 10, 11));
     expect(copy.until, DateTime(2026, 10, 15));
     range.dispose();

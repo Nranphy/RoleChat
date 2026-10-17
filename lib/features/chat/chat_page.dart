@@ -20,11 +20,19 @@ class ChatPage extends StatelessWidget {
           ),
         if (wide) const VerticalDivider(width: 1),
         Expanded(
-          child: ChatView(
-            key: ValueKey(store.selectedId),
-            store: store,
-            wide: wide,
-          ),
+          child: store.activeChats.isEmpty
+              ? const Align(
+                  alignment: Alignment.topCenter,
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Text('暂无对话', style: TextStyle(fontSize: 11)),
+                  ),
+                )
+              : ChatView(
+                  key: ValueKey(store.selectedId),
+                  store: store,
+                  wide: wide,
+                ),
         ),
       ],
     );

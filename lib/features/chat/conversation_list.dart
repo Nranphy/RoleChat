@@ -20,7 +20,7 @@ class _ConversationListState extends State<ConversationList> {
   Widget build(BuildContext context) {
     final store = widget.store;
     final scheme = Theme.of(context).colorScheme;
-    final chats = store.conversations
+    final chats = store.activeChats
         .where(
           (c) =>
               c.name.contains(query) &&

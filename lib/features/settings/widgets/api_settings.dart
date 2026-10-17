@@ -38,7 +38,10 @@ class ApiSettings extends StatelessWidget {
         child: Column(
           children: [
             if (apis.isEmpty)
-              const EmptyState(title: '还没有接口配置', subtitle: '添加配置后，可在角色基础页检测模型。'),
+              const EmptyState(
+                title: '还没有接口配置',
+                subtitle: '添加配置后，可在角色基础页检测模型。',
+              ),
             ...apis.map(
               (a) => SettingsRow(
                 icon: Icons.dns_outlined,

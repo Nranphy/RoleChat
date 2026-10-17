@@ -20,13 +20,16 @@ void main() {
       store.roles.first.identity = '保存的身份';
       store.selected.background = '保存的群背景';
       expect(await store.saveProfiles(), isTrue);
-      final data =
-          jsonDecode(prefs.getString('profiles')!) as Map<String, dynamic>;
-      expect(data.containsKey('version'), isFalse);
-      final rule = (data['schedules'] as List).first as Map;
+      final files = await store.storage.read();
+      final root = 'agents/' + store.roles.first.id;
+      expect(utf8.decode(files['$root/identity.md']!), '保存的身份');
+      final rule =
+          (jsonDecode(utf8.decode(files['$root/schedule.json']!)) as List).first
+              as Map;
       expect(rule.containsKey('condition'), isFalse);
       expect(rule.containsKey('dateDetail'), isFalse);
-      final restored = PreviewStore(prefs);
+      final restored = PreviewStore(prefs, storage: store.storage);
+      await restored.initialize();
       expect(restored.persistenceError, isNull);
       expect(restored.roles.first.identity, '保存的身份');
       expect(restored.selected.background, '保存的群背景');
@@ -133,14 +136,30 @@ void main() {
       final preferences = await SharedPreferences.getInstance();
       final store = PreviewStore(preferences);
       final avatar = await image(tester);
-      store.addRole(RoleProfile(id: 'uploaded', name: '测试角色', avatar: avatar));
-      store.addGroup('测试群聊', ['uploaded'], avatar: avatar);
+      store.addRole(
+        RoleProfile(
+          id: '99999999-9999-4999-8999-999999999999',
+          name: '测试角色',
+          avatar: avatar,
+        ),
+      );
+      store.addGroup('测试群聊', [
+        '99999999-9999-4999-8999-999999999999',
+      ], avatar: avatar);
       expect(await store.saveProfiles(), isTrue);
-      final restored = PreviewStore(preferences);
-      expect(restored.role('uploaded').avatar, avatar);
+      final restored = PreviewStore(preferences, storage: store.storage);
+      await restored.initialize();
+      expect(
+        restored.role('99999999-9999-4999-8999-999999999999').avatar,
+        avatar,
+      );
       expect(
         restored.avatarFor(
-          restored.conversations.firstWhere((c) => c.id == 'private-uploaded'),
+          restored.conversations.firstWhere(
+            (c) =>
+                !c.group &&
+                c.members.contains('99999999-9999-4999-8999-999999999999'),
+          ),
         ),
         avatar,
       );
@@ -150,14 +169,23 @@ void main() {
       );
       expect(
         restored.conversations
-            .firstWhere((c) => c.id == 'private-uploaded')
+            .firstWhere(
+              (c) =>
+                  !c.group &&
+                  c.members.contains('99999999-9999-4999-8999-999999999999'),
+            )
             .messages,
         isEmpty,
       );
-      restored.role('uploaded').avatar = null;
+      restored.role('99999999-9999-4999-8999-999999999999').avatar = null;
       restored.changed();
       await restored.saveProfiles();
-      expect(PreviewStore(preferences).role('uploaded').avatar, isNull);
+      final finalStore = PreviewStore(preferences, storage: store.storage);
+      await finalStore.initialize();
+      expect(
+        finalStore.role('99999999-9999-4999-8999-999999999999').avatar,
+        isNull,
+      );
     },
   );
   testWidgets('create menu opens below its button with consistent rounding', (

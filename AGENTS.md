@@ -1,6 +1,6 @@
 # RoleChat 开发约定
 
-开始开发前阅读 docs/ 目录中的产品、UI、架构和设计决定；最新用户要求优先。当前只开发 Flutter Web 的 UI 与展示交互，仅接口及模型检测可调用配置的外部 API；聊天与角色调度仍不接入模型。
+开始开发前阅读 docs/ 目录中的产品、UI、架构和设计决定；最新用户要求优先。当前开发Flutter Web；按docs/16-final-architecture.md实现OPFS、导入导出、归档、配置及角色调度和工具循环。
 
 ## Git
 
@@ -31,4 +31,4 @@ FluffyChat 仓库保持只读，不复制其业务代码，不修改其文件。
 
 ## 最新设计与交接
 
-先阅读docs/14-handoff.md及docs/04-data.md。已确认后续采用浏览器OPFS，config.json存通用/API配置，角色与群聊独立目录存profile.json、Markdown和messages.jsonl；提供导入导出，角色/群聊自动UUID且前端不可见。用户当前明确要求暂不实现这些功能，仅同步文档，须等待恢复开发指示。现有localStorage/内存实现不代表目标方案已落地。docs不跟踪，交接需另行包含该目录。
+先阅读docs/16-final-architecture.md、docs/14-handoff.md及docs/04-data.md。已确认后续采用浏览器OPFS，config.json存通用/API配置，角色与群聊独立目录存profile.json、Markdown和messages.jsonl；提供导入导出，角色/群聊自动UUID且前端不可见。用户已于2026-10-17授权开始按最终方案实现。现有localStorage/内存实现不代表目标方案已落地。docs不跟踪，交接需另行包含该目录。

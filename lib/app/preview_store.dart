@@ -1,5 +1,9 @@
+import '../data/workspace_remap.dart';
 import '../data/preview_data.dart';
-import '../data/profile_persistence.dart';
+import '../data/workspace_storage.dart';
+import '../data/workspace_repository.dart';
+import '../data/workspace_codec.dart';
+import 'package:uuid/uuid.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,14 +11,82 @@ import '../design/app_theme.dart';
 import '../models/preview_models.dart';
 
 class PreviewStore extends ChangeNotifier {
-  PreviewStore(this.preferences)
-    : _persistence = ProfilePersistence(preferences) {
-    restoreProfiles();
-  }
+  PreviewStore(this.preferences, {WorkspaceStorage? storage})
+    : _persistence = WorkspaceRepository(storage ?? MemoryWorkspaceStorage());
   final SharedPreferences preferences;
-  final ProfilePersistence _persistence;
+  final WorkspaceRepository _persistence;
+  WorkspaceStorage get storage => _persistence.storage;
+  final runtimeData = <String, dynamic>{};
+  bool _disposed = false;
+  Future<void> initialize() async {
+    final saved = await _persistence.load();
+    if (saved != null) {
+      applyData(saved);
+    } else {
+      final mapping = <String, String>{};
+      String id(String old) => mapping.putIfAbsent(old, newId);
+      final files = WorkspaceCodec.encode(data);
+      // Only first-run samples are instantiated, never migrated from old storage.
+      final source = WorkspaceCodec.decode(files);
+      for (final r in source.roles) {
+        id(r.id);
+      }
+      for (final a in source.apis) {
+        id(a.id);
+      }
+      for (final c in source.chats) {
+        id(c.id);
+      }
+      applyData(remapData(source, mapping));
+      if (!await saveProfiles()) throw StateError(persistenceError!);
+    }
+  }
+
+  WorkspaceData get data => WorkspaceData(
+    apis: apis,
+    roles: roles,
+    chats: conversations,
+    schedules: schedules,
+    runtime: runtimeData,
+  );
+  void applyData(WorkspaceData data) {
+    apis
+      ..clear()
+      ..addAll(data.apis);
+    roles
+      ..clear()
+      ..addAll(data.roles);
+    conversations
+      ..clear()
+      ..addAll(data.chats);
+    schedules
+      ..clear()
+      ..addAll(data.schedules);
+    runtimeData
+      ..clear()
+      ..addAll(data.runtime);
+    if (!activeChats.any((c) => c.id == selectedId)) {
+      selectedId = activeChats.firstOrNull?.id ?? '';
+    }
+    refresh();
+  }
+
+  List<Conversation> get activeChats =>
+      conversations.where((c) => !c.archived).toList();
+  List<RoleProfile> get activeRoles => roles.where((r) => !r.archived).toList();
+  void refresh() {
+    if (!_disposed) notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _persistence.close();
+    super.dispose();
+  }
+
   int destination = 0;
-  String selectedId = 'garden';
+  String selectedId = '55555555-5555-4555-8555-555555555555';
   bool showChatOnMobile = false;
   ThemeMode get mode {
     final index = preferences.getInt('themeMode');
@@ -27,7 +99,7 @@ class PreviewStore extends ChangeNotifier {
       Color(preferences.getInt('seed') ?? AppTheme.seeds.first.toARGB32());
   Future<void> setMode(ThemeMode value) async {
     await preferences.setInt('themeMode', value.index);
-    notifyListeners();
+    refresh();
   }
 
   Future<void> setSeed(Color value) async {
@@ -36,7 +108,7 @@ class PreviewStore extends ChangeNotifier {
   }
 
   void changed() {
-    notifyListeners();
+    refresh();
     unawaited(saveProfiles());
   }
 
@@ -58,12 +130,7 @@ class PreviewStore extends ChangeNotifier {
     orElse: () => conversations.first,
   );
   RoleProfile role(String id) => roles.firstWhere((r) => r.id == id);
-  int _lastId = 0;
-  String newId() {
-    final now = DateTime.now().microsecondsSinceEpoch;
-    _lastId = now > _lastId ? now : _lastId + 1;
-    return _lastId.toString();
-  }
+  String newId() => const Uuid().v4();
 
   void send(String text, {MessageReference? reply}) {
     if (text.trim().isEmpty) return;
@@ -75,29 +142,50 @@ class PreviewStore extends ChangeNotifier {
         reply: reply,
       ),
     );
-    notifyListeners();
+    changed();
   }
 
   void addRole(RoleProfile profile) {
     roles.add(profile);
     conversations.add(
-      Conversation(
-        id: 'private-${profile.id}',
-        name: profile.name,
-
-        members: [profile.id],
-      ),
+      Conversation(id: newId(), name: profile.name, members: [profile.id]),
     );
     changed();
   }
 
   void removeRole(String id) {
+    role(id).archived = true;
+    for (final c in conversations.where(
+      (c) => !c.group && c.members.contains(id),
+    )) {
+      c.archived = true;
+    }
+    ensureSelection();
+    changed();
+  }
+
+  void deleteRole(String id, {required bool keepHistory}) {
     roles.removeWhere((r) => r.id == id);
     schedules.removeWhere((s) => s.roleId == id);
+    conversations.removeWhere(
+      (c) => !c.group && c.members.contains(id) && !keepHistory,
+    );
     for (final c in conversations) {
       c.members.remove(id);
     }
     changed();
+  }
+
+  void archiveChat(Conversation chat) {
+    chat.archived = true;
+    ensureSelection();
+    changed();
+  }
+
+  void ensureSelection() {
+    if (!activeChats.any((c) => c.id == selectedId)) {
+      selectedId = activeChats.firstOrNull?.id ?? '';
+    }
   }
 
   void addGroup(
@@ -122,30 +210,14 @@ class PreviewStore extends ChangeNotifier {
     changed();
   }
 
-  String? get persistenceError => _persistence.persistenceError;
+  String? get persistenceError => _persistence.error;
   String? avatarFor(Conversation c) => c.group
       ? c.avatar
       : roles.where((r) => c.members.contains(r.id)).firstOrNull?.avatar;
   Future<bool> saveProfiles() async {
-    final saved = await _persistence.save(
-      roles: roles,
-      schedules: schedules,
-      conversations: conversations,
-    );
-    if (!saved) notifyListeners();
+    final saved = await _persistence.save(data);
+    if (!saved) refresh();
     return saved;
-  }
-
-  void restoreProfiles() {
-    _persistence.restore(
-      apis: apis,
-      roles: roles,
-      schedules: schedules,
-      conversations: conversations,
-    );
-    if (!conversations.any((c) => c.id == selectedId)) {
-      selectedId = conversations.first.id;
-    }
   }
 
   final apis = PreviewData.apis();

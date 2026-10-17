@@ -18,7 +18,7 @@ class RolesPage extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (store.roles.isEmpty)
+        if (store.activeRoles.isEmpty)
           EmptyState(
             title: '还没有角色',
             subtitle: '点击新建角色。',

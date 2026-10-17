@@ -27,7 +27,9 @@ void main() {
                   MessageBubble(
                     message: ChatMessage(
                       id: 'untimed',
-                      roleId: mine ? null : 'lin',
+                      roleId: mine
+                          ? null
+                          : '11111111-1111-4111-8111-111111111111',
                       text: '第一条消息',
                       time: '16:38',
                     ),
@@ -39,7 +41,9 @@ void main() {
                   MessageBubble(
                     message: ChatMessage(
                       id: 'timed',
-                      roleId: mine ? null : 'lin',
+                      roleId: mine
+                          ? null
+                          : '11111111-1111-4111-8111-111111111111',
                       text: '第二条消息',
                       time: '16:39',
                     ),

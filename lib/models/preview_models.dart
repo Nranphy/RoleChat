@@ -8,9 +8,22 @@ class RoleProfile {
     this.identity = '',
     this.soul = '',
     this.memory = '',
+    this.archived = false,
+    this.timezone = 'UTC',
+    this.checkMin = 5,
+    this.checkMax = 30,
+    this.maxToolRounds = 8,
+    this.lockSoul = false,
+    this.lockMemory = false,
+    List<String>? lockedSchedules,
     List<Map<String, String>>? examples,
-  }) : examples = examples ?? [];
+  }) : examples = examples ?? [],
+       lockedSchedules = lockedSchedules ?? [];
   final String id;
+  bool archived, lockSoul, lockMemory;
+  String timezone;
+  int checkMin, checkMax, maxToolRounds;
+  List<String> lockedSchedules;
   String name, model, identity, soul, memory;
   String? apiId, avatar;
   List<Map<String, String>> examples;
@@ -34,12 +47,19 @@ class ChatMessage {
     this.roleId,
     this.time = '16:42',
     this.reply,
-  });
+    this.senderName,
+    DateTime? createdAt,
+    List<String>? mentions,
+  }) : createdAt = createdAt ?? DateTime.now().toUtc(),
+       mentions = mentions ?? [];
   final String id;
   final String text;
   final String? roleId;
   final MessageReference? reply;
   final String time;
+  final DateTime createdAt;
+  final String? senderName;
+  final List<String> mentions;
   bool get isUser => roleId == null;
 }
 
@@ -51,12 +71,13 @@ class Conversation {
     required this.members,
     this.group = false,
     this.background = '',
+    this.archived = false,
     List<ChatMessage>? messages,
   }) : messages = messages ?? [];
   final String id;
   String name, background;
   String? avatar;
-  bool group;
+  bool group, archived;
   List<String> members;
   List<ChatMessage> messages;
 }
@@ -67,9 +88,13 @@ class ApiProfile {
     required this.name,
     required this.url,
     this.key = '',
-  });
+    Map<String, ModelSettings>? models,
+  }) : models = models ?? {};
   final String id;
   String name, url, key;
+  Map<String, ModelSettings> models;
+  ModelSettings settings(String model) =>
+      models.putIfAbsent(model, ModelSettings.new);
 }
 
 enum ScheduleRuleKind { daily, weekly, annual, date, range }
@@ -96,4 +121,59 @@ class ScheduleEntry {
   ScheduleRuleKind ruleKind;
   String? dateFrom, dateUntil;
   int? annualMonth, annualDay;
+}
+
+class ModelSettings {
+  ModelSettings({
+    this.contextTokens = 32768,
+    this.historyHigh = 20000,
+    this.historyTarget = 12000,
+    this.maxOutput = 2048,
+    this.concurrency = 2,
+    this.timeoutSeconds = 60,
+    this.protocol = 'chat',
+    this.toolsUnsupported = false,
+  });
+  int contextTokens,
+      historyHigh,
+      historyTarget,
+      maxOutput,
+      concurrency,
+      timeoutSeconds;
+  String protocol;
+  bool toolsUnsupported;
+  Map<String, dynamic> toJson() => {
+    'contextTokens': contextTokens,
+    'historyHigh': historyHigh,
+    'historyTarget': historyTarget,
+    'maxOutput': maxOutput,
+    'concurrency': concurrency,
+    'timeoutSeconds': timeoutSeconds,
+    'protocol': protocol,
+    'toolsUnsupported': toolsUnsupported,
+  };
+  factory ModelSettings.fromJson(Map<String, dynamic> j) => ModelSettings(
+    contextTokens: j['contextTokens'] as int,
+    historyHigh: j['historyHigh'] as int,
+    historyTarget: j['historyTarget'] as int,
+    maxOutput: j['maxOutput'] as int,
+    concurrency: j['concurrency'] as int,
+    timeoutSeconds: j['timeoutSeconds'] as int,
+    protocol: j['protocol'] as String,
+    toolsUnsupported: j['toolsUnsupported'] as bool,
+  );
+  void validate() {
+    if (contextTokens < 1024 ||
+        maxOutput < 1 ||
+        historyTarget < 0 ||
+        historyTarget >= historyHigh ||
+        historyHigh + maxOutput >= contextTokens ||
+        concurrency < 1 ||
+        concurrency > 32 ||
+        timeoutSeconds < 1 ||
+        timeoutSeconds > 600 ||
+        !['chat', 'responses'].contains(protocol)) {
+      throw const FormatException('模型预算、并发或超时无效');
+    }
+  }
 }

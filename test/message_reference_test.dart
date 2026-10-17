@@ -20,14 +20,22 @@ void main() {
       SharedPreferences.setMockInitialValues({});
       final store = PreviewStore(await SharedPreferences.getInstance());
       store.selected.messages = [
-        ChatMessage(id: 'first', roleId: 'lin', text: '同样的内容'),
-        ChatMessage(id: 'target', roleId: 'summer', text: '同样的内容'),
+        ChatMessage(
+          id: 'first',
+          roleId: '11111111-1111-4111-8111-111111111111',
+          text: '同样的内容',
+        ),
+        ChatMessage(
+          id: 'target',
+          roleId: '33333333-3333-4333-8333-333333333333',
+          text: '同样的内容',
+        ),
         ChatMessage(
           id: 'quoted',
           text: '带引用的回复',
           reply: const MessageReference(
             messageId: 'target',
-            roleId: 'summer',
+            roleId: '33333333-3333-4333-8333-333333333333',
             senderName: '夏芽',
             text: '同样的内容',
           ),
