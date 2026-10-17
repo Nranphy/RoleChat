@@ -28,5 +28,5 @@ class WorkspaceRepository {
   }
 
   Future<void> flush() => _queue;
-  void close() => storage.close();
+  void close() => unawaited(_queue.whenComplete(storage.close));
 }

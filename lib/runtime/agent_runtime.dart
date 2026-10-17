@@ -188,6 +188,23 @@ class AgentRuntime {
       while ((_requests[limiter] ?? 0) >= settings.concurrency) {
         await Future<void>.delayed(const Duration(milliseconds: 100));
         if (!_valid(role, chat, epoch)) return;
+        if (SchedulePolicy.match(
+              role,
+              store.schedules,
+              DateTime.now(),
+            ).probability ==
+            0) {
+          return;
+        }
+      }
+      if (!_valid(role, chat, epoch) ||
+          SchedulePolicy.match(
+                role,
+                store.schedules,
+                DateTime.now(),
+              ).probability ==
+              0) {
+        return;
       }
       _requests[limiter] = (_requests[limiter] ?? 0) + 1;
       acquired = true;
