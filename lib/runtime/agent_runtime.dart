@@ -282,6 +282,8 @@ class AgentRuntime {
         identical(api.models[model], settings);
     var acquired = false;
     var sentMessages = 0;
+    final sentReceipts = <String, String>{};
+    final runId = store.newId();
     try {
       if ((_requests[limiter] ?? 0) >= settings.concurrency) {
         _log('等待模型并发额度', {
@@ -317,7 +319,9 @@ class AgentRuntime {
       while (valid()) {
         final generation = _generation(chat, role);
         bool current() => valid() && generation == _generation(chat, role);
-        store.runtimeData['view:${role.id}:${chat.id}'] = chat.nextSequence - 1;
+        final viewKey = 'view:${role.id}:${chat.id}';
+        final previousViewSequence = (store.runtimeData[viewKey] as int?) ?? 0;
+        store.runtimeData[viewKey] = chat.nextSequence - 1;
         final messages = ContextBuilder().build(
           store,
           role,
@@ -327,6 +331,8 @@ class AgentRuntime {
           SchedulePolicy.match(role, store.schedules, DateTime.now()),
           agentTools,
           DateTime.now(),
+          previousViewSequence: previousViewSequence,
+          committedMessages: sentReceipts,
         );
         await store.saveProfiles();
         _log('上下文就绪', {
@@ -335,7 +341,12 @@ class AgentRuntime {
           'messageCount': chat.messages.length,
           'estimatedTokens': estimateTokens(messages),
         });
-        final executor = AgentToolExecutor(store, role, chat);
+        final executor = AgentToolExecutor(
+          store,
+          role,
+          chat,
+          sentReceipts: sentReceipts,
+        );
         var restart = false;
         for (var round = 0; round < role.maxToolRounds; round++) {
           if (!current()) {
@@ -351,6 +362,7 @@ class AgentRuntime {
           late final ModelTurn turn;
           try {
             _log('请求模型', {
+              'runId': runId,
               'role': role.name,
               'chatId': chat.id,
               'round': round + 1,
@@ -409,7 +421,27 @@ class AgentRuntime {
             Object result;
             try {
               result = executor.execute(call.name, call.arguments, current);
-              if (call.name == 'send_message') sentMessages++;
+              if (call.name == 'send_message') {
+                final receipt = result as Map;
+                if (receipt['deduplicated'] == true) {
+                  _log('重复发送已拦截', {
+                    'runId': runId,
+                    'role': role.name,
+                    'chatId': chat.id,
+                    'toolCallId': call.id,
+                    'messageId': receipt['message_id'],
+                  });
+                } else {
+                  sentMessages++;
+                  _log('消息已发送', {
+                    'runId': runId,
+                    'role': role.name,
+                    'chatId': chat.id,
+                    'toolCallId': call.id,
+                    'messageId': receipt['message_id'],
+                  });
+                }
+              }
               _log('工具执行成功', {
                 'role': role.name,
                 'chatId': chat.id,

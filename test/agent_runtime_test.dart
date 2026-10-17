@@ -56,6 +56,111 @@ Future<PreviewStore> fixture() async {
 }
 
 void main() {
+  test(
+    'repeated sends across tool rounds create one message while distinct messages remain',
+    () async {
+      final store = await fixture();
+      final gateway = DeferredGateway();
+      final runtime = AgentRuntime(
+        store,
+        gateway: gateway,
+        random: ZeroRandom(),
+      );
+      runtime.tick(DateTime.now());
+      await settle();
+      gateway.requests.first.complete(
+        const ModelTurn([
+          ToolCall('a', 'send_message', {'text': '一起去散步吧'}),
+          ToolCall('b', 'send_message', {'text': '  一起去散步吧  '}),
+        ], []),
+      );
+      await settle();
+      expect(gateway.requests, hasLength(2));
+      gateway.requests.last.complete(
+        const ModelTurn([
+          ToolCall('c', 'send_message', {'text': '一起去散步吧'}),
+          ToolCall('d', 'send_message', {'text': '我在门口等你'}),
+          ToolCall('e', 'finish', {}),
+        ], []),
+      );
+      await settle();
+      expect(store.selected.messages.map((m) => m.text), ['一起去散步吧', '我在门口等你']);
+      expect(gateway.inputs.last, contains('"deduplicated":true'));
+      runtime.dispose();
+      store.dispose();
+    },
+  );
+
+  test(
+    'restart preserves sent receipts and tells the model what was already sent',
+    () async {
+      final store = await fixture();
+      final gateway = DeferredGateway();
+      final runtime = AgentRuntime(
+        store,
+        gateway: gateway,
+        random: ZeroRandom(),
+      );
+      runtime.tick(DateTime.now());
+      await settle();
+      gateway.requests.first.complete(
+        const ModelTurn([
+          ToolCall('a', 'send_message', {'text': '我刚出门'}),
+        ], []),
+      );
+      await settle();
+      store.send('记得带伞');
+      gateway.requests.last.complete(
+        const ModelTurn([
+          ToolCall('stale', 'send_message', {'text': '过期内容'}),
+        ], []),
+      );
+      await settle();
+      expect(gateway.requests, hasLength(3));
+      expect(gateway.inputs.last, contains('committed_messages'));
+      expect(gateway.inputs.last, contains('我刚出门'));
+      gateway.requests.last.complete(
+        const ModelTurn([
+          ToolCall('again', 'send_message', {'text': '我刚出门'}),
+          ToolCall('new', 'send_message', {'text': '带着呢'}),
+          ToolCall('done', 'finish', {}),
+        ], []),
+      );
+      await settle();
+      expect(store.selected.messages.map((m) => m.text), [
+        '我刚出门',
+        '记得带伞',
+        '带着呢',
+      ]);
+      runtime.dispose();
+      store.dispose();
+    },
+  );
+
+  test(
+    'new checks deduplicate recent own messages but a new incoming message permits repetition',
+    () async {
+      final store = await fixture();
+      final role = store.roles.single;
+      final first = AgentToolExecutor(store, role, store.selected);
+      final original =
+          first.execute('send_message', {'text': '好呀'}, () => true) as Map;
+      final second = AgentToolExecutor(store, role, store.selected);
+      final duplicate =
+          second.execute('send_message', {'text': '好呀'}, () => true) as Map;
+      expect(duplicate['deduplicated'], isTrue);
+      expect(duplicate['message_id'], original['message_id']);
+      expect(store.selected.messages, hasLength(1));
+      store.send('明天也可以吗');
+      final third = AgentToolExecutor(store, role, store.selected);
+      final fresh =
+          third.execute('send_message', {'text': '好呀'}, () => true) as Map;
+      expect(fresh['deduplicated'], isFalse);
+      expect(store.selected.messages, hasLength(3));
+      store.dispose();
+    },
+  );
+
   test('changing model configuration invalidates an in-flight reply', () async {
     final store = await fixture();
     final role = store.roles.single;

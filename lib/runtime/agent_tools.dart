@@ -26,7 +26,7 @@ const _string = {'type': 'string'};
 final agentTools = <Map<String, dynamic>>[
   _tool(
     'send_message',
-    '向当前会话发送一条自然的纯文本消息，可重复调用。',
+    '向当前会话发送一条自然的纯文本消息，可分条发送不同内容。已发送的相同内容不要重复调用；重复发送会返回原消息ID。',
     {'text': _string},
     ['text'],
   ),
@@ -53,10 +53,18 @@ final agentTools = <Map<String, dynamic>>[
 ];
 
 class AgentToolExecutor {
-  AgentToolExecutor(this.store, this.role, this.chat);
+  AgentToolExecutor(
+    this.store,
+    this.role,
+    this.chat, {
+    Map<String, String>? sentReceipts,
+  }) : sentReceipts = sentReceipts ?? {};
   final PreviewStore store;
   final RoleProfile role;
   final Conversation chat;
+
+  /// Shared across context restarts of one handling session.
+  final Map<String, String> sentReceipts;
   bool canRead(Conversation c) =>
       !role.archived && !c.archived && c.members.contains(role.id);
   String document(String name) => switch (name) {
@@ -85,6 +93,22 @@ class AgentToolExecutor {
         if (text.isEmpty || text.length > 8000) {
           throw const FormatException('消息内容为空或过长');
         }
+        var previousId = sentReceipts[text];
+        if (previousId == null) {
+          // A new periodic check must not replay this role's latest messages
+          // without any intervening message from someone else.
+          for (final message in chat.messages.reversed) {
+            if (message.roleId != role.id) break;
+            if (message.text == text) {
+              previousId = message.id;
+              break;
+            }
+          }
+        }
+        if (previousId != null) {
+          sentReceipts[text] = previousId;
+          return {'sent': true, 'deduplicated': true, 'message_id': previousId};
+        }
         final now = DateTime.now();
         chat.messages.add(
           ChatMessage(
@@ -104,7 +128,12 @@ class AgentToolExecutor {
           ),
         );
         store.changed();
-        return {'sent': true, 'message_id': chat.messages.last.id};
+        sentReceipts[text] = chat.messages.last.id;
+        return {
+          'sent': true,
+          'deduplicated': false,
+          'message_id': chat.messages.last.id,
+        };
       case 'search_history':
         final target = store.conversations
             .where((c) => c.id == args['conversation_id'])

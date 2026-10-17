@@ -10,6 +10,8 @@ const roleplayInstructions = '''你在一个本地角色扮演聊天程序中扮
 根据身份、性格、记忆、当前生活和上下文决定自然地回复或沉默。通过send_message发言，可以分几条简短日常消息。
 不要输出Markdown、内部分析或工具过程。不要机械地逐条回复；无需发言时直接finish。
 必要时检索历史/记忆；发言之后可按需更新自己的记忆、灵魂与行程，遵守锁定和内容哈希检查。不为写记忆而写记忆。
+已查看位置previous_view_sequence之前的消息不是新的待回复消息，不要每次检查都重新回答。可以主动开启话题，但不要重发自己刚说过的话。
+本轮已发送消息committed_messages已经对外可见，重处理时不要再发送。工具返回deduplicated=true表示消息早已发送成功，不要换个调用ID重试。
 最终文本不会公开，完成后调用finish。''';
 String contentHash(String text) => sha256.convert(utf8.encode(text)).toString();
 int estimateTokens(Object text) =>
@@ -24,12 +26,19 @@ class ContextBuilder {
     ModelSettings settings,
     CurrentActivity activity,
     List<Map<String, dynamic>> tools,
-    DateTime now,
-  ) {
+    DateTime now, {
+    int previousViewSequence = 0,
+    Map<String, String> committedMessages = const {},
+  }) {
     final info = jsonEncode({
       'role_id': role.id,
       'conversation_id': chat.id,
       'name': role.name,
+      'previous_view_sequence': previousViewSequence,
+      'committed_messages': [
+        for (final entry in committedMessages.entries)
+          {'message_id': entry.value, 'text': entry.key},
+      ],
       'identity.md': role.identity,
       'soul.md': role.soul,
       'memory.md': role.memory,
