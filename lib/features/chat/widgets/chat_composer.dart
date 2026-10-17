@@ -78,10 +78,8 @@ class ChatComposer extends StatelessWidget {
                       Expanded(
                         child: CallbackShortcuts(
                           bindings: {
-                            const SingleActivator(
-                              LogicalKeyboardKey.enter,
-                              control: true,
-                            ): onSend,
+                            const SingleActivator(LogicalKeyboardKey.enter):
+                                onSend,
                           },
                           child: TextField(
                             controller: input,

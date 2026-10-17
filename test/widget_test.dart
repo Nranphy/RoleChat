@@ -34,7 +34,7 @@ void main() {
     expect(find.text('一起去看花吧'), findsNWidgets(2));
     expect(tester.takeException(), isNull);
   });
-  testWidgets('Enter inserts newline and Ctrl Enter sends the draft', (
+  testWidgets('Shift Enter inserts newline and Enter sends the draft', (
     tester,
   ) async {
     final store = await setup(tester);
@@ -46,7 +46,9 @@ void main() {
       tester.widget<TextField>(field).textInputAction,
       TextInputAction.newline,
     );
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
     await tester.pump();
     expect(
       tester.widget<TextField>(field).keyboardType,
@@ -57,6 +59,9 @@ void main() {
     await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await tester.pump();
+    expect(store.selected.messages.length, count);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pumpAndSettle();
     expect(store.selected.messages.length, count + 1);
     expect(store.selected.messages.last.text, '第一行\n第二行');
