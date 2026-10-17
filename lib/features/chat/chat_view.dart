@@ -79,12 +79,15 @@ class _ChatViewState extends State<ChatView> {
           onSearch: searchMessages,
           onMenuSelected: (v) async {
             if (v == 'info') showInfo(context, store, c);
+            if (v == 'archive') {
+              store.archiveChat(c);
+            }
             if (v == 'typing') setState(() => showTyping = !showTyping);
             if (v == 'clear' &&
                 await confirm(
                   context,
-                  title: '清空展示消息？',
-                  body: '只清空当前预览会话，不影响其他会话。',
+                  title: '清空消息？',
+                  body: '清空当前会话的所有消息，无法恢复。',
                   action: '清空',
                 )) {
               c.messages.clear();
@@ -118,8 +121,8 @@ class _ChatViewState extends State<ChatView> {
             onDelete: (m) async {
               if (await confirm(
                 context,
-                title: '删除这条展示消息？',
-                body: '此操作只影响当前预览。',
+                title: '删除这条消息？',
+                body: '此操作将从本地文件中删除消息。',
               )) {
                 c.messages.remove(m);
                 store.changed();

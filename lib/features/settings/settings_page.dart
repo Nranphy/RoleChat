@@ -1,3 +1,5 @@
+import 'package:rolechat/features/data/archive_dialog.dart';
+import 'package:rolechat/features/data/data_transfer_dialog.dart';
 import 'settings_dialogs.dart';
 import 'widgets/runtime_settings.dart';
 import 'widgets/appearance_settings.dart';
@@ -16,7 +18,6 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  bool background = true;
   @override
   Widget build(BuildContext context) {
     final store = widget.store;
@@ -60,9 +61,19 @@ class _SettingsPageState extends State<SettingsPage> {
           const Text('运行与数据', style: TextStyle(fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
           RuntimeSettings(
-            background: background,
-            onBackgroundChanged: (v) => setState(() => background = v),
-            onLocalData: () => showLocalDataInfo(context),
+            background: store.runtimeData['background'] != false,
+            onArchive: () => managedDialog<void>(
+              context: context,
+              builder: (_) => ArchiveDialog(store: store),
+            ),
+            onBackgroundChanged: (v) {
+              store.runtimeData['background'] = v;
+              store.changed();
+            },
+            onLocalData: () => managedDialog<void>(
+              context: context,
+              builder: (_) => DataTransferDialog(store: store),
+            ),
             onAbout: () => showRoleChatAbout(context),
           ),
         ],

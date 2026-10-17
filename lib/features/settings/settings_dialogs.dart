@@ -3,22 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:rolechat/shared/widgets/common.dart';
 import 'package:rolechat/design/form_metrics.dart';
 
-Future<void> showLocalDataInfo(BuildContext context) => managedDialog<void>(
-  context: context,
-  builder: (context) => AppDialog.content(
-    title: const Text('关于本地数据'),
-    content: const Text(
-      '主题、头像以及角色与群聊资料保存在当前浏览器。API 配置与消息仅在本次运行中保留。导入导出和角色自动回复尚未实现。',
-    ),
-    actions: [
-      TextButton(
-        style: FormMetrics.dialogActionStyle,
-        onPressed: () => Navigator.pop(context),
-        child: const Text('知道了'),
-      ),
-    ],
-  ),
-);
 void showRoleChatAbout(BuildContext context) => showAboutDialog(
   context: context,
   applicationName: 'RoleChat',

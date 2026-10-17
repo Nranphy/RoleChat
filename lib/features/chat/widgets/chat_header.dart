@@ -100,7 +100,8 @@ class ChatHeader extends StatelessWidget {
             itemBuilder: (_) => [
               const PopupMenuItem(value: 'info', child: Text('会话资料')),
               const PopupMenuItem(value: 'typing', child: Text('切换输入中效果')),
-              const PopupMenuItem(value: 'clear', child: Text('清空展示消息')),
+              const PopupMenuItem(value: 'clear', child: Text('清空消息')),
+              const PopupMenuItem(value: 'archive', child: Text('归档会话')),
             ],
           ),
         ],

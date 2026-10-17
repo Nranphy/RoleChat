@@ -7,11 +7,12 @@ class RuntimeSettings extends StatelessWidget {
     required this.background,
     required this.onBackgroundChanged,
     required this.onLocalData,
+    required this.onArchive,
     required this.onAbout,
   });
   final bool background;
   final ValueChanged<bool> onBackgroundChanged;
-  final VoidCallback onLocalData, onAbout;
+  final VoidCallback onLocalData, onAbout, onArchive;
   @override
   Widget build(BuildContext context) => SettingsSection(
     padding: EdgeInsets.zero,
@@ -23,7 +24,7 @@ class RuntimeSettings extends StatelessWidget {
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 12),
           title: const Text('后台运行偏好'),
-          subtitle: const Text('展示开关；浏览器后台调度尚未实现'),
+          subtitle: const Text('允许页面在后台时检查消息；浏览器冻结页面后暂停运行'),
           value: background,
           onChanged: onBackgroundChanged,
         ),
@@ -31,8 +32,14 @@ class RuntimeSettings extends StatelessWidget {
         SettingsRow(
           icon: Icons.storage_outlined,
           title: '本地数据',
-          subtitle: '头像与角色、群聊资料保存在浏览器本地',
+          subtitle: '文件存储、ZIP 导入与导出',
           onTap: onLocalData,
+        ),
+        SettingsRow(
+          icon: Icons.archive_outlined,
+          title: '归档',
+          subtitle: '恢复或永久删除角色与会话',
+          onTap: onArchive,
         ),
         SettingsRow(
           icon: Icons.info_outline,

@@ -129,7 +129,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('删除角色').first);
     await tester.pumpAndSettle();
-    expect(find.text('删除 青禾？'), findsOneWidget);
+    expect(find.text('归档 青禾？'), findsOneWidget);
     expect(store.roles.length, 3);
     await tester.tap(find.text('取消'));
     await tester.pumpAndSettle();

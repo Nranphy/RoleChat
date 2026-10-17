@@ -49,8 +49,9 @@ class RolesPage extends StatelessWidget {
                     .join('、');
                 if (await confirm(
                   context,
-                  title: '删除 ${r.name}？',
-                  body: '参与群聊：${groups.isEmpty ? '无' : groups}\n已有消息保留。',
+                  title: '归档 ${r.name}？',
+                  body:
+                      '参与群聊：${groups.isEmpty ? '无' : groups}\n已有消息保留，可在设置的归档中恢复或永久删除。',
                 )) {
                   store.removeRole(r.id);
                 }
