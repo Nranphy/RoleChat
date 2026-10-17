@@ -4,10 +4,10 @@
 
 ## Git
 
-- docs/ 暂时不纳入 Git 跟踪，不修改 .gitignore 来忽略它。
-- 使用明确路径暂存；禁止 git add . 或 git add -A 导致 docs/ 被提交。
-- 提交前检查暂存文件，确保不包含 docs/、凭据和构建产物。
-- 自主管理本地提交，使用 feat:、fix:、chore: 等 Conventional Commits，按可审查功能划分提交。不自动推送远端。
+- docs/ 纳入 Git 跟踪，与实现同步维护；不修改 .gitignore。
+- 使用明确路径暂存，不使用 git add . 或 git add -A。
+- 提交前检查暂存文件，确保不包含凭据和构建产物。
+- 自主管理本地提交，使用 feat:、fix:、chore: 等 Conventional Commits，按可审查功能划分提交。仅在用户授权后推送远端。
 
 ## README
 
@@ -39,4 +39,4 @@ lib按app、presentation、application、domain、infrastructure、core分层，
 
 ## 最新设计与交接
 
-先阅读docs/16-final-architecture.md、docs/14-handoff.md及docs/04-data.md。用户已于2026-10-17授权按最终方案实现。业务存储、ZIP、归档及角色调度/原生工具循环已接入；后续维护需验证真实浏览器文件恢复和模型协议，不能将mock测试等同于真实模型验收。docs不跟踪，交接需另行包含该目录。
+先阅读docs/16-final-architecture.md、docs/14-handoff.md及docs/04-data.md。用户已于2026-10-17授权按最终方案实现。业务存储、ZIP、归档及角色调度/原生工具循环已接入；后续维护需验证真实浏览器文件恢复和模型协议，不能将mock测试等同于真实模型验收。docs纳入版本控制，交接以仓库中的文档为准。
