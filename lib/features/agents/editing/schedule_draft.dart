@@ -1,3 +1,4 @@
+import 'package:uuid/uuid.dart';
 import 'package:flutter/material.dart';
 import 'package:rolechat/models/preview_models.dart';
 
@@ -12,7 +13,7 @@ const ruleLabels = {
 /// Editing state keeps conditions separate from activity and time-of-day.
 class ScheduleDraft {
   ScheduleDraft([ScheduleEntry? entry])
-    : id = entry?.id,
+    : id = entry?.id ?? const Uuid().v4(),
       activity = TextEditingController(text: entry?.activity ?? ''),
       start = parseTime(entry?.start ?? '09:00'),
       end = parseTime(entry?.end ?? '12:00'),

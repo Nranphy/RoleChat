@@ -21,8 +21,10 @@ class RoleBasicTab extends StatelessWidget {
     this.modelCheckMessage,
     this.modelCheckSucceeded = false,
     this.checkingModel = false,
+    this.runtimeFields,
   });
   final TextEditingController name, model;
+  final Widget? runtimeFields;
   final String? avatar, api;
   final Map<String, String> apiOptions;
   final ValueChanged<String?> onAvatarChanged;
@@ -80,6 +82,10 @@ class RoleBasicTab extends StatelessWidget {
             ),
           ),
         ),
+      if (runtimeFields != null) ...[
+        const SizedBox(height: 20),
+        runtimeFields!,
+      ],
     ],
   );
 }

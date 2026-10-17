@@ -21,7 +21,7 @@ void main() {
       store.selected.background = '保存的群背景';
       expect(await store.saveProfiles(), isTrue);
       final files = await store.storage.read();
-      final root = 'agents/' + store.roles.first.id;
+      final root = 'agents/${store.roles.first.id}';
       expect(utf8.decode(files['$root/identity.md']!), '保存的身份');
       final rule =
           (jsonDecode(utf8.decode(files['$root/schedule.json']!)) as List).first

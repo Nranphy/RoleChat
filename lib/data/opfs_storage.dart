@@ -134,7 +134,7 @@ class OpfsWorkspaceStorage implements WorkspaceStorage {
       }
       final manifest = Uint8List.fromList(
         utf8.encode(
-          jsonEncode({'directory': next, 'files': files.keys.toList()..sort()}),
+          jsonEncode({'directory': next, 'files': files.keys.toList()}),
         ),
       );
       await _write(root, 'active.json', manifest);

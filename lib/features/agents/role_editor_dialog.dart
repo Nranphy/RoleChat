@@ -1,3 +1,7 @@
+import 'widgets/role_runtime_fields.dart';
+import 'dart:convert';
+import '../../data/workspace_codec.dart';
+import 'package:timezone/timezone.dart' as tz;
 import 'package:rolechat/services/api_check_controller.dart';
 import 'package:rolechat/services/model_availability_checker.dart';
 import 'editing/schedule_draft.dart';
@@ -27,6 +31,9 @@ class RoleEditorDialog extends StatefulWidget {
 
 class _RoleEditorDialogState extends State<RoleEditorDialog> {
   final form = GlobalKey<FormState>();
+  late final Map<String, TextEditingController> runtimeFields;
+  bool lockSoul = false, lockMemory = false;
+  late final Set<String> lockedSchedules;
   final controllers = <TextEditingController>[];
   late final TextEditingController name, model, identity, soul, memoryDocument;
   late String id;
@@ -49,6 +56,15 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
     super.initState();
     modelCheck.addListener(refreshModelCheck);
     final r = widget.role;
+    runtimeFields = {
+      '时区': text(r?.timezone ?? widget.store.localTimezone),
+      '检查最小间隔（秒）': text((r?.checkMin ?? 5).toString()),
+      '检查最大间隔（秒）': text((r?.checkMax ?? 30).toString()),
+      '最大工具轮数': text((r?.maxToolRounds ?? 8).toString()),
+    };
+    lockSoul = r?.lockSoul ?? false;
+    lockMemory = r?.lockMemory ?? false;
+    lockedSchedules = {...r?.lockedSchedules ?? []};
     id = r?.id ?? widget.store.newId();
     name = text(r?.name ?? '');
     model = text(r?.model ?? 'gpt-4o');
@@ -91,6 +107,22 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
       ProfileDialogTab(
         '基础',
         RoleBasicTab(
+          runtimeFields: RoleRuntimeFields(
+            fields: runtimeFields,
+            lockSoul: lockSoul,
+            lockMemory: lockMemory,
+            onSoulLock: (v) => setState(() => lockSoul = v),
+            onMemoryLock: (v) => setState(() => lockMemory = v),
+            scheduleNames: {
+              for (final s in schedules)
+                if (s.id != null)
+                  s.id!: s.activity.text.isEmpty ? '未命名活动' : s.activity.text,
+            },
+            lockedSchedules: lockedSchedules,
+            onScheduleLock: (id, v) => setState(
+              () => v ? lockedSchedules.add(id) : lockedSchedules.remove(id),
+            ),
+          ),
           name: name,
           model: model,
           avatar: avatar,
@@ -207,13 +239,38 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
       toast(context, '请填写活动，并检查星期和日期范围');
       return;
     }
+    final min = int.tryParse(runtimeFields['检查最小间隔（秒）']!.text);
+    final max = int.tryParse(runtimeFields['检查最大间隔（秒）']!.text);
+    final rounds = int.tryParse(runtimeFields['最大工具轮数']!.text);
+    if (min == null ||
+        max == null ||
+        rounds == null ||
+        min < 1 ||
+        max < min ||
+        rounds < 1 ||
+        rounds > 100 ||
+        !(runtimeFields['时区']!.text.trim() == 'UTC' ||
+            tz.timeZoneDatabase.locations.containsKey(
+              runtimeFields['时区']!.text.trim(),
+            ))) {
+      setState(() => tab = 0);
+      toast(context, '请检查时区、检查区间和工具轮数');
+      return;
+    }
     setState(() => saving = true);
     final store = widget.store;
     final r = widget.role ?? RoleProfile(id: id, name: name.text.trim());
     r.name = name.text.trim();
     r.avatar = avatar;
     r.apiId = api;
-    r.model = model.text;
+    r.model = model.text.trim();
+    r.timezone = runtimeFields['时区']!.text.trim();
+    r.checkMin = min;
+    r.checkMax = max;
+    r.maxToolRounds = rounds;
+    r.lockSoul = lockSoul;
+    r.lockMemory = lockMemory;
+    r.lockedSchedules = lockedSchedules.toList();
     r.identity = identity.text;
     r.soul = soul.text;
     r.memory = memoryDocument.text;
@@ -230,8 +287,18 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
       }
       store.changed();
     }
+    final previous = {
+      for (final s in store.schedules.where((s) => s.roleId == id))
+        s.id: jsonEncode(WorkspaceCodec.scheduleJson(s)),
+    };
+    final updated = schedules.map((s) => s.toEntry(id, store.newId())).toList();
+    bool unchanged(ScheduleEntry s) =>
+        previous[s.id] == jsonEncode(WorkspaceCodec.scheduleJson(s));
     store.schedules.removeWhere((s) => s.roleId == id);
-    store.schedules.addAll(schedules.map((s) => s.toEntry(id, store.newId())));
+    store.schedules.addAll([
+      ...updated.where(unchanged),
+      ...updated.where((s) => !unchanged(s)),
+    ]);
     if (!await store.saveProfiles()) {
       if (mounted) {
         setState(() => saving = false);

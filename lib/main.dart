@@ -29,6 +29,7 @@ Future<void> main() async {
       store.dispose();
       rethrow;
     }
+    store.startRuntime();
     runApp(RoleChatApp(store: store));
   } catch (e) {
     runApp(

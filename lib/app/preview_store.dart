@@ -1,3 +1,4 @@
+import 'package:timezone/data/latest.dart' as tzdata;
 import '../data/workspace_remap.dart';
 import '../data/preview_data.dart';
 import '../data/workspace_storage.dart';
@@ -5,6 +6,8 @@ import '../data/workspace_repository.dart';
 import '../data/workspace_codec.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:async';
+import '../runtime/agent_runtime.dart';
+import '../runtime/browser_environment.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../design/app_theme.dart';
@@ -12,13 +15,41 @@ import '../models/preview_models.dart';
 
 class PreviewStore extends ChangeNotifier {
   PreviewStore(this.preferences, {WorkspaceStorage? storage})
-    : _persistence = WorkspaceRepository(storage ?? MemoryWorkspaceStorage());
+    : _persistence = WorkspaceRepository(storage ?? MemoryWorkspaceStorage()) {
+    tzdata.initializeTimeZones();
+  }
   final SharedPreferences preferences;
   final WorkspaceRepository _persistence;
+  AgentRuntime? runtime;
+  String? runtimeError;
+  void startRuntime() {
+    runtime ??= AgentRuntime(this);
+    runtime!.start();
+  }
+
   WorkspaceStorage get storage => _persistence.storage;
   final runtimeData = <String, dynamic>{};
   bool _disposed = false;
+  bool transferring = false;
+  int dataEpoch = 0;
+  String localTimezone = 'UTC';
+  Future<void> importData(WorkspaceData merged) async {
+    transferring = true;
+    dataEpoch++;
+    refresh();
+    try {
+      if (!await _persistence.save(merged)) {
+        throw StateError(_persistence.error!);
+      }
+      applyData(merged);
+    } finally {
+      transferring = false;
+      refresh();
+    }
+  }
+
   Future<void> initialize() async {
+    localTimezone = browserTimezone();
     final saved = await _persistence.load();
     if (saved != null) {
       applyData(saved);
@@ -50,6 +81,7 @@ class PreviewStore extends ChangeNotifier {
     runtime: runtimeData,
   );
   void applyData(WorkspaceData data) {
+    dataEpoch++;
     apis
       ..clear()
       ..addAll(data.apis);
@@ -81,6 +113,7 @@ class PreviewStore extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    runtime?.dispose();
     _persistence.close();
     super.dispose();
   }
@@ -136,6 +169,13 @@ class PreviewStore extends ChangeNotifier {
     if (text.trim().isEmpty) return;
     selected.messages.add(
       ChatMessage(
+        sequence: selected.nextSequence++,
+        senderName: '你',
+        mentions: [
+          for (final r in activeRoles)
+            if (selected.members.contains(r.id) && text.contains('@${r.name}'))
+              r.id,
+        ],
         id: newId(),
         text: text.trim(),
         time: TimeOfDay.now().format24,

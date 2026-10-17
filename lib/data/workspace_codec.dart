@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:uuid/uuid.dart';
+import 'package:timezone/data/latest.dart' as tzdata;
+import 'package:timezone/timezone.dart' as tz;
 import '../models/preview_models.dart';
 import 'workspace_storage.dart';
 
@@ -79,6 +81,7 @@ abstract final class WorkspaceCodec {
         'id': c.id,
         'name': c.name,
         'group': c.group,
+        'nextSequence': c.nextSequence,
         'members': c.members,
         'archived': c.archived,
       });
@@ -91,6 +94,7 @@ abstract final class WorkspaceCodec {
             .map(
               (m) => jsonEncode({
                 'id': m.id,
+                'sequence': m.sequence,
                 'roleId': m.roleId,
                 'senderName': m.senderName,
                 'createdAt': m.createdAt.toUtc().toIso8601String(),
@@ -169,6 +173,7 @@ abstract final class WorkspaceCodec {
   }
 
   static WorkspaceData decode(FileTree files) {
+    tzdata.initializeTimeZones();
     for (final path in files.keys) {
       validateFilePath(path);
     }
@@ -272,11 +277,17 @@ abstract final class WorkspaceCodec {
           if (group) '$base/avatar.png',
         ]);
         final ids = <String>{};
+        var lastSequence = 0;
         final messages = const LineSplitter()
             .convert(read('$base/messages.jsonl'))
             .where((l) => l.isNotEmpty)
             .map((line) {
               final m = jsonDecode(line) as Map<String, dynamic>;
+              final sequence = m['sequence'] as int;
+              if (sequence <= lastSequence) {
+                throw const FormatException('消息序号必须递增且大于零');
+              }
+              lastSequence = sequence;
               if (!ids.add(m['id'] as String)) {
                 throw const FormatException('重复消息ID');
               }
@@ -284,6 +295,7 @@ abstract final class WorkspaceCodec {
               final reply = m['reply'] as Map<String, dynamic>?;
               return ChatMessage(
                 id: m['id'] as String,
+                sequence: m['sequence'] as int,
                 text: m['text'] as String,
                 roleId: m['roleId'] as String?,
                 senderName: m['senderName'] as String?,
@@ -302,11 +314,15 @@ abstract final class WorkspaceCodec {
               );
             })
             .toList();
+        if ((j['nextSequence'] as int) <= lastSequence) {
+          throw const FormatException('会话下一消息序号无效');
+        }
         chats.add(
           Conversation(
             id: j['id'] as String,
             name: j['name'] as String,
             group: group,
+            nextSequence: j['nextSequence'] as int,
             archived: j['archived'] as bool,
             members: List<String>.from(j['members'] as List),
             messages: messages,
@@ -345,6 +361,10 @@ abstract final class WorkspaceCodec {
       }
     }
     for (final r in roles) {
+      if (r.timezone != 'UTC' &&
+          !tz.timeZoneDatabase.locations.containsKey(r.timezone)) {
+        throw const FormatException('角色时区无效');
+      }
       if (r.apiId != null && !apiIds.contains(r.apiId)) {
         throw const FormatException('角色引用不存在的API配置');
       }

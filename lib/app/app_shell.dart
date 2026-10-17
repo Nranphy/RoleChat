@@ -44,7 +44,26 @@ class AppShell extends StatelessWidget {
                         : ThemeMode.dark,
                   ),
                 ),
-              Expanded(child: page),
+              Expanded(
+                child: Column(
+                  children: [
+                    if (store.runtimeError != null)
+                      MaterialBanner(
+                        content: Text(store.runtimeError!),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              store.runtimeError = null;
+                              store.refresh();
+                            },
+                            child: const Text('关闭'),
+                          ),
+                        ],
+                      ),
+                    Expanded(child: page),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
