@@ -5,17 +5,15 @@ import 'package:rolechat/design/app_theme.dart';
 import 'package:rolechat/features/chat/chat_page.dart';
 import 'package:rolechat/features/agents/roles_page.dart';
 import 'package:rolechat/features/settings/settings_page.dart';
-import 'package:rolechat/features/showcase/showcase_page.dart';
 
 class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.store});
   final PreviewStore store;
-  static const labels = ['聊天', '角色', '设置', '界面展览'];
+  static const labels = ['聊天', '角色', '设置'];
   static const icons = [
     Icons.chat_bubble_outline,
     Icons.people_outline,
     Icons.tune,
-    Icons.widgets_outlined,
   ];
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -24,8 +22,7 @@ class AppShell extends StatelessWidget {
       Widget page = switch (store.destination) {
         0 => ChatPage(store: store, wide: wide),
         1 => RolesPage(store: store),
-        2 => SettingsPage(store: store),
-        _ => const ShowcasePage(),
+        _ => SettingsPage(store: store),
       };
       return AbsorbPointer(
         absorbing: store.transferring,
@@ -77,7 +74,7 @@ class AppShell extends StatelessWidget {
                   selectedIndex: store.destination,
                   onDestinationSelected: store.navigate,
                   destinations: List.generate(
-                    4,
+                    labels.length,
                     (i) => NavigationDestination(
                       icon: Icon(icons[i]),
                       label: labels[i],

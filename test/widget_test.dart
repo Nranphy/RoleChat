@@ -197,7 +197,7 @@ void main() {
     for (final size in [const Size(1280, 900), const Size(390, 844)]) {
       tester.view.physicalSize = size;
       Rect? rolePanel;
-      for (var i = 0; i < 4; i++) {
+      for (var i = 0; i < 3; i++) {
         store.navigate(i);
         await tester.pumpAndSettle();
         if (i == 1 || i == 2) {
