@@ -111,6 +111,12 @@ flutter:
       fonts:
         - asset: assets/fonts/NotoColorEmoji.ttf
   assets:
+    - assets/presets/
+    - assets/presets/asashizuku/
+    - assets/presets/kaede/
+    - assets/presets/nagitsu/
+    - assets/presets/saki/
+    - assets/presets/wakaba/
     - assets/fonts/LICENSE-Roboto.txt
     - assets/fonts/OFL.txt
     - assets/fonts/OFL-emoji.txt
