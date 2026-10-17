@@ -6,6 +6,7 @@ import '../app/preview_store.dart';
 import '../models/preview_models.dart';
 import 'agent_gateway.dart';
 import 'agent_tools.dart';
+import 'agent_execution.dart';
 import 'context_builder.dart';
 import 'schedule_policy.dart';
 import 'browser_environment.dart';
@@ -152,7 +153,7 @@ class AgentRuntime {
         });
         for (final chat in _chats(role)) {
           clock.baselines[chat.id] = chat.nextSequence - 1;
-          if (activity.probability > 0) {
+          if (activity.probability > 0 && clock.activeChat != chat.id) {
             clock.pending.putIfAbsent(
               chat.id,
               () => now.add(
@@ -282,7 +283,7 @@ class AgentRuntime {
         identical(api.models[model], settings);
     var acquired = false;
     var sentMessages = 0;
-    final sentReceipts = <String, String>{};
+    final execution = AgentExecution();
     final runId = store.newId();
     try {
       if ((_requests[limiter] ?? 0) >= settings.concurrency) {
@@ -317,6 +318,9 @@ class AgentRuntime {
       acquired = true;
       _roles[role.id]?.processing = true;
       while (valid()) {
+        if (execution.requests >= role.maxToolRounds) {
+          throw StateError('达到工具循环最大轮数（包含上下文更新前的请求）');
+        }
         final generation = _generation(chat, role);
         bool current() => valid() && generation == _generation(chat, role);
         final viewKey = 'view:${role.id}:${chat.id}';
@@ -332,8 +336,8 @@ class AgentRuntime {
           agentTools,
           DateTime.now(),
           previousViewSequence: previousViewSequence,
-          committedMessages: sentReceipts,
         );
+        messages.addAll(execution.transcript);
         await store.saveProfiles();
         _log('上下文就绪', {
           'role': role.name,
@@ -341,14 +345,9 @@ class AgentRuntime {
           'messageCount': chat.messages.length,
           'estimatedTokens': estimateTokens(messages),
         });
-        final executor = AgentToolExecutor(
-          store,
-          role,
-          chat,
-          sentReceipts: sentReceipts,
-        );
+        final executor = AgentToolExecutor(store, role, chat);
         var restart = false;
-        for (var round = 0; round < role.maxToolRounds; round++) {
+        while (execution.requests < role.maxToolRounds) {
           if (!current()) {
             restart = true;
             break;
@@ -361,11 +360,12 @@ class AgentRuntime {
           }
           late final ModelTurn turn;
           try {
+            execution.requests++;
             _log('请求模型', {
               'runId': runId,
               'role': role.name,
               'chatId': chat.id,
-              'round': round + 1,
+              'round': execution.requests,
               'maxRounds': role.maxToolRounds,
               'model': role.model,
               'protocol': settings.protocol,
@@ -407,12 +407,12 @@ class AgentRuntime {
                   : '模型本轮未返回原生工具调用（结束原因：${turn.finishReason ?? "未知"}），不能据此认定模型不支持工具。请检查接口和模型的工具支持；60 秒后允许重试。',
             );
           }
-          messages.addAll(turn.continuation);
           _log('模型返回工具', {
             'role': role.name,
             'tools': turn.calls.map((c) => c.name).toList(),
           });
           var finished = false;
+          final results = <(ToolCall, Object)>[];
           for (final call in turn.calls) {
             if (!current()) {
               restart = true;
@@ -420,16 +420,17 @@ class AgentRuntime {
             }
             Object result;
             try {
-              result = executor.execute(call.name, call.arguments, current);
+              final receipt = execution.execute(call, executor, current);
+              result = receipt.$1;
               if (call.name == 'send_message') {
-                final receipt = result as Map;
-                if (receipt['deduplicated'] == true) {
-                  _log('重复发送已拦截', {
+                final message = result as Map;
+                if (receipt.$2) {
+                  _log('复用工具调用结果', {
                     'runId': runId,
                     'role': role.name,
                     'chatId': chat.id,
                     'toolCallId': call.id,
-                    'messageId': receipt['message_id'],
+                    'messageId': message['message_id'],
                   });
                 } else {
                   sentMessages++;
@@ -438,7 +439,7 @@ class AgentRuntime {
                     'role': role.name,
                     'chatId': chat.id,
                     'toolCallId': call.id,
-                    'messageId': receipt['message_id'],
+                    'messageId': message['message_id'],
                   });
                 }
               }
@@ -456,20 +457,10 @@ class AgentRuntime {
               });
               result = {'error': '$e'};
             }
-            messages.add(
-              settings.protocol == 'responses'
-                  ? {
-                      'type': 'function_call_output',
-                      'call_id': call.id,
-                      'output': jsonEncode(result),
-                    }
-                  : {
-                      'role': 'tool',
-                      'tool_call_id': call.id,
-                      'content': jsonEncode(result),
-                    },
-            );
+            results.add((call, result));
+            if (finished) break;
           }
+          messages.addAll(execution.record(turn, results, settings.protocol));
           if (restart) break;
           if (finished) {
             _log('模型结束本轮', {
@@ -479,7 +470,9 @@ class AgentRuntime {
             });
             return;
           }
-          if (round == role.maxToolRounds - 1) throw StateError('达到工具循环最大轮数');
+          if (execution.requests == role.maxToolRounds) {
+            throw StateError('达到工具循环最大轮数');
+          }
         }
         if (!restart) return;
       }

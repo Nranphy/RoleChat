@@ -57,7 +57,44 @@ Future<PreviewStore> fixture() async {
 
 void main() {
   test(
-    'repeated sends across tool rounds create one message while distinct messages remain',
+    'schedule transition does not queue a second run of the currently active chat',
+    () async {
+      final store = await fixture();
+      final role = store.roles.single;
+      final gateway = DeferredGateway();
+      final runtime = AgentRuntime(
+        store,
+        gateway: gateway,
+        random: ZeroRandom(),
+      );
+      final now = DateTime.now();
+      runtime.tick(now);
+      await settle();
+      store.schedules.add(
+        ScheduleEntry(
+          id: store.newId(),
+          roleId: role.id,
+          activity: '聊天',
+          start: '00:00',
+          end: '23:59',
+          probability: 100,
+        ),
+      );
+      runtime.tick(now.add(const Duration(seconds: 1)));
+      gateway.requests.single.complete(
+        const ModelTurn([ToolCall('done', 'finish', {})], []),
+      );
+      await settle();
+      runtime.tick(now.add(const Duration(seconds: 2)));
+      await settle();
+      expect(gateway.requests, hasLength(1));
+      runtime.dispose();
+      store.dispose();
+    },
+  );
+
+  test(
+    'same tool call is executed once and its full exchange reaches the next model request',
     () async {
       final store = await fixture();
       final gateway = DeferredGateway();
@@ -71,28 +108,29 @@ void main() {
       gateway.requests.first.complete(
         const ModelTurn([
           ToolCall('a', 'send_message', {'text': '一起去散步吧'}),
-          ToolCall('b', 'send_message', {'text': '  一起去散步吧  '}),
         ], []),
       );
       await settle();
       expect(gateway.requests, hasLength(2));
       gateway.requests.last.complete(
         const ModelTurn([
-          ToolCall('c', 'send_message', {'text': '一起去散步吧'}),
+          ToolCall('a', 'send_message', {'text': '一起去散步吧'}),
           ToolCall('d', 'send_message', {'text': '我在门口等你'}),
           ToolCall('e', 'finish', {}),
         ], []),
       );
       await settle();
       expect(store.selected.messages.map((m) => m.text), ['一起去散步吧', '我在门口等你']);
-      expect(gateway.inputs.last, contains('"deduplicated":true'));
+      expect(gateway.inputs.last, contains('role: assistant'));
+      expect(gateway.inputs.last, contains('tool_call_id: a'));
+      expect(gateway.inputs.last, contains('"sent":true'));
       runtime.dispose();
       store.dispose();
     },
   );
 
   test(
-    'restart preserves sent receipts and tells the model what was already sent',
+    'restart preserves completed assistant-tool exchanges and discards unexecuted stale calls',
     () async {
       final store = await fixture();
       final gateway = DeferredGateway();
@@ -117,11 +155,12 @@ void main() {
       );
       await settle();
       expect(gateway.requests, hasLength(3));
-      expect(gateway.inputs.last, contains('committed_messages'));
+      expect(gateway.inputs.last, contains('tool_call_id: a'));
+      expect(gateway.inputs.last, contains('role: assistant'));
+      expect(gateway.inputs.last, isNot(contains('过期内容')));
       expect(gateway.inputs.last, contains('我刚出门'));
       gateway.requests.last.complete(
         const ModelTurn([
-          ToolCall('again', 'send_message', {'text': '我刚出门'}),
           ToolCall('new', 'send_message', {'text': '带着呢'}),
           ToolCall('done', 'finish', {}),
         ], []),
@@ -137,29 +176,52 @@ void main() {
     },
   );
 
-  test(
-    'new checks deduplicate recent own messages but a new incoming message permits repetition',
-    () async {
-      final store = await fixture();
-      final role = store.roles.single;
-      final first = AgentToolExecutor(store, role, store.selected);
-      final original =
-          first.execute('send_message', {'text': '好呀'}, () => true) as Map;
-      final second = AgentToolExecutor(store, role, store.selected);
-      final duplicate =
-          second.execute('send_message', {'text': '好呀'}, () => true) as Map;
-      expect(duplicate['deduplicated'], isTrue);
-      expect(duplicate['message_id'], original['message_id']);
-      expect(store.selected.messages, hasLength(1));
-      store.send('明天也可以吗');
-      final third = AgentToolExecutor(store, role, store.selected);
-      final fresh =
-          third.execute('send_message', {'text': '好呀'}, () => true) as Map;
-      expect(fresh['deduplicated'], isFalse);
-      expect(store.selected.messages, hasLength(3));
-      store.dispose();
-    },
-  );
+  test('independent sends are not blocked by equal message content', () async {
+    final store = await fixture();
+    final role = store.roles.single;
+    final first = AgentToolExecutor(store, role, store.selected);
+    final original =
+        first.execute('send_message', {'text': '好呀'}, () => true) as Map;
+    final second = AgentToolExecutor(store, role, store.selected);
+    final duplicate =
+        second.execute('send_message', {'text': '好呀'}, () => true) as Map;
+    expect(duplicate['message_id'], isNot(original['message_id']));
+    expect(store.selected.messages, hasLength(2));
+    store.send('明天也可以吗');
+    final third = AgentToolExecutor(store, role, store.selected);
+    final fresh =
+        third.execute('send_message', {'text': '好呀'}, () => true) as Map;
+    expect(fresh['sent'], isTrue);
+    expect(store.selected.messages, hasLength(4));
+    store.dispose();
+  });
+
+  test('context refreshes do not reset the handling request budget', () async {
+    final store = await fixture();
+    store.roles.single.maxToolRounds = 2;
+    final gateway = DeferredGateway();
+    final runtime = AgentRuntime(store, gateway: gateway, random: ZeroRandom());
+    runtime.tick(DateTime.now());
+    await settle();
+    gateway.requests.first.complete(
+      const ModelTurn([
+        ToolCall('a', 'send_message', {'text': '出门啦'}),
+      ], []),
+    );
+    await settle();
+    store.send('等一下');
+    gateway.requests.last.complete(
+      const ModelTurn([
+        ToolCall('stale', 'send_message', {'text': '过期回复'}),
+      ], []),
+    );
+    await settle();
+    expect(gateway.requests, hasLength(2));
+    expect(store.runtimeError, contains('达到工具循环最大轮数'));
+    expect(store.selected.messages.map((m) => m.text), ['出门啦', '等一下']);
+    runtime.dispose();
+    store.dispose();
+  });
 
   test('changing model configuration invalidates an in-flight reply', () async {
     final store = await fixture();

@@ -10,8 +10,8 @@ const roleplayInstructions = '''你在一个本地角色扮演聊天程序中扮
 根据身份、性格、记忆、当前生活和上下文决定自然地回复或沉默。通过send_message发言，可以分几条简短日常消息。
 不要输出Markdown、内部分析或工具过程。不要机械地逐条回复；无需发言时直接finish。
 必要时检索历史/记忆；发言之后可按需更新自己的记忆、灵魂与行程，遵守锁定和内容哈希检查。不为写记忆而写记忆。
-已查看位置previous_view_sequence之前的消息不是新的待回复消息，不要每次检查都重新回答。可以主动开启话题，但不要重发自己刚说过的话。
-本轮已发送消息committed_messages已经对外可见，重处理时不要再发送。工具返回deduplicated=true表示消息早已发送成功，不要换个调用ID重试。
+已查看位置previous_view_sequence及之前的消息不是新的待回复消息。check_kind为new_messages时结合新消息继续聊天，为scheduled_review时是自主查看历史，不是要求重新回复旧消息，可以沉默或自然开启话题。
+后续assistant工具调用和tool结果是本次处理中已经执行的操作，发送成功的消息已经公开。更新聊天上下文后继续完成未完成的事情，不要从头重演已完成的回复或操作。
 最终文本不会公开，完成后调用finish。''';
 String contentHash(String text) => sha256.convert(utf8.encode(text)).toString();
 int estimateTokens(Object text) =>
@@ -28,17 +28,18 @@ class ContextBuilder {
     List<Map<String, dynamic>> tools,
     DateTime now, {
     int previousViewSequence = 0,
-    Map<String, String> committedMessages = const {},
   }) {
     final info = jsonEncode({
       'role_id': role.id,
       'conversation_id': chat.id,
       'name': role.name,
       'previous_view_sequence': previousViewSequence,
-      'committed_messages': [
-        for (final entry in committedMessages.entries)
-          {'message_id': entry.value, 'text': entry.key},
-      ],
+      'check_kind':
+          chat.messages.any(
+            (m) => m.sequence > previousViewSequence && m.roleId != role.id,
+          )
+          ? 'new_messages'
+          : 'scheduled_review',
       'identity.md': role.identity,
       'soul.md': role.soul,
       'memory.md': role.memory,
