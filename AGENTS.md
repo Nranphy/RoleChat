@@ -1,6 +1,6 @@
 # RoleChat 开发约定
 
-开始开发前阅读 docs/ 目录中的产品、UI、架构和设计决定；最新用户要求优先。当前开发Flutter Web；按docs/16-final-architecture.md实现OPFS、导入导出、归档、配置及角色调度和工具循环。
+开始开发前阅读docs/00-index.md、14-handoff.md、17-modular-architecture.md及相关专题；最新用户要求优先。当前Flutter Web已接入OPFS、ZIP及Agent工具循环，不能再按仅UI预览阶段理解。
 
 ## Git
 
@@ -25,15 +25,17 @@ D:/agent-identity是用户只读人设源目录，禁止修改。项目使用ass
 
 ## UI 组件边界
 
-维护 UI 前阅读 docs/12-ui-component-structure.md。公共展示组件放在 shared/widgets，功能专用组件放在 features 对应目录；展示组件通过数据和回调交互，不依赖 PreviewStore 或直接访问本地存储。页面与编辑弹窗负责协调操作。保留各组件现有 hover、尺寸与保存行为，避免结构重构混入样式或功能修改。
+维护UI前阅读docs/12-ui-component-structure.md。公共组件放在lib/presentation/shared/widgets，功能组件放在lib/presentation/features，主题在presentation/theme；展示组件不依赖AppStore或直接访问存储。页面收集草稿并协调操作，保留现有hover、尺寸与保存行为。
 
 ## 模块边界
 
-维护业务前阅读docs/17-modular-architecture.md。runtime通过AgentWorkspace访问数据，不反向导入app或features。通用ActivationScheduler及ActivationPolicy不依赖Flutter、聊天模型、SDK和存储；RoleActivation只做快照适配，AgentRunner只负责模型与工具循环。界面草稿通过PreviewStore保存入口提交，跨实体引用更新交给ProfileActions，文件生命周期交给WorkspaceLifecycle。重构不得引入按正文过滤消息或重置上下文重启预算的旧逻辑。
+lib按app、presentation、application、domain、infrastructure、core分层，内部统一package:rolechat导入，不保留旧路径转发。core只依赖core；domain依赖domain/core；application依赖应用端口/domain/core，不导入UI或SDK；infrastructure实现端口，不反向依赖app/presentation。AppStore装配具体模型、浏览器和日志适配。角色策略在application/agents/activation，通用调度在core/activation。依赖与可达性由test/architecture自动检查。
+
+界面草稿通过AppStore保存入口提交；跨实体更新用domain/services，文件生命周期用infrastructure/storage。不得引入按正文过滤消息或上下文重启预算归零的旧逻辑。测试按层次组织，生产源码不放示例数据；README不写架构。
 
 ## 数据格式
 
-当前为初期开发，无正式旧数据，允许经当前需求授权的破坏性变更。业务数据采用OPFS独立JSON、Markdown和JSONL文件，不保留profiles旧格式迁移。自定义弹窗统一使用shared/widgets/AppDialog；系统日期时间和关于窗口保持Flutter标准组件。
+当前为初期开发，无正式旧数据，允许经当前需求授权的破坏性变更。业务数据采用OPFS独立JSON、Markdown和JSONL文件，不保留profiles旧格式迁移。自定义弹窗统一使用lib/presentation/shared/widgets/app_dialog.dart；系统日期时间和关于窗口保持Flutter标准组件。
 
 ## 最新设计与交接
 
