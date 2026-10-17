@@ -1,5 +1,5 @@
 import 'dart:convert';
-import '../app/preview_store.dart';
+import 'agent_workspace.dart';
 import '../data/workspace_codec.dart';
 import '../models/preview_models.dart';
 import 'context_builder.dart';
@@ -54,7 +54,7 @@ final agentTools = <Map<String, dynamic>>[
 
 class AgentToolExecutor {
   AgentToolExecutor(this.store, this.role, this.chat);
-  final PreviewStore store;
+  final AgentWorkspace store;
   final RoleProfile role;
   final Conversation chat;
 

@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:timezone/timezone.dart' as tz;
 import '../models/preview_models.dart';
 
@@ -73,13 +72,4 @@ abstract final class SchedulePolicy {
       role.defaultActivationProbability / 100,
     );
   }
-
-  static double probability(double base, int aiCount, bool mentioned) =>
-      min(1.0, base * (mentioned ? 2 : 1)) *
-      max(.05, pow(2, -max(0, aiCount - 6) / 4).toDouble());
-  static Duration transitionDelay(double p, Random random) => Duration(
-    milliseconds:
-        ((5 * (1 - p) + random.nextDouble() * (5 + 50 * (1 - p))) * 1000)
-            .round(),
-  );
 }

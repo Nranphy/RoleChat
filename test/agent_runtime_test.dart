@@ -10,6 +10,7 @@ import 'package:rolechat/runtime/agent_runtime.dart';
 import 'package:rolechat/runtime/agent_tools.dart';
 import 'package:rolechat/runtime/context_builder.dart';
 import 'package:rolechat/runtime/schedule_policy.dart';
+import 'package:rolechat/runtime/activation_policy.dart';
 import 'package:rolechat/models/workspace_cleanup.dart';
 
 class ZeroRandom implements Random {
@@ -379,9 +380,12 @@ void main() {
     store.dispose();
   });
   test('zero probability remains zero and decay has a coefficient floor', () {
-    expect(SchedulePolicy.probability(0, 100, true), 0);
-    expect(SchedulePolicy.probability(.2, 100, false), closeTo(.01, .00001));
-    expect(SchedulePolicy.probability(1, 10, false), .5);
+    expect(const RoleplayActivationPolicy().probability(0, 100, true), 0);
+    expect(
+      const RoleplayActivationPolicy().probability(.2, 100, false),
+      closeTo(.01, .00001),
+    );
+    expect(const RoleplayActivationPolicy().probability(1, 10, false), .5);
   });
   test(
     'unmatched schedules use role probability while matched rules take precedence',

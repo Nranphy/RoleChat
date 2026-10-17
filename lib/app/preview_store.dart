@@ -6,6 +6,7 @@ import '../data/workspace_codec.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:async';
 import '../runtime/agent_runtime.dart';
+import '../runtime/agent_workspace.dart';
 import '../runtime/browser_environment.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,7 +14,7 @@ import '../design/app_theme.dart';
 import '../models/preview_models.dart';
 import '../models/workspace_cleanup.dart';
 
-class PreviewStore extends ChangeNotifier {
+class PreviewStore extends ChangeNotifier implements AgentWorkspace {
   PreviewStore(this.preferences, {WorkspaceStorage? storage})
     : _persistence = WorkspaceRepository(storage ?? MemoryWorkspaceStorage()) {
     tzdata.initializeTimeZones();
@@ -22,15 +23,26 @@ class PreviewStore extends ChangeNotifier {
   final WorkspaceRepository _persistence;
   AgentRuntime? runtime;
   String? runtimeError;
+  @override
+  Future<bool> save() => saveProfiles();
+  @override
+  void reportError(String message) {
+    runtimeError = message;
+    refresh();
+  }
+
   void startRuntime() {
     runtime ??= AgentRuntime(this);
     runtime!.start();
   }
 
   WorkspaceStorage get storage => _persistence.storage;
+  @override
   final runtimeData = <String, dynamic>{};
   bool _disposed = false;
+  @override
   bool transferring = false;
+  @override
   int dataEpoch = 0;
   String localTimezone = 'UTC';
   Future<void> importData(WorkspaceData merged) async {
@@ -151,8 +163,10 @@ class PreviewStore extends ChangeNotifier {
     refresh();
   }
 
+  @override
   List<Conversation> get activeChats =>
       conversations.where((c) => !c.archived).toList();
+  @override
   List<RoleProfile> get activeRoles => roles.where((r) => !r.archived).toList();
   void refresh() {
     if (!_disposed) notifyListeners();
@@ -188,6 +202,7 @@ class PreviewStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  @override
   void changed() {
     refresh();
     unawaited(saveProfiles());
@@ -211,6 +226,7 @@ class PreviewStore extends ChangeNotifier {
     orElse: () => conversations.first,
   );
   RoleProfile role(String id) => roles.firstWhere((r) => r.id == id);
+  @override
   String newId() => const Uuid().v4();
 
   void send(String text, {MessageReference? reply}) {
@@ -309,9 +325,13 @@ class PreviewStore extends ChangeNotifier {
     return saved;
   }
 
+  @override
   final apis = <ApiProfile>[];
+  @override
   final roles = <RoleProfile>[];
+  @override
   final conversations = <Conversation>[];
+  @override
   final schedules = <ScheduleEntry>[];
 }
 

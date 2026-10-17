@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
-import '../app/preview_store.dart';
+import 'agent_workspace.dart';
 import '../models/preview_models.dart';
 import '../data/workspace_codec.dart';
 import 'schedule_policy.dart';
@@ -19,7 +19,7 @@ int estimateTokens(Object text) =>
 
 class ContextBuilder {
   List<Map<String, dynamic>> build(
-    PreviewStore store,
+    AgentWorkspace store,
     RoleProfile role,
     Conversation chat,
     ApiProfile api,
