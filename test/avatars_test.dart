@@ -9,6 +9,7 @@ import 'package:rolechat/main.dart';
 import 'package:rolechat/models/preview_models.dart';
 import 'package:rolechat/shared/widgets/avatar_field.dart';
 import 'package:rolechat/shared/widgets/common.dart';
+import 'package:rolechat/design/app_theme.dart';
 
 void main() {
   test(
@@ -66,26 +67,122 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.widget<AnimatedPositioned>(strip).bottom, -32);
   });
-  Future<String> image(WidgetTester tester) async =>
-      (await tester.runAsync(() async {
-        final recorder = ui.PictureRecorder();
-        final canvas = ui.Canvas(recorder);
-        canvas.drawRect(
-          const Rect.fromLTWH(0, 0, 320, 160),
-          ui.Paint()..color = Colors.blue,
+  Future<String> image(
+    WidgetTester tester, {
+    Color color = Colors.blue,
+  }) async => (await tester.runAsync(() async {
+    final recorder = ui.PictureRecorder();
+    final canvas = ui.Canvas(recorder);
+    canvas.drawRect(
+      const Rect.fromLTWH(0, 0, 320, 160),
+      ui.Paint()..color = color,
+    );
+    canvas.drawRect(
+      const Rect.fromLTWH(160, 0, 160, 160),
+      ui.Paint()..color = Colors.red,
+    );
+    final picture = recorder.endRecording();
+    final bitmap = await picture.toImage(320, 160);
+    final data = await bitmap.toByteData(format: ui.ImageByteFormat.png);
+    final result = base64Encode(data!.buffer.asUint8List());
+    bitmap.dispose();
+    picture.dispose();
+    return result;
+  }))!;
+
+  testWidgets(
+    'avatar image stays cached across rebuilds and changes only with image content',
+    (tester) async {
+      final original = await image(tester);
+      final replacement = await image(tester, color: Colors.green);
+      Future<void> render(
+        String? data, {
+        String name = '林间',
+        double size = 48,
+        Brightness brightness = Brightness.light,
+      }) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.build(AppTheme.seeds.first, brightness),
+            home: Scaffold(
+              body: RoleAvatar(name, imageData: data, size: size),
+            ),
+          ),
         );
-        canvas.drawRect(
-          const Rect.fromLTWH(160, 0, 160, 160),
-          ui.Paint()..color = Colors.red,
+        await tester.pumpAndSettle();
+      }
+
+      await render(original);
+      final provider = tester.widget<Image>(find.byType(Image)).image;
+      await tester.runAsync(
+        () => precacheImage(provider, tester.element(find.byType(RoleAvatar))),
+      );
+      await tester.pumpAndSettle();
+      final frame = tester.widget<RawImage>(find.byType(RawImage)).image;
+      expect(frame, isNotNull);
+      for (final brightness in [Brightness.dark, Brightness.light]) {
+        await render(
+          String.fromCharCodes(original.codeUnits),
+          name: '月白',
+          size: 96,
+          brightness: brightness,
         );
-        final picture = recorder.endRecording();
-        final bitmap = await picture.toImage(320, 160);
-        final data = await bitmap.toByteData(format: ui.ImageByteFormat.png);
-        final result = base64Encode(data!.buffer.asUint8List());
-        bitmap.dispose();
-        picture.dispose();
-        return result;
-      }))!;
+        expect(
+          identical(tester.widget<Image>(find.byType(Image)).image, provider),
+          isTrue,
+        );
+        expect(
+          identical(
+            tester.widget<RawImage>(find.byType(RawImage)).image,
+            frame,
+          ),
+          isTrue,
+        );
+        final surface = find.descendant(
+          of: find.byType(RoleAvatar),
+          matching: find.byType(Material),
+        );
+        expect(tester.widget<Material>(surface).color, Colors.transparent);
+        expect(find.text('月'), findsNothing);
+      }
+      await render(replacement);
+      expect(
+        identical(tester.widget<Image>(find.byType(Image)).image, provider),
+        isFalse,
+      );
+      expect(tester.widget<Image>(find.byType(Image)).gaplessPlayback, isTrue);
+      expect(tester.widget<RawImage>(find.byType(RawImage)).image, isNotNull);
+      await render(null, name: '月白');
+      expect(find.byType(Image), findsNothing);
+      expect(find.text('月'), findsOneWidget);
+      final surface = find.descendant(
+        of: find.byType(RoleAvatar),
+        matching: find.byType(Material),
+      );
+      expect(
+        tester.widget<Material>(surface).color,
+        RoleAvatar.backgroundColor(
+          tester.element(find.byType(RoleAvatar)),
+          '月白',
+        ),
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('invalid image data does not reveal a name placeholder', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: RoleAvatar('林间', imageData: 'invalid image data')),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.broken_image_outlined), findsOneWidget);
+    expect(find.text('林'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('crop produces a square avatar and cancel does not save', (
     tester,
