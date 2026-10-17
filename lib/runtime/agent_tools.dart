@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'agent_workspace.dart';
-import '../data/workspace_codec.dart';
+import '../data/schedule_codec.dart';
 import '../models/preview_models.dart';
 import 'context_builder.dart';
 
@@ -66,7 +66,7 @@ class AgentToolExecutor {
     'schedule.json' => jsonEncode(
       store.schedules
           .where((s) => s.roleId == role.id)
-          .map(WorkspaceCodec.scheduleJson)
+          .map(ScheduleCodec.encode)
           .toList(),
     ),
     _ => throw const FormatException('不允许访问此文档'),
@@ -152,7 +152,7 @@ class AgentToolExecutor {
           final rows = jsonDecode(text) as List;
           final rules = rows
               .map(
-                (r) => WorkspaceCodec.scheduleFrom(
+                (r) => ScheduleCodec.decode(
                   Map<String, dynamic>.from(r as Map),
                   role.id,
                 ),
@@ -168,8 +168,8 @@ class AgentToolExecutor {
             final next = rules.where((s) => s.id == id).firstOrNull;
             if (previous != null &&
                 (next == null ||
-                    jsonEncode(WorkspaceCodec.scheduleJson(previous)) !=
-                        jsonEncode(WorkspaceCodec.scheduleJson(next)))) {
+                    jsonEncode(ScheduleCodec.encode(previous)) !=
+                        jsonEncode(ScheduleCodec.encode(next)))) {
               throw StateError('行程规则已被用户锁定');
             }
           }

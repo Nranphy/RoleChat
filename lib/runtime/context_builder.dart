@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'agent_workspace.dart';
 import '../models/preview_models.dart';
-import '../data/workspace_codec.dart';
+import '../data/schedule_codec.dart';
 import 'schedule_policy.dart';
 
 const roleplayInstructions = '''你在一个本地角色扮演聊天程序中扮演后置角色资料指定的人物。
@@ -58,7 +58,7 @@ class ContextBuilder {
         jsonEncode(
           store.schedules
               .where((s) => s.roleId == role.id)
-              .map(WorkspaceCodec.scheduleJson)
+              .map(ScheduleCodec.encode)
               .toList(),
         ),
       ),

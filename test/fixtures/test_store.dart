@@ -1,6 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:rolechat/app/preview_store.dart';
-import 'package:rolechat/data/workspace_codec.dart';
+import 'package:rolechat/models/workspace_data.dart';
 import 'package:rolechat/data/workspace_storage.dart';
 import 'preview_data.dart';
 

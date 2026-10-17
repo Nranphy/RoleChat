@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 import '../models/preview_models.dart';
-import 'workspace_codec.dart';
+import '../models/workspace_data.dart';
 
 /// Presets occupy UUIDv5 identities; user-created entities use UUIDv4.
 abstract final class PresetIds {

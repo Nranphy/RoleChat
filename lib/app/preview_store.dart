@@ -1,8 +1,8 @@
 import 'package:timezone/data/latest.dart' as tzdata;
-import '../data/preset_workspace.dart';
+import '../models/workspace_data.dart';
+import '../data/workspace_lifecycle.dart';
 import '../data/workspace_storage.dart';
 import '../data/workspace_repository.dart';
-import '../data/workspace_codec.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:async';
 import '../runtime/agent_runtime.dart';
@@ -21,6 +21,7 @@ class PreviewStore extends ChangeNotifier implements AgentWorkspace {
   }
   final SharedPreferences preferences;
   final WorkspaceRepository _persistence;
+  late final _lifecycle = WorkspaceLifecycle(_persistence);
   AgentRuntime? runtime;
   String? runtimeError;
   @override
@@ -51,9 +52,7 @@ class PreviewStore extends ChangeNotifier implements AgentWorkspace {
     dataEpoch++;
     refresh();
     try {
-      if (!await _persistence.save(merged)) {
-        throw StateError(_persistence.error!);
-      }
+      await _persistence.saveOrThrow(merged);
       applyData(merged);
     } finally {
       transferring = false;
@@ -67,41 +66,15 @@ class PreviewStore extends ChangeNotifier implements AgentWorkspace {
     dataEpoch++;
     refresh();
     try {
-      await _persistence.flush();
-      if (scope == WorkspaceCleanup.initialization) {
-        await storage.removeInitializationMarker();
-        return;
-      }
+      final next = await _lifecycle.clear(scope, data);
+      if (next == null) return;
       if (scope == WorkspaceCleanup.all) {
-        await storage.clearAll();
         runtime?.dispose();
         runtime = null;
-        applyData(WorkspaceData(apis: [], roles: [], chats: [], schedules: []));
         await preferences.remove('themeMode');
         await preferences.remove('seed');
-      } else {
-        final next = scope == WorkspaceCleanup.profiles
-            ? WorkspaceData(
-                apis: apis.toList(),
-                roles: [],
-                chats: [],
-                schedules: [],
-                runtime: {
-                  if (runtimeData.containsKey('background'))
-                    'background': runtimeData['background'],
-                },
-              )
-            : WorkspaceCodec.decode(WorkspaceCodec.encode(data));
-        if (scope == WorkspaceCleanup.messages) {
-          for (final chat in next.chats) {
-            chat.messages.clear();
-            chat.nextSequence = 1;
-          }
-          next.runtime.removeWhere((key, _) => key != 'background');
-        }
-        if (!await _persistence.save(next)) throw StateError(persistenceError!);
-        applyData(next);
       }
+      applyData(next);
       runtimeError = null;
       showChatOnMobile = false;
     } finally {
@@ -115,22 +88,7 @@ class PreviewStore extends ChangeNotifier implements AgentWorkspace {
 
   Future<void> _initializeWorkspace() async {
     localTimezone = browserTimezone();
-    final initialized = await storage.isInitialized();
-    final saved = await _persistence.load();
-    if (initialized) {
-      if (saved == null) throw StateError('初始化标记存在，但数据文件缺失；不会重新注入预设');
-      applyData(saved);
-    } else {
-      final initial = await loadPresetWorkspace(
-        timezone: localTimezone,
-        existing: saved,
-      );
-      if (!await _persistence.save(initial)) {
-        throw StateError(persistenceError!);
-      }
-      await storage.markInitialized();
-      applyData(initial);
-    }
+    applyData(await _lifecycle.initialize(localTimezone));
   }
 
   WorkspaceData get data => WorkspaceData(

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'workspace_storage.dart';
 import 'workspace_codec.dart';
+import '../models/workspace_data.dart';
 
 WorkspaceData remapData(WorkspaceData source, Map<String, String> ids) {
   // Map only identifier-valued JSON fields; never rewrite user text or Markdown.

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'workspace_codec.dart';
+import '../models/workspace_data.dart';
 import 'workspace_storage.dart';
 
 class WorkspaceRepository {
@@ -28,5 +29,9 @@ class WorkspaceRepository {
   }
 
   Future<void> flush() => _queue;
+  Future<void> saveOrThrow(WorkspaceData data) async {
+    if (!await save(data)) throw StateError(error!);
+  }
+
   void close() => unawaited(_queue.whenComplete(storage.close));
 }

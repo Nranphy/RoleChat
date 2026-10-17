@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:archive/archive.dart';
 import 'package:uuid/uuid.dart';
 import 'workspace_codec.dart';
+import '../models/workspace_data.dart';
 import 'workspace_remap.dart';
 import 'workspace_storage.dart';
 

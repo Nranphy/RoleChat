@@ -1,6 +1,6 @@
 import 'widgets/role_runtime_fields.dart';
 import 'dart:convert';
-import '../../data/workspace_codec.dart';
+import '../../data/schedule_codec.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:rolechat/services/api_check_controller.dart';
 import 'package:rolechat/services/model_availability_checker.dart';
@@ -317,11 +317,11 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
     }
     final previous = {
       for (final s in store.schedules.where((s) => s.roleId == id))
-        s.id: jsonEncode(WorkspaceCodec.scheduleJson(s)),
+        s.id: jsonEncode(ScheduleCodec.encode(s)),
     };
     final updated = schedules.map((s) => s.toEntry(id, store.newId())).toList();
     bool unchanged(ScheduleEntry s) =>
-        previous[s.id] == jsonEncode(WorkspaceCodec.scheduleJson(s));
+        previous[s.id] == jsonEncode(ScheduleCodec.encode(s));
     store.schedules.removeWhere((s) => s.roleId == id);
     store.schedules.addAll([
       ...updated.where(unchanged),

@@ -1,3 +1,5 @@
+import '../models/workspace_data.dart';
+import 'schedule_codec.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:uuid/uuid.dart';
@@ -5,21 +7,6 @@ import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 import '../models/preview_models.dart';
 import 'workspace_storage.dart';
-
-class WorkspaceData {
-  WorkspaceData({
-    required this.apis,
-    required this.roles,
-    required this.chats,
-    required this.schedules,
-    Map<String, dynamic>? runtime,
-  }) : runtime = runtime ?? {};
-  final List<ApiProfile> apis;
-  final List<RoleProfile> roles;
-  final List<Conversation> chats;
-  final List<ScheduleEntry> schedules;
-  final Map<String, dynamic> runtime;
-}
 
 abstract final class WorkspaceCodec {
   static Uint8List text(String value) => Uint8List.fromList(utf8.encode(value));
@@ -71,7 +58,7 @@ abstract final class WorkspaceCodec {
       files['$path/schedule.json'] = json(
         data.schedules
             .where((s) => s.roleId == r.id)
-            .map(scheduleJson)
+            .map(ScheduleCodec.encode)
             .toList(),
       );
       if (r.avatar != null) files['$path/avatar.png'] = base64Decode(r.avatar!);
@@ -116,61 +103,6 @@ abstract final class WorkspaceCodec {
       );
     }
     return files;
-  }
-
-  static Map<String, dynamic> scheduleJson(ScheduleEntry s) => {
-    'id': s.id,
-    'activity': s.activity,
-    'start': s.start,
-    'end': s.end,
-    'probability': s.probability,
-    'weekdays': s.weekdays,
-    'ruleKind': s.ruleKind.name,
-    'dateFrom': s.dateFrom,
-    'dateUntil': s.dateUntil,
-    'annualMonth': s.annualMonth,
-    'annualDay': s.annualDay,
-  };
-  static ScheduleEntry scheduleFrom(Map<String, dynamic> j, String roleId) {
-    final s = ScheduleEntry(
-      id: j['id'] as String,
-      roleId: roleId,
-      activity: j['activity'] as String,
-      start: j['start'] as String,
-      end: j['end'] as String,
-      probability: (j['probability'] as num).toDouble(),
-      weekdays: List<int>.from(j['weekdays'] as List),
-      ruleKind: ScheduleRuleKind.values.byName(j['ruleKind'] as String),
-      dateFrom: j['dateFrom'] as String?,
-      dateUntil: j['dateUntil'] as String?,
-      annualMonth: j['annualMonth'] as int?,
-      annualDay: j['annualDay'] as int?,
-    );
-    final time = RegExp(r'^(?:[01]\d|2[0-3]):[0-5]\d$');
-    if (!time.hasMatch(s.start) ||
-        !time.hasMatch(s.end) ||
-        s.activity.trim().isEmpty ||
-        !s.probability.isFinite ||
-        s.probability < 0 ||
-        s.probability > 100 ||
-        s.weekdays.any((v) => v < 1 || v > 7) ||
-        (s.ruleKind == ScheduleRuleKind.weekly && s.weekdays.isEmpty)) {
-      throw const FormatException('行程规则无效');
-    }
-    if (s.ruleKind == ScheduleRuleKind.annual) {
-      final date = DateTime(2024, s.annualMonth!, s.annualDay!);
-      if (date.month != s.annualMonth || date.day != s.annualDay) {
-        throw const FormatException('年度日期无效');
-      }
-    }
-    if ([ScheduleRuleKind.date, ScheduleRuleKind.range].contains(s.ruleKind)) {
-      final from = DateTime.parse(s.dateFrom!);
-      if (s.ruleKind == ScheduleRuleKind.range &&
-          DateTime.parse(s.dateUntil!).isBefore(from)) {
-        throw const FormatException('行程日期范围无效');
-      }
-    }
-    return s;
   }
 
   static WorkspaceData decode(FileTree files) {
@@ -271,7 +203,7 @@ abstract final class WorkspaceCodec {
         roles.add(role);
         schedules.addAll(
           (jsonDecode(read('$base/schedule.json')) as List).map(
-            (s) => scheduleFrom(s as Map<String, dynamic>, role.id),
+            (s) => ScheduleCodec.decode(s as Map<String, dynamic>, role.id),
           ),
         );
       } else if (['chats', 'groups'].contains(parts[0])) {
