@@ -35,6 +35,9 @@ void main() {
       }
       await tester.pumpWidget(RoleChatApp(store: store));
       await tester.pumpAndSettle();
+      final timeline = tester.widget<ChatTimeline>(find.byType(ChatTimeline));
+      expect(timeline.scroll.position.extentAfter, lessThanOrEqualTo(.5));
+      expect(find.byKey(const ValueKey('search-179')), findsOneWidget);
       expect(find.byKey(const ValueKey('search-145')), findsNothing);
       Future<void> search(String query) async {
         await tester.tap(find.byTooltip('搜索聊天记录'));

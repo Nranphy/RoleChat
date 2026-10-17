@@ -31,6 +31,31 @@ class ChatTimelineState extends State<ChatTimeline> {
   final messageKeys = <String, GlobalKey>{};
   String? highlightedId;
   Timer? highlightTimer;
+  int initialScrollGeneration = 0;
+  @override
+  void initState() {
+    super.initState();
+    openAtBottom();
+  }
+
+  void openAtBottom() {
+    final generation = ++initialScrollGeneration;
+    void settle(Duration _) {
+      if (!mounted ||
+          generation != initialScrollGeneration ||
+          !widget.scroll.hasClients) {
+        return;
+      }
+      final position = widget.scroll.position;
+      if (position.extentAfter <= .5) return;
+      widget.scroll.jumpTo(position.maxScrollExtent);
+      // Lazy, variable-height rows can change the estimated extent after layout.
+      WidgetsBinding.instance.addPostFrameCallback(settle);
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback(settle);
+  }
+
   @override
   void dispose() {
     highlightTimer?.cancel();
@@ -40,6 +65,7 @@ class ChatTimelineState extends State<ChatTimeline> {
   @override
   void didUpdateWidget(covariant ChatTimeline oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.c.id != widget.c.id) openAtBottom();
     final ids = widget.c.messages.map((m) => m.id).toSet();
     messageKeys.removeWhere((id, _) => !ids.contains(id));
     if (!ids.contains(highlightedId)) {
@@ -50,6 +76,7 @@ class ChatTimelineState extends State<ChatTimeline> {
 
   /// Locate by stable ID, including messages outside the lazy list's viewport.
   Future<bool> scrollToMessage(String id) async {
+    initialScrollGeneration++;
     final indexes = {
       for (final entry in widget.c.messages.indexed) entry.$2.id: entry.$1,
     };
