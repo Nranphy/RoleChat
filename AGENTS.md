@@ -27,8 +27,8 @@ FluffyChat 仓库保持只读，不复制其业务代码，不修改其文件。
 
 ## 数据格式
 
-当前为初期开发，无正式旧数据，允许经当前需求授权的破坏性变更。资料使用profiles，仅结构化行程；不添加早期预览格式迁移。API配置和聊天记录仍为运行时内存数据。自定义弹窗统一使用shared/widgets/AppDialog；系统日期时间和关于窗口保持Flutter标准组件。
+当前为初期开发，无正式旧数据，允许经当前需求授权的破坏性变更。业务数据采用OPFS独立JSON、Markdown和JSONL文件，不保留profiles旧格式迁移。自定义弹窗统一使用shared/widgets/AppDialog；系统日期时间和关于窗口保持Flutter标准组件。
 
 ## 最新设计与交接
 
-先阅读docs/16-final-architecture.md、docs/14-handoff.md及docs/04-data.md。已确认后续采用浏览器OPFS，config.json存通用/API配置，角色与群聊独立目录存profile.json、Markdown和messages.jsonl；提供导入导出，角色/群聊自动UUID且前端不可见。用户已于2026-10-17授权开始按最终方案实现。现有localStorage/内存实现不代表目标方案已落地。docs不跟踪，交接需另行包含该目录。
+先阅读docs/16-final-architecture.md、docs/14-handoff.md及docs/04-data.md。用户已于2026-10-17授权按最终方案实现。业务存储、ZIP、归档及角色调度/原生工具循环已接入；后续维护需验证真实浏览器文件恢复和模型协议，不能将mock测试等同于真实模型验收。docs不跟踪，交接需另行包含该目录。
