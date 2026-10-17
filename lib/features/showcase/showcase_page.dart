@@ -36,11 +36,11 @@ class _ShowcasePageState extends State<ShowcasePage> {
                     MessageBubble(
                       message: ChatMessage(
                         id: 'a',
-                        roleId: 'lin',
+                        roleId: 'showcase-role',
                         text: '窗外开始下雨了。\n给你留了一杯热茶。',
                         time: '16:42',
                       ),
-                      name: '林间',
+                      name: '咲',
                     ),
                     MessageBubble(
                       message: ChatMessage(
@@ -48,9 +48,9 @@ class _ShowcasePageState extends State<ShowcasePage> {
                         text: '那我们就在这里待一会儿吧。',
                         reply: const MessageReference(
                           messageId: 'a',
-                          text: '给你留了一杯热茶。 ☕',
-                          senderName: '林间',
-                          roleId: 'lin',
+                          text: '给你留了一杯热茶。',
+                          senderName: '咲',
+                          roleId: 'showcase-role',
                         ),
                         time: '16:43',
                       ),
@@ -118,10 +118,11 @@ class _ShowcasePageState extends State<ShowcasePage> {
                     const Wrap(
                       spacing: 12,
                       children: [
-                        RoleAvatar('林间'),
-                        RoleAvatar('月白'),
-                        RoleAvatar('夏芽'),
-                        RoleAvatar('周末小花园'),
+                        RoleAvatar('朝雫'),
+                        RoleAvatar('枫'),
+                        RoleAvatar('凪津'),
+                        RoleAvatar('咲'),
+                        RoleAvatar('若叶'),
                       ],
                     ),
                     const SizedBox(height: 18),
@@ -197,7 +198,7 @@ class _ShowcasePageState extends State<ShowcasePage> {
                             final result = await confirm(
                               context,
                               title: '删除角色？',
-                              body: '这个角色正在参与「周末小花园」。\n此处仅展示确认弹窗。',
+                              body: '这个角色正在参与「社团群聊」。\n此处仅展示确认弹窗。',
                             );
                             if (context.mounted) {
                               toast(context, result ? '确认操作已展示' : '已取消');

@@ -1,7 +1,7 @@
+import 'fixtures/test_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:rolechat/app/preview_store.dart';
 import 'package:rolechat/main.dart';
 import 'package:rolechat/features/agents/agent_dialogs.dart';
 import 'package:rolechat/shared/widgets/anchored_select.dart';
@@ -21,7 +21,7 @@ void main() {
         for (final mode in [ThemeMode.light, ThemeMode.dark]) {
           tester.view.physicalSize = size;
           SharedPreferences.setMockInitialValues({});
-          final store = PreviewStore(await SharedPreferences.getInstance());
+          final store = createTestStore(await SharedPreferences.getInstance());
           await store.setMode(mode);
           await tester.pumpWidget(RoleChatApp(store: store));
           await tester.pumpAndSettle();

@@ -1,9 +1,9 @@
+import 'fixtures/test_store.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:rolechat/app/preview_store.dart';
 import 'package:rolechat/main.dart';
 
 void main() {
@@ -36,7 +36,7 @@ void main() {
       }))!;
       for (final mode in [ThemeMode.light, ThemeMode.dark]) {
         SharedPreferences.setMockInitialValues({});
-        final store = PreviewStore(await SharedPreferences.getInstance());
+        final store = createTestStore(await SharedPreferences.getInstance());
         await store.setMode(mode);
         await tester.pumpWidget(
           RepaintBoundary(

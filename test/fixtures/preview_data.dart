@@ -1,4 +1,4 @@
-import '../models/preview_models.dart';
+import 'package:rolechat/models/preview_models.dart';
 
 /// Fresh sample objects for each store, never shared mutable application state.
 abstract final class PreviewData {

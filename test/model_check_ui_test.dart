@@ -1,8 +1,8 @@
+import 'fixtures/test_store.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:rolechat/app/preview_store.dart';
 import 'package:rolechat/features/agents/role_editor_dialog.dart';
 import 'package:rolechat/services/model_availability_checker.dart';
 
@@ -25,7 +25,7 @@ void main() {
     'model detection disables duplicates, clears stale results and displays success or failure',
     (tester) async {
       SharedPreferences.setMockInitialValues({});
-      final store = PreviewStore(await SharedPreferences.getInstance());
+      final store = createTestStore(await SharedPreferences.getInstance());
       final checker = ControlledChecker();
       final role = store.roles.first;
       role.apiId = store.apis.first.id;

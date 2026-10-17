@@ -1,6 +1,5 @@
 import 'package:timezone/data/latest.dart' as tzdata;
-import '../data/workspace_remap.dart';
-import '../data/preview_data.dart';
+import '../data/preset_workspace.dart';
 import '../data/workspace_storage.dart';
 import '../data/workspace_repository.dart';
 import '../data/workspace_codec.dart';
@@ -48,28 +47,28 @@ class PreviewStore extends ChangeNotifier {
     }
   }
 
-  Future<void> initialize() async {
+  Future<void>? _initialization;
+  Future<void> initialize() => _initialization ??= _initializeWorkspace();
+
+  Future<void> _initializeWorkspace() async {
     localTimezone = browserTimezone();
+    final initialized = await storage.isInitialized();
     final saved = await _persistence.load();
-    if (saved != null) {
+    if (initialized) {
+      if (saved == null) throw StateError('初始化标记存在，但数据文件缺失；不会重新注入预设');
+      applyData(saved);
+    } else if (saved != null) {
+      // Preserve workspaces created before the explicit marker was introduced.
+      // Only write the marker; never merge or replace the user's entities.
+      await storage.markInitialized();
       applyData(saved);
     } else {
-      final mapping = <String, String>{};
-      String id(String old) => mapping.putIfAbsent(old, newId);
-      final files = WorkspaceCodec.encode(data);
-      // Only first-run samples are instantiated, never migrated from old storage.
-      final source = WorkspaceCodec.decode(files);
-      for (final r in source.roles) {
-        id(r.id);
+      final initial = await loadPresetWorkspace(timezone: localTimezone);
+      if (!await _persistence.save(initial)) {
+        throw StateError(persistenceError!);
       }
-      for (final a in source.apis) {
-        id(a.id);
-      }
-      for (final c in source.chats) {
-        id(c.id);
-      }
-      applyData(remapData(source, mapping));
-      if (!await saveProfiles()) throw StateError(persistenceError!);
+      await storage.markInitialized();
+      applyData(initial);
     }
   }
 
@@ -119,7 +118,7 @@ class PreviewStore extends ChangeNotifier {
   }
 
   int destination = 0;
-  String selectedId = '55555555-5555-4555-8555-555555555555';
+  String selectedId = '';
   bool showChatOnMobile = false;
   ThemeMode get mode {
     final index = preferences.getInt('themeMode');
@@ -260,10 +259,10 @@ class PreviewStore extends ChangeNotifier {
     return saved;
   }
 
-  final apis = PreviewData.apis();
-  final roles = PreviewData.roles();
-  final conversations = PreviewData.conversations();
-  final schedules = PreviewData.schedules();
+  final apis = <ApiProfile>[];
+  final roles = <RoleProfile>[];
+  final conversations = <Conversation>[];
+  final schedules = <ScheduleEntry>[];
 }
 
 extension on TimeOfDay {

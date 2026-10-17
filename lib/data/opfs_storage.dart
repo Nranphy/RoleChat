@@ -44,6 +44,23 @@ class OpfsWorkspaceStorage implements WorkspaceStorage {
   final Completer<JSAny?> release;
   String? active;
   @override
+  Future<bool> isInitialized() async {
+    final bytes = await _read(root, 'initialized.json');
+    if (bytes == null) return false;
+    final marker = jsonDecode(utf8.decode(bytes));
+    if (marker is! Map || marker['initialized'] != true) {
+      throw const FormatException('初始化标记损坏，未改动现有数据');
+    }
+    return true;
+  }
+
+  @override
+  Future<void> markInitialized() => _write(
+    root,
+    'initialized.json',
+    Uint8List.fromList(utf8.encode('{"initialized":true}\n')),
+  );
+  @override
   void close() {
     if (!release.isCompleted) release.complete(null);
   }

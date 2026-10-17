@@ -3,6 +3,8 @@ import 'dart:typed_data';
 typedef FileTree = Map<String, Uint8List>;
 
 abstract interface class WorkspaceStorage {
+  Future<bool> isInitialized();
+  Future<void> markInitialized();
   Future<FileTree> read();
   Future<void> write(FileTree files);
   void close();
@@ -10,6 +12,14 @@ abstract interface class WorkspaceStorage {
 
 class MemoryWorkspaceStorage implements WorkspaceStorage {
   FileTree files = {};
+  bool initialized = false;
+  @override
+  Future<bool> isInitialized() async => initialized;
+  @override
+  Future<void> markInitialized() async {
+    initialized = true;
+  }
+
   @override
   Future<FileTree> read() async => {
     for (final e in files.entries) e.key: Uint8List.fromList(e.value),

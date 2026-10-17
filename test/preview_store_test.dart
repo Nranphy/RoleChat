@@ -1,7 +1,7 @@
+import 'fixtures/test_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:rolechat/app/preview_store.dart';
 
 void main() {
   test(
@@ -9,8 +9,8 @@ void main() {
     () async {
       SharedPreferences.setMockInitialValues({});
       final preferences = await SharedPreferences.getInstance();
-      final first = PreviewStore(preferences);
-      final second = PreviewStore(preferences);
+      final first = createTestStore(preferences);
+      final second = createTestStore(preferences);
       first.roles.first.name = 'changed';
       expect(second.roles.first.name, '林间');
       final ids = List.generate(5000, (_) => first.newId());
@@ -24,7 +24,7 @@ void main() {
     () async {
       SharedPreferences.setMockInitialValues({'themeMode': 99});
       final preferences = await SharedPreferences.getInstance();
-      final store = PreviewStore(preferences);
+      final store = createTestStore(preferences);
       expect(store.mode, ThemeMode.system);
       store.deleteRole(
         '11111111-1111-4111-8111-111111111111',
@@ -37,7 +37,7 @@ void main() {
         isEmpty,
       );
       expect(await store.saveProfiles(), isTrue);
-      final restored = PreviewStore(preferences, storage: store.storage);
+      final restored = createTestStore(preferences, storage: store.storage);
       await restored.initialize();
       expect(
         restored.roles.where(

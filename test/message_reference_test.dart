@@ -1,7 +1,7 @@
+import 'fixtures/test_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:rolechat/app/preview_store.dart';
 import 'package:rolechat/main.dart';
 import 'package:rolechat/models/preview_models.dart';
 import 'package:rolechat/features/chat/widgets/chat_composer.dart';
@@ -18,7 +18,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
       SharedPreferences.setMockInitialValues({});
-      final store = PreviewStore(await SharedPreferences.getInstance());
+      final store = createTestStore(await SharedPreferences.getInstance());
       store.selected.messages = [
         ChatMessage(
           id: 'first',

@@ -1,3 +1,4 @@
+import 'fixtures/test_store.dart';
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
@@ -40,7 +41,7 @@ class DeferredGateway implements AgentGateway {
 Future<void> settle() => Future<void>.delayed(const Duration(milliseconds: 10));
 Future<PreviewStore> fixture() async {
   SharedPreferences.setMockInitialValues({});
-  final store = PreviewStore(await SharedPreferences.getInstance());
+  final store = createTestStore(await SharedPreferences.getInstance());
   store.roles.removeRange(1, store.roles.length);
   final role = store.roles.single;
   role.identity = role.soul = role.memory = '';

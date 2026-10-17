@@ -1,3 +1,4 @@
+import 'fixtures/test_store.dart';
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,7 +9,7 @@ import 'package:rolechat/data/workspace_transfer.dart';
 void main() {
   Future<PreviewStore> create() async {
     SharedPreferences.setMockInitialValues({});
-    return PreviewStore(await SharedPreferences.getInstance());
+    return createTestStore(await SharedPreferences.getInstance());
   }
 
   test(
@@ -26,7 +27,10 @@ void main() {
         utf8.decode(files['agents/${store.roles.first.id}/memory.md']!),
         '# 日记\n两行\n文字',
       );
-      final restored = PreviewStore(store.preferences, storage: store.storage);
+      final restored = createTestStore(
+        store.preferences,
+        storage: store.storage,
+      );
       await restored.initialize();
       expect(restored.apis.first.key, 'secret');
       expect(restored.selected.messages.last.text, '新消息\n第二行');

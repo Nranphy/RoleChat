@@ -1,3 +1,4 @@
+import 'fixtures/test_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,7 +17,7 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     SharedPreferences.setMockInitialValues({});
-    final store = PreviewStore(await SharedPreferences.getInstance());
+    final store = createTestStore(await SharedPreferences.getInstance());
     await tester.pumpWidget(RoleChatApp(store: store));
     await tester.pumpAndSettle();
     return store;
@@ -112,7 +113,10 @@ void main() {
       ]);
       expect(store.selected.messages, isEmpty);
       expect(store.selected.background, '# 背景\n雨天的茶馆。');
-      final restored = PreviewStore(store.preferences, storage: store.storage);
+      final restored = createTestStore(
+        store.preferences,
+        storage: store.storage,
+      );
       await restored.initialize();
       final group = restored.conversations.firstWhere((c) => c.name == '雨天茶会');
       expect(group.background, '# 背景\n雨天的茶馆。');
@@ -267,7 +271,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('保存'));
     await tester.pumpAndSettle();
-    final restored = PreviewStore(store.preferences, storage: store.storage);
+    final restored = createTestStore(store.preferences, storage: store.storage);
     await restored.initialize();
     expect(restored.roles.first.memory, '# 记忆\n喜欢雨天。');
     expect(restored.schedules.single.weekdays, [1, 3, 5]);

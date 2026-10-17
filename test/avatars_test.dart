@@ -1,10 +1,10 @@
+import 'fixtures/test_store.dart';
 import 'package:rolechat/shared/widgets/avatar_crop_dialog.dart';
 import 'dart:convert';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:rolechat/app/preview_store.dart';
 import 'package:rolechat/main.dart';
 import 'package:rolechat/models/preview_models.dart';
 import 'package:rolechat/shared/widgets/avatar_field.dart';
@@ -16,7 +16,7 @@ void main() {
     () async {
       SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();
-      final store = PreviewStore(prefs);
+      final store = createTestStore(prefs);
       store.roles.first.identity = '保存的身份';
       store.selected.background = '保存的群背景';
       expect(await store.saveProfiles(), isTrue);
@@ -28,7 +28,7 @@ void main() {
               as Map;
       expect(rule.containsKey('condition'), isFalse);
       expect(rule.containsKey('dateDetail'), isFalse);
-      final restored = PreviewStore(prefs, storage: store.storage);
+      final restored = createTestStore(prefs, storage: store.storage);
       await restored.initialize();
       expect(restored.persistenceError, isNull);
       expect(restored.roles.first.identity, '保存的身份');
@@ -91,7 +91,7 @@ void main() {
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
-    final store = PreviewStore(await SharedPreferences.getInstance());
+    final store = createTestStore(await SharedPreferences.getInstance());
     await tester.pumpWidget(RoleChatApp(store: store));
     final original = await image(tester);
     final context = tester.element(find.byType(Scaffold));
@@ -134,7 +134,7 @@ void main() {
     (tester) async {
       SharedPreferences.setMockInitialValues({});
       final preferences = await SharedPreferences.getInstance();
-      final store = PreviewStore(preferences);
+      final store = createTestStore(preferences);
       final avatar = await image(tester);
       store.addRole(
         RoleProfile(
@@ -147,7 +147,7 @@ void main() {
         '99999999-9999-4999-8999-999999999999',
       ], avatar: avatar);
       expect(await store.saveProfiles(), isTrue);
-      final restored = PreviewStore(preferences, storage: store.storage);
+      final restored = createTestStore(preferences, storage: store.storage);
       await restored.initialize();
       expect(
         restored.role('99999999-9999-4999-8999-999999999999').avatar,
@@ -180,7 +180,7 @@ void main() {
       restored.role('99999999-9999-4999-8999-999999999999').avatar = null;
       restored.changed();
       await restored.saveProfiles();
-      final finalStore = PreviewStore(preferences, storage: store.storage);
+      final finalStore = createTestStore(preferences, storage: store.storage);
       await finalStore.initialize();
       expect(
         finalStore.role('99999999-9999-4999-8999-999999999999').avatar,
@@ -197,7 +197,9 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(
-      RoleChatApp(store: PreviewStore(await SharedPreferences.getInstance())),
+      RoleChatApp(
+        store: createTestStore(await SharedPreferences.getInstance()),
+      ),
     );
     await tester.pumpAndSettle();
     final button = find.byKey(const ValueKey('create-menu'));

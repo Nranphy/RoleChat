@@ -1,8 +1,8 @@
+import 'fixtures/test_store.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:rolechat/app/preview_store.dart';
 import 'package:rolechat/features/settings/api_editor.dart';
 import 'package:rolechat/services/model_availability_checker.dart';
 
@@ -28,7 +28,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
       SharedPreferences.setMockInitialValues({});
-      final store = PreviewStore(await SharedPreferences.getInstance());
+      final store = createTestStore(await SharedPreferences.getInstance());
       final checker = PendingApiChecker();
       await tester.pumpWidget(
         MaterialApp(home: Scaffold(body: const SizedBox())),

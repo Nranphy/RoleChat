@@ -1,3 +1,4 @@
+import 'fixtures/test_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -17,7 +18,7 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     SharedPreferences.setMockInitialValues({});
-    final store = PreviewStore(await SharedPreferences.getInstance());
+    final store = createTestStore(await SharedPreferences.getInstance());
     await tester.pumpWidget(RoleChatApp(store: store));
     await tester.pumpAndSettle();
     return store;
@@ -103,7 +104,7 @@ void main() {
       '青禾',
     );
     await store.saveProfiles();
-    final restoredName = PreviewStore(
+    final restoredName = createTestStore(
       store.preferences,
       storage: store.storage,
     );
