@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:rolechat/app/preview_store.dart';
 import 'package:rolechat/main.dart';
 import 'package:rolechat/features/agents/agent_dialogs.dart';
+import 'package:rolechat/shared/widgets/anchored_select.dart';
 
 void main() {
   testWidgets(
@@ -31,6 +32,16 @@ void main() {
           editRole(tester.element(find.byType(Scaffold)), store, role: role);
           await tester.pumpAndSettle();
           expect(find.text('模型连接'), findsOneWidget);
+          expect(find.widgetWithText(TextField, '时区'), findsNothing);
+          final timezone = find.byWidgetPredicate(
+            (widget) =>
+                widget is AnchoredSelect<String> && widget.label == '时区',
+          );
+          await tester.ensureVisible(timezone);
+          await tester.tap(timezone);
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('上海 · Asia/Shanghai').last);
+          await tester.pumpAndSettle();
           final minimum = find.widgetWithText(TextField, '最短');
           final maximum = find.widgetWithText(TextField, '最长');
           expect(tester.getTopLeft(minimum).dy, tester.getTopLeft(maximum).dy);
@@ -52,6 +63,7 @@ void main() {
           await tester.tap(find.text('保存'));
           await tester.pumpAndSettle();
           expect(role.lockSoul, isTrue);
+          expect(role.timezone, 'Asia/Shanghai');
           expect(role.lockMemory, isTrue);
           expect(role.lockedSchedules, contains(schedule.id));
           expect(tester.takeException(), isNull);

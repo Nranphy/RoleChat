@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rolechat/design/form_metrics.dart';
+import 'package:rolechat/shared/widgets/anchored_select.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 class RoleRuntimeFields extends StatelessWidget {
   const RoleRuntimeFields({super.key, required this.fields});
@@ -7,7 +9,7 @@ class RoleRuntimeFields extends StatelessWidget {
 
   Widget field(String key, {String? label, String? suffix}) => TextField(
     controller: fields[key],
-    keyboardType: key == '时区' ? TextInputType.text : TextInputType.number,
+    keyboardType: TextInputType.number,
     style: FormMetrics.textStyle,
     decoration: FormMetrics.decoration(
       label ?? key,
@@ -18,7 +20,15 @@ class RoleRuntimeFields extends StatelessWidget {
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final narrow = constraints.maxWidth < 420;
-      final timezone = field('时区');
+      final timezone = ValueListenableBuilder<TextEditingValue>(
+        valueListenable: fields['时区']!,
+        builder: (context, value, _) => AnchoredSelect<String>(
+          label: '时区',
+          value: value.text,
+          options: timezoneOptions(),
+          onChanged: (zone) => fields['时区']!.text = zone,
+        ),
+      );
       final rounds = field('最大工具轮数');
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -61,4 +71,28 @@ class RoleRuntimeFields extends StatelessWidget {
       );
     },
   );
+}
+
+Map<String, String> timezoneOptions() {
+  const common = {
+    'UTC': 'UTC · 协调世界时',
+    'Asia/Shanghai': '上海 · Asia/Shanghai',
+    'Asia/Hong_Kong': '香港 · Asia/Hong_Kong',
+    'Asia/Taipei': '台北 · Asia/Taipei',
+    'Asia/Tokyo': '东京 · Asia/Tokyo',
+    'Asia/Seoul': '首尔 · Asia/Seoul',
+    'Asia/Singapore': '新加坡 · Asia/Singapore',
+    'Asia/Kolkata': '加尔各答 · Asia/Kolkata',
+    'Australia/Sydney': '悉尼 · Australia/Sydney',
+    'Europe/London': '伦敦 · Europe/London',
+    'Europe/Paris': '巴黎 · Europe/Paris',
+    'America/New_York': '纽约 · America/New_York',
+    'America/Los_Angeles': '洛杉矶 · America/Los_Angeles',
+  };
+  final zones = tz.timeZoneDatabase.locations.keys.toList()..sort();
+  return {
+    ...common,
+    for (final zone in zones)
+      if (!common.containsKey(zone)) zone: zone.replaceAll('_', ' '),
+  };
 }
