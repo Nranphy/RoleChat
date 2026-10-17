@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:dart_openai/dart_openai.dart';
+import '../services/openai_client_factory.dart';
 import 'package:http/http.dart' as http;
 import '../models/preview_models.dart';
 
@@ -36,15 +36,10 @@ class SdkAgentGateway implements AgentGateway {
     List<Map<String, dynamic>> messages,
     List<Map<String, dynamic>> tools,
   ) async {
-    final root = api.url.trim().replaceFirst(RegExp(r'/+$'), '');
-    final versioned = RegExp(r'/v\d+$').hasMatch(Uri.parse(root).path);
-    final slash = root.lastIndexOf('/');
-    final sdk = OpenAIClient(
+    final sdk = OpenAIClientFactory.create(
+      address: api.url,
       apiKey: api.key,
-      baseUrl: versioned ? root.substring(0, slash) : root,
-      version: versioned ? root.substring(slash + 1) : 'v1',
-      requestsTimeOut: Duration(seconds: settings.timeoutSeconds),
-      retryPolicy: const OpenAIRetryPolicy(maxAttempts: 1),
+      timeout: Duration(seconds: settings.timeoutSeconds),
     );
     final timeout = Duration(seconds: settings.timeoutSeconds);
     if (settings.protocol == 'responses') {

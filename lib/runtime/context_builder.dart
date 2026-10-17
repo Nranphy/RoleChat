@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:crypto/crypto.dart';
+import 'agent_documents.dart';
 import 'agent_workspace.dart';
 import '../models/preview_models.dart';
 import '../data/schedule_codec.dart';
@@ -13,7 +13,6 @@ const roleplayInstructions = '''你在一个本地角色扮演聊天程序中扮
 已查看位置previous_view_sequence及之前的消息不是新的待回复消息。check_kind为new_messages时结合新消息继续聊天，为scheduled_review时是自主查看历史，不是要求重新回复旧消息，可以沉默或自然开启话题。
 后续assistant工具调用和tool结果是本次处理中已经执行的操作，发送成功的消息已经公开。更新聊天上下文后继续完成未完成的事情，不要从头重演已完成的回复或操作。
 最终文本不会公开，完成后调用finish。''';
-String contentHash(String text) => sha256.convert(utf8.encode(text)).toString();
 int estimateTokens(Object text) =>
     utf8.encode(text is String ? text : jsonEncode(text)).length;
 
@@ -52,9 +51,9 @@ class ContextBuilder {
         for (final c in store.activeChats)
           if (c.members.contains(role.id)) {'id': c.id, 'name': c.name},
       ],
-      'soul_hash': contentHash(role.soul),
-      'memory_hash': contentHash(role.memory),
-      'schedule_hash': contentHash(
+      'soul_hash': AgentDocuments.hash(role.soul),
+      'memory_hash': AgentDocuments.hash(role.memory),
+      'schedule_hash': AgentDocuments.hash(
         jsonEncode(
           store.schedules
               .where((s) => s.roleId == role.id)

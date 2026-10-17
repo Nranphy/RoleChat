@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'openai_client_factory.dart';
 import 'package:dart_openai/dart_openai.dart';
 import 'package:http/http.dart' as http;
 
@@ -42,19 +43,12 @@ class ModelAvailabilityChecker {
     if (model != null && model.trim().isEmpty) {
       return const ModelCheckResult(false, '检测失败：请输入模型名称。');
     }
-    final base = address.trim().replaceFirst(RegExp(r'/+$'), '');
-    // The SDK always inserts /version; split the supplied API root accordingly.
-    final path = Uri.parse(base).path;
-    final hasVersion = RegExp(r'/v\d+$').hasMatch(path);
-    final slash = base.lastIndexOf('/');
     final client = clientFactory();
     try {
-      final sdk = OpenAIClient(
+      final sdk = OpenAIClientFactory.create(
+        address: address,
         apiKey: apiKey.trim(),
-        baseUrl: hasVersion ? base.substring(0, slash) : base,
-        version: hasVersion ? base.substring(slash + 1) : 'v1',
-        requestsTimeOut: const Duration(seconds: 30),
-        retryPolicy: const OpenAIRetryPolicy(maxAttempts: 1),
+        timeout: const Duration(seconds: 30),
       );
       if (model == null) {
         await sdk.model

@@ -4,6 +4,7 @@ import 'agent_workspace.dart';
 import 'agent_binding.dart';
 import 'agent_gateway.dart';
 import 'agent_tools.dart';
+import 'tool_definitions.dart';
 import 'agent_execution.dart';
 import 'context_builder.dart';
 import 'schedule_policy.dart';

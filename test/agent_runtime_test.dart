@@ -8,7 +8,7 @@ import 'package:rolechat/models/preview_models.dart';
 import 'package:rolechat/runtime/agent_gateway.dart';
 import 'package:rolechat/runtime/agent_runtime.dart';
 import 'package:rolechat/runtime/agent_tools.dart';
-import 'package:rolechat/runtime/context_builder.dart';
+import 'package:rolechat/runtime/agent_documents.dart';
 import 'package:rolechat/runtime/schedule_policy.dart';
 import 'package:rolechat/runtime/activation_policy.dart';
 import 'package:rolechat/models/workspace_cleanup.dart';
@@ -355,7 +355,7 @@ void main() {
     final args = {
       'name': 'memory.md',
       'content': '喜欢雨天',
-      'expected_hash': contentHash(''),
+      'expected_hash': AgentDocuments.hash(''),
     };
     role.lockMemory = true;
     expect(

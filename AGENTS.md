@@ -15,7 +15,7 @@ README.md 面向用户，只包含仓库名称、简短简介和对 FluffyChat U
 
 ## 实现
 
-组件化实现统一主题、配色、响应式布局和各页面。使用本地展示数据，提供可操作的 UI 预览入口，覆盖正常、空、错误与加载状态。演示行为明确标注，不假装已经连接模型。
+组件化实现统一主题、配色、响应式布局和各页面。生产数据来自OPFS及首次预设初始化，示例聊天数据只留在test/fixtures；不增加演示入口。保持真实模型流程与错误提示，不能将mock验证当作实机验收。
 
 FluffyChat 仓库保持只读，不复制其业务代码，不修改其文件。RoleChat 独立实现 UI。
 
@@ -26,6 +26,10 @@ D:/agent-identity是用户只读人设源目录，禁止修改。项目使用ass
 ## UI 组件边界
 
 维护 UI 前阅读 docs/12-ui-component-structure.md。公共展示组件放在 shared/widgets，功能专用组件放在 features 对应目录；展示组件通过数据和回调交互，不依赖 PreviewStore 或直接访问本地存储。页面与编辑弹窗负责协调操作。保留各组件现有 hover、尺寸与保存行为，避免结构重构混入样式或功能修改。
+
+## 模块边界
+
+维护业务前阅读docs/17-modular-architecture.md。runtime通过AgentWorkspace访问数据，不反向导入app或features。通用ActivationScheduler及ActivationPolicy不依赖Flutter、聊天模型、SDK和存储；RoleActivation只做快照适配，AgentRunner只负责模型与工具循环。界面草稿通过PreviewStore保存入口提交，跨实体引用更新交给ProfileActions，文件生命周期交给WorkspaceLifecycle。重构不得引入按正文过滤消息或重置上下文重启预算的旧逻辑。
 
 ## 数据格式
 

@@ -3,6 +3,7 @@ import 'dart:math';
 import '../models/preview_models.dart';
 import 'activation_models.dart';
 import 'activation_scheduler.dart';
+import 'activation_policy.dart';
 import 'agent_binding.dart';
 import 'agent_gateway.dart';
 import 'agent_runner.dart';
@@ -21,12 +22,17 @@ class AgentRuntime {
     AgentGateway? gateway,
     Random? random,
     RuntimeLog log = consoleRuntimeLog,
+    ActivationPolicy policy = const RoleplayActivationPolicy(),
     bool Function()? isHidden,
     DateTime Function()? clock,
   }) : log = log,
        isHidden = isHidden ?? browserHidden,
        clock = clock ?? DateTime.now,
-       scheduler = ActivationScheduler(random: random, log: log) {
+       scheduler = ActivationScheduler(
+         random: random,
+         log: log,
+         policy: policy,
+       ) {
     runner = AgentRunner(
       store,
       gateway: gateway ?? SdkAgentGateway(),

@@ -2,6 +2,14 @@ import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rolechat/runtime/activation_models.dart';
 import 'package:rolechat/runtime/activation_scheduler.dart';
+import 'package:rolechat/runtime/activation_policy.dart';
+
+class ImmediatePolicy extends RoleplayActivationPolicy {
+  @override
+  double probability(double base, int automaticCount, bool mentioned) => 1;
+  @override
+  Duration activationDelay(Random random) => Duration.zero;
+}
 
 class FixedRandom implements Random {
   FixedRandom([this.value = 0]);
@@ -32,6 +40,26 @@ ActivationSnapshot input({
 
 void main() {
   final now = DateTime.utc(2026, 10, 17, 12);
+  test('activation strategy is replaceable without changing execution', () {
+    final scheduler = ActivationScheduler(
+      random: FixedRandom(.9),
+      policy: ImmediatePolicy(),
+    );
+    expect(scheduler.evaluate(input(p: .1), now), isNotNull);
+  });
+  test('completing one job dispatches the next target serially', () {
+    final scheduler = ActivationScheduler(random: FixedRandom());
+    final snapshot = input(
+      targets: [
+        const ActivationTarget(id: 'one', latestSequence: 0),
+        const ActivationTarget(id: 'two', latestSequence: 0),
+      ],
+    );
+    expect(scheduler.evaluate(snapshot, now)!.targetId, 'one');
+    expect(scheduler.evaluate(snapshot, now), isNull);
+    scheduler.complete('a');
+    expect(scheduler.evaluate(snapshot, now)!.targetId, 'two');
+  });
   test('one active target per agent, independent agents can run together', () {
     final scheduler = ActivationScheduler(random: FixedRandom());
     final first = scheduler.evaluate(
