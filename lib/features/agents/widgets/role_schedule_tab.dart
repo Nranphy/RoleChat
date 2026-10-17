@@ -10,10 +10,14 @@ class RoleScheduleTab extends StatelessWidget {
     required this.onAdd,
     required this.onChanged,
     required this.onDelete,
+    this.lockedSchedules = const {},
+    this.onLockChanged,
   });
   final List<ScheduleDraft> schedules;
   final VoidCallback onAdd, onChanged;
   final ValueChanged<int> onDelete;
+  final Set<String> lockedSchedules;
+  final void Function(String, bool)? onLockChanged;
   @override
   Widget build(BuildContext context) => Column(
     mainAxisSize: MainAxisSize.min,
@@ -29,6 +33,10 @@ class RoleScheduleTab extends StatelessWidget {
             index: e.key,
             onChanged: onChanged,
             onDelete: () => onDelete(e.key),
+            locked: lockedSchedules.contains(e.value.id),
+            onLockChanged: onLockChanged == null || e.value.id == null
+                ? null
+                : (locked) => onLockChanged!(e.value.id!, locked),
           ),
         ),
       ),

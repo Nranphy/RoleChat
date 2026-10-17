@@ -13,15 +13,29 @@ class ScheduleRuleField extends StatelessWidget {
     required this.index,
     required this.onChanged,
     required this.onDelete,
+    this.locked = false,
+    this.onLockChanged,
   });
   final ScheduleDraft draft;
   final int index;
   final VoidCallback onChanged, onDelete;
+  final bool locked;
+  final ValueChanged<bool>? onLockChanged;
   @override
   Widget build(BuildContext context) => EditableEntryCard(
     title: '活动 ${index + 1}',
     deleteTooltip: '删除行程',
     onDelete: onDelete,
+    headerAction: onLockChanged == null
+        ? null
+        : IconButton(
+            tooltip: locked ? '允许角色修改此行程' : '禁止角色修改此行程',
+            isSelected: locked,
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.lock_open_outlined, size: 18),
+            selectedIcon: const Icon(Icons.lock_outline, size: 18),
+            onPressed: () => onLockChanged!(!locked),
+          ),
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       TextFormField(

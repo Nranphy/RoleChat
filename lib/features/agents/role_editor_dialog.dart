@@ -107,22 +107,7 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
       ProfileDialogTab(
         '基础',
         RoleBasicTab(
-          runtimeFields: RoleRuntimeFields(
-            fields: runtimeFields,
-            lockSoul: lockSoul,
-            lockMemory: lockMemory,
-            onSoulLock: (v) => setState(() => lockSoul = v),
-            onMemoryLock: (v) => setState(() => lockMemory = v),
-            scheduleNames: {
-              for (final s in schedules)
-                if (s.id != null)
-                  s.id!: s.activity.text.isEmpty ? '未命名活动' : s.activity.text,
-            },
-            lockedSchedules: lockedSchedules,
-            onScheduleLock: (id, v) => setState(
-              () => v ? lockedSchedules.add(id) : lockedSchedules.remove(id),
-            ),
-          ),
+          runtimeFields: RoleRuntimeFields(fields: runtimeFields),
           name: name,
           model: model,
           avatar: avatar,
@@ -167,6 +152,8 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
           controller: soul,
           title: 'soul.md',
           explanation: '控制 Agent 的性格和观念（会自主更新）。',
+          autoUpdateEnabled: !lockSoul,
+          onAutoUpdateChanged: (v) => setState(() => lockSoul = !v),
         ),
       ),
       ProfileDialogTab(
@@ -175,12 +162,18 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
           controller: memoryDocument,
           title: 'memory.md',
           explanation: '记录 Agent 的记忆内容（会自主更新）。',
+          autoUpdateEnabled: !lockMemory,
+          onAutoUpdateChanged: (v) => setState(() => lockMemory = !v),
         ),
       ),
       ProfileDialogTab(
         '行程',
         RoleScheduleTab(
           schedules: schedules,
+          lockedSchedules: lockedSchedules,
+          onLockChanged: (id, locked) => setState(() {
+            locked ? lockedSchedules.add(id) : lockedSchedules.remove(id);
+          }),
           onAdd: () => setState(() => schedules.add(ScheduleDraft())),
           onChanged: () => setState(() {}),
           onDelete: (i) =>

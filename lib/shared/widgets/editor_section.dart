@@ -47,11 +47,13 @@ class EditableEntryCard extends StatelessWidget {
     required this.onDelete,
     required this.children,
     this.crossAxisAlignment = CrossAxisAlignment.center,
+    this.headerAction,
   });
   final String title, deleteTooltip;
   final VoidCallback onDelete;
   final List<Widget> children;
   final CrossAxisAlignment crossAxisAlignment;
+  final Widget? headerAction;
   @override
   Widget build(BuildContext context) => SectionCard(
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -62,6 +64,7 @@ class EditableEntryCard extends StatelessWidget {
         Row(
           children: [
             Expanded(child: Text(title)),
+            ?headerAction,
             IconButton(
               tooltip: deleteTooltip,
               onPressed: onDelete,

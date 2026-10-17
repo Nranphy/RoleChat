@@ -36,7 +36,9 @@ class RoleBasicTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Column(
     mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
+      const SizedBox(height: 12),
       ProfileIdentityHeader(
         name: name,
         avatar: avatar,
@@ -46,13 +48,15 @@ class RoleBasicTab extends StatelessWidget {
         onNameCommitted: onNameCommitted,
       ),
       const SizedBox(height: 24),
+      _SectionHeading('模型连接'),
+      const SizedBox(height: 14),
       AnchoredSelect<String>(
         label: 'API 配置',
         value: api ?? '',
         options: apiOptions,
         onChanged: onApiChanged,
       ),
-      const SizedBox(height: 20),
+      const SizedBox(height: 16),
       TextField(
         controller: model,
         style: FormMetrics.textStyle,
@@ -83,9 +87,26 @@ class RoleBasicTab extends StatelessWidget {
           ),
         ),
       if (runtimeFields != null) ...[
+        const SizedBox(height: 24),
+        const Divider(height: 1),
         const SizedBox(height: 20),
+        _SectionHeading('运行设置'),
+        const SizedBox(height: 16),
         runtimeFields!,
+        const SizedBox(height: 8),
       ],
     ],
+  );
+}
+
+class _SectionHeading extends StatelessWidget {
+  const _SectionHeading(this.title);
+  final String title;
+  @override
+  Widget build(BuildContext context) => Text(
+    title,
+    style: Theme.of(
+      context,
+    ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
   );
 }
