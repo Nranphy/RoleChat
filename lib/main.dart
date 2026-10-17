@@ -1,11 +1,11 @@
-import 'data/open_workspace.dart';
+import 'package:rolechat/infrastructure/storage/open_workspace.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'app/preview_store.dart';
-import 'design/app_theme.dart';
-import 'package:rolechat/app/app_shell.dart';
+import 'package:rolechat/app/app_store.dart';
+
+import 'package:rolechat/app/role_chat_app.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,7 +22,7 @@ Future<void> main() async {
   });
   final preferences = await SharedPreferences.getInstance();
   try {
-    final store = PreviewStore(preferences, storage: await openWorkspace());
+    final store = AppStore(preferences, storage: await openWorkspace());
     try {
       await store.initialize();
     } catch (_) {
@@ -53,21 +53,4 @@ Future<void> main() async {
       ),
     );
   }
-}
-
-class RoleChatApp extends StatelessWidget {
-  const RoleChatApp({super.key, required this.store});
-  final PreviewStore store;
-  @override
-  Widget build(BuildContext context) => ListenableBuilder(
-    listenable: store,
-    builder: (context, _) => MaterialApp(
-      title: 'RoleChat',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.build(store.seed, Brightness.light),
-      darkTheme: AppTheme.build(store.seed, Brightness.dark),
-      themeMode: store.mode,
-      home: AppShell(store: store),
-    ),
-  );
 }
