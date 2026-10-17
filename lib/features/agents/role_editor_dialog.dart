@@ -1,7 +1,7 @@
 import 'widgets/role_runtime_fields.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:rolechat/services/api_check_controller.dart';
-import 'package:rolechat/services/model_availability_checker.dart';
+import 'package:rolechat/services/api_checker.dart';
 import 'editing/schedule_draft.dart';
 import 'package:rolechat/shared/widgets/document_editor_tab.dart';
 import 'widgets/role_examples_tab.dart';
@@ -22,7 +22,7 @@ class RoleEditorDialog extends StatefulWidget {
   });
   final PreviewStore store;
   final RoleProfile? role;
-  final ModelAvailabilityChecker? modelChecker;
+  final ApiChecker? modelChecker;
   @override
   State<RoleEditorDialog> createState() => _RoleEditorDialogState();
 }
@@ -208,7 +208,7 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
     if (configuration == null) {
       return const ModelCheckResult(false, '检测失败：请先选择 API 配置。');
     }
-    return (widget.modelChecker ?? ModelAvailabilityChecker()).check(
+    return (widget.modelChecker ?? widget.store.apiChecker).check(
       address: configuration.url,
       apiKey: configuration.key,
       model: model.text,

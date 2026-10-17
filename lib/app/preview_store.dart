@@ -15,13 +15,22 @@ import '../models/preview_models.dart';
 import '../models/workspace_cleanup.dart';
 import '../services/conversation_messages.dart';
 import '../services/profile_actions.dart';
+import '../services/api_checker.dart';
+import '../services/model_availability_checker.dart';
+import '../runtime/sdk_agent_gateway.dart';
+import '../runtime/runtime_log.dart';
 
 class PreviewStore extends ChangeNotifier implements AgentWorkspace {
-  PreviewStore(this.preferences, {WorkspaceStorage? storage})
-    : _persistence = WorkspaceRepository(storage ?? MemoryWorkspaceStorage()) {
+  PreviewStore(
+    this.preferences, {
+    WorkspaceStorage? storage,
+    ApiChecker? apiChecker,
+  }) : apiChecker = apiChecker ?? ModelAvailabilityChecker(),
+       _persistence = WorkspaceRepository(storage ?? MemoryWorkspaceStorage()) {
     tzdata.initializeTimeZones();
   }
   final SharedPreferences preferences;
+  final ApiChecker apiChecker;
   final WorkspaceRepository _persistence;
   late final _lifecycle = WorkspaceLifecycle(_persistence);
   AgentRuntime? runtime;
@@ -35,7 +44,12 @@ class PreviewStore extends ChangeNotifier implements AgentWorkspace {
   }
 
   void startRuntime() {
-    runtime ??= AgentRuntime(this);
+    runtime ??= AgentRuntime(
+      this,
+      gateway: SdkAgentGateway(),
+      log: consoleRuntimeLog,
+      isHidden: browserHidden,
+    );
     runtime!.start();
   }
 

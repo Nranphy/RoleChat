@@ -18,7 +18,7 @@ class ActivationScheduler {
   ActivationScheduler({
     Random? random,
     this.log = silentRuntimeLog,
-    this.policy = const RoleplayActivationPolicy(),
+    required this.policy,
   }) : random = random ?? Random();
   final Random random;
   final RuntimeLog log;

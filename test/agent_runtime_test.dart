@@ -10,7 +10,7 @@ import 'package:rolechat/runtime/agent_runtime.dart';
 import 'package:rolechat/runtime/agent_tools.dart';
 import 'package:rolechat/runtime/agent_documents.dart';
 import 'package:rolechat/runtime/schedule_policy.dart';
-import 'package:rolechat/runtime/activation_policy.dart';
+import 'package:rolechat/runtime/roleplay_activation_policy.dart';
 import 'package:rolechat/models/workspace_cleanup.dart';
 
 class ZeroRandom implements Random {

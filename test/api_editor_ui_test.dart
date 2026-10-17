@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:rolechat/features/settings/api_editor.dart';
 import 'package:rolechat/services/model_availability_checker.dart';
+import 'package:rolechat/services/api_checker.dart';
 
 class PendingApiChecker extends ModelAvailabilityChecker {
   final pending = <Completer<ModelCheckResult>>[];

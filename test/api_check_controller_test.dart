@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rolechat/services/api_check_controller.dart';
-import 'package:rolechat/services/model_availability_checker.dart';
+import 'package:rolechat/services/api_checker.dart';
 
 void main() {
   test(

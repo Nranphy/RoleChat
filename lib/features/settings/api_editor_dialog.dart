@@ -7,7 +7,7 @@ import 'package:rolechat/app/preview_store.dart';
 import 'package:rolechat/design/form_metrics.dart';
 import 'package:rolechat/models/preview_models.dart';
 import 'package:rolechat/services/api_check_controller.dart';
-import 'package:rolechat/services/model_availability_checker.dart';
+import 'package:rolechat/services/api_checker.dart';
 import 'widgets/api_configuration_form.dart';
 
 class ApiEditorDialog extends StatefulWidget {
@@ -19,7 +19,7 @@ class ApiEditorDialog extends StatefulWidget {
   });
   final PreviewStore store;
   final ApiProfile? profile;
-  final ModelAvailabilityChecker? checker;
+  final ApiChecker? checker;
   @override
   State<ApiEditorDialog> createState() => _ApiEditorDialogState();
 }
@@ -132,7 +132,7 @@ class _ApiEditorDialogState extends State<ApiEditorDialog> {
           onPressed: check.running
               ? null
               : () => check.run(
-                  () => (widget.checker ?? ModelAvailabilityChecker()).checkApi(
+                  () => (widget.checker ?? widget.store.apiChecker).checkApi(
                     address: url.text,
                     apiKey: key.text,
                   ),

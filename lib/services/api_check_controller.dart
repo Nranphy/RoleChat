@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'model_availability_checker.dart';
+import 'api_checker.dart';
 
 /// Shared request state; edited inputs invalidate results without starting duplicates.
 class ApiCheckController extends ChangeNotifier {

@@ -1,24 +1,21 @@
 import 'dart:async';
+import 'api_checker.dart';
 import 'openai_client_factory.dart';
 import 'package:dart_openai/dart_openai.dart';
 import 'package:http/http.dart' as http;
 
-class ModelCheckResult {
-  const ModelCheckResult(this.success, this.message);
-  final bool success;
-  final String message;
-}
-
-class ModelAvailabilityChecker {
+class ModelAvailabilityChecker implements ApiChecker {
   ModelAvailabilityChecker({http.Client Function()? clientFactory})
     : clientFactory = clientFactory ?? http.Client.new;
   final http.Client Function() clientFactory;
 
+  @override
   Future<ModelCheckResult> checkApi({
     required String address,
     required String apiKey,
   }) => _check(address: address, apiKey: apiKey);
 
+  @override
   Future<ModelCheckResult> check({
     required String address,
     required String apiKey,

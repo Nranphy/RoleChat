@@ -4,14 +4,14 @@ import '../models/preview_models.dart';
 import 'activation_models.dart';
 import 'activation_scheduler.dart';
 import 'activation_policy.dart';
+import 'roleplay_activation_policy.dart';
 import 'agent_binding.dart';
 import 'agent_gateway.dart';
 import 'agent_runner.dart';
 import 'agent_workspace.dart';
-import 'browser_environment.dart';
 import 'model_request_gate.dart';
 import 'role_activation.dart';
-import 'runtime_log.dart';
+import 'runtime_events.dart';
 
 export 'activation_models.dart' show AgentState;
 
@@ -19,14 +19,14 @@ export 'activation_models.dart' show AgentState;
 class AgentRuntime {
   AgentRuntime(
     this.store, {
-    AgentGateway? gateway,
+    required AgentGateway gateway,
     Random? random,
-    RuntimeLog log = consoleRuntimeLog,
+    RuntimeLog log = silentRuntimeLog,
     ActivationPolicy policy = const RoleplayActivationPolicy(),
     bool Function()? isHidden,
     DateTime Function()? clock,
   }) : log = log,
-       isHidden = isHidden ?? browserHidden,
+       isHidden = isHidden ?? (() => false),
        clock = clock ?? DateTime.now,
        scheduler = ActivationScheduler(
          random: random,
@@ -35,7 +35,7 @@ class AgentRuntime {
        ) {
     runner = AgentRunner(
       store,
-      gateway: gateway ?? SdkAgentGateway(),
+      gateway: gateway,
       gate: gate,
       log: log,
       isClosed: () => _closed,
