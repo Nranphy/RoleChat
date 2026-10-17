@@ -10,6 +10,7 @@ import 'package:rolechat/runtime/agent_runtime.dart';
 import 'package:rolechat/runtime/agent_tools.dart';
 import 'package:rolechat/runtime/context_builder.dart';
 import 'package:rolechat/runtime/schedule_policy.dart';
+import 'package:rolechat/models/workspace_cleanup.dart';
 
 class ZeroRandom implements Random {
   @override
@@ -55,6 +56,33 @@ Future<PreviewStore> fixture() async {
 }
 
 void main() {
+  test(
+    'cleanup prevents an in-flight model response from restoring cleared messages',
+    () async {
+      final store = await fixture();
+      final gateway = DeferredGateway();
+      final runtime = AgentRuntime(
+        store,
+        gateway: gateway,
+        random: ZeroRandom(),
+      );
+      runtime.tick(DateTime.now());
+      await settle();
+      expect(gateway.requests.length, 1);
+      await store.clearData(WorkspaceCleanup.messages);
+      gateway.requests.single.complete(
+        const ModelTurn([
+          ToolCall('old', 'send_message', {'text': '不应写回的回复'}),
+          ToolCall('done', 'finish', {}),
+        ], []),
+      );
+      await settle();
+      expect(store.selected.messages, isEmpty);
+      expect(store.runtimeError, isNull);
+      runtime.dispose();
+      store.dispose();
+    },
+  );
   test(
     'new messages invalidate pending effects and restart with latest history',
     () async {

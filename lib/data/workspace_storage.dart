@@ -5,6 +5,8 @@ typedef FileTree = Map<String, Uint8List>;
 abstract interface class WorkspaceStorage {
   Future<bool> isInitialized();
   Future<void> markInitialized();
+  Future<void> removeInitializationMarker();
+  Future<void> clearAll();
   Future<FileTree> read();
   Future<void> write(FileTree files);
   void close();
@@ -18,6 +20,17 @@ class MemoryWorkspaceStorage implements WorkspaceStorage {
   @override
   Future<void> markInitialized() async {
     initialized = true;
+  }
+
+  @override
+  Future<void> removeInitializationMarker() async {
+    initialized = false;
+  }
+
+  @override
+  Future<void> clearAll() async {
+    files = {};
+    initialized = false;
   }
 
   @override

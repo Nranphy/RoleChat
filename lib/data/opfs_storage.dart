@@ -40,7 +40,7 @@ Future<WorkspaceStorage> openWorkspace() async {
 
 class OpfsWorkspaceStorage implements WorkspaceStorage {
   OpfsWorkspaceStorage(this.root, this.release);
-  final web.FileSystemDirectoryHandle root;
+  web.FileSystemDirectoryHandle root;
   final Completer<JSAny?> release;
   String? active;
   @override
@@ -60,6 +60,35 @@ class OpfsWorkspaceStorage implements WorkspaceStorage {
     'initialized.json',
     Uint8List.fromList(utf8.encode('{"initialized":true}\n')),
   );
+
+  @override
+  Future<void> removeInitializationMarker() async {
+    try {
+      await root.removeEntry('initialized.json').toDart;
+    } catch (e) {
+      if (!(e.isA<web.DOMException>() &&
+          (e as web.DOMException).name == 'NotFoundError')) {
+        rethrow;
+      }
+    }
+  }
+
+  @override
+  Future<void> clearAll() async {
+    final parent = await web.window.navigator.storage.getDirectory().toDart;
+    // Delete only the application's named directory, including abandoned snapshots.
+    await parent
+        .removeEntry('rolechat', web.FileSystemRemoveOptions(recursive: true))
+        .toDart;
+    root = await parent
+        .getDirectoryHandle(
+          'rolechat',
+          web.FileSystemGetDirectoryOptions(create: true),
+        )
+        .toDart;
+    active = null;
+  }
+
   @override
   void close() {
     if (!release.isCompleted) release.complete(null);

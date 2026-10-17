@@ -27,59 +27,64 @@ class AppShell extends StatelessWidget {
         2 => SettingsPage(store: store),
         _ => const ShowcasePage(),
       };
-      return Scaffold(
-        body: SafeArea(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (wide)
-                RoleNavigationRail(
-                  selectedIndex: store.destination,
-                  labels: labels,
-                  icons: icons,
-                  onSelected: store.navigate,
-                  onToggleTheme: () => store.setMode(
-                    Theme.of(context).brightness == Brightness.dark
-                        ? ThemeMode.light
-                        : ThemeMode.dark,
+      return AbsorbPointer(
+        absorbing: store.transferring,
+        child: Scaffold(
+          body: SafeArea(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (wide)
+                  RoleNavigationRail(
+                    selectedIndex: store.destination,
+                    labels: labels,
+                    icons: icons,
+                    onSelected: store.navigate,
+                    onToggleTheme: () => store.setMode(
+                      Theme.of(context).brightness == Brightness.dark
+                          ? ThemeMode.light
+                          : ThemeMode.dark,
+                    ),
+                  ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      if (store.transferring)
+                        const LinearProgressIndicator(minHeight: 2),
+                      if (store.runtimeError != null)
+                        MaterialBanner(
+                          content: Text(store.runtimeError!),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                store.runtimeError = null;
+                                store.refresh();
+                              },
+                              child: const Text('关闭'),
+                            ),
+                          ],
+                        ),
+                      Expanded(child: page),
+                    ],
                   ),
                 ),
-              Expanded(
-                child: Column(
-                  children: [
-                    if (store.runtimeError != null)
-                      MaterialBanner(
-                        content: Text(store.runtimeError!),
-                        actions: [
-                          TextButton(
-                            onPressed: () {
-                              store.runtimeError = null;
-                              store.refresh();
-                            },
-                            child: const Text('关闭'),
-                          ),
-                        ],
-                      ),
-                    Expanded(child: page),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-        bottomNavigationBar: wide || store.showChatOnMobile
-            ? null
-            : NavigationBar(
-                selectedIndex: store.destination,
-                onDestinationSelected: store.navigate,
-                destinations: List.generate(
-                  4,
-                  (i) => NavigationDestination(
-                    icon: Icon(icons[i]),
-                    label: labels[i],
+          bottomNavigationBar: wide || store.showChatOnMobile
+              ? null
+              : NavigationBar(
+                  selectedIndex: store.destination,
+                  onDestinationSelected: store.navigate,
+                  destinations: List.generate(
+                    4,
+                    (i) => NavigationDestination(
+                      icon: Icon(icons[i]),
+                      label: labels[i],
+                    ),
                   ),
                 ),
-              ),
+        ),
       );
     },
   );

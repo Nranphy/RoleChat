@@ -29,7 +29,7 @@ class ChatPage extends StatelessWidget {
                   ),
                 )
               : ChatView(
-                  key: ValueKey(store.selectedId),
+                  key: ValueKey('${store.selectedId}:${store.dataEpoch}'),
                   store: store,
                   wide: wide,
                 ),

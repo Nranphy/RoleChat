@@ -228,6 +228,10 @@ class AgentRuntime {
         final executor = AgentToolExecutor(store, role, chat);
         var restart = false;
         for (var round = 0; round < role.maxToolRounds; round++) {
+          if (!current()) {
+            restart = true;
+            break;
+          }
           if (estimateTokens(messages) +
                   estimateTokens(agentTools) +
                   settings.maxOutput >

@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../design/app_theme.dart';
 import '../models/preview_models.dart';
+import '../models/workspace_cleanup.dart';
 
 class PreviewStore extends ChangeNotifier {
   PreviewStore(this.preferences, {WorkspaceStorage? storage})
@@ -33,6 +34,7 @@ class PreviewStore extends ChangeNotifier {
   int dataEpoch = 0;
   String localTimezone = 'UTC';
   Future<void> importData(WorkspaceData merged) async {
+    if (transferring) throw StateError('本地数据操作正在进行');
     transferring = true;
     dataEpoch++;
     refresh();
@@ -41,6 +43,55 @@ class PreviewStore extends ChangeNotifier {
         throw StateError(_persistence.error!);
       }
       applyData(merged);
+    } finally {
+      transferring = false;
+      refresh();
+    }
+  }
+
+  Future<void> clearData(WorkspaceCleanup scope) async {
+    if (transferring) throw StateError('本地数据操作正在进行');
+    transferring = true;
+    dataEpoch++;
+    refresh();
+    try {
+      await _persistence.flush();
+      if (scope == WorkspaceCleanup.initialization) {
+        await storage.removeInitializationMarker();
+        return;
+      }
+      if (scope == WorkspaceCleanup.all) {
+        await storage.clearAll();
+        runtime?.dispose();
+        runtime = null;
+        applyData(WorkspaceData(apis: [], roles: [], chats: [], schedules: []));
+        await preferences.remove('themeMode');
+        await preferences.remove('seed');
+      } else {
+        final next = scope == WorkspaceCleanup.profiles
+            ? WorkspaceData(
+                apis: apis.toList(),
+                roles: [],
+                chats: [],
+                schedules: [],
+                runtime: {
+                  if (runtimeData.containsKey('background'))
+                    'background': runtimeData['background'],
+                },
+              )
+            : WorkspaceCodec.decode(WorkspaceCodec.encode(data));
+        if (scope == WorkspaceCleanup.messages) {
+          for (final chat in next.chats) {
+            chat.messages.clear();
+            chat.nextSequence = 1;
+          }
+          next.runtime.removeWhere((key, _) => key != 'background');
+        }
+        if (!await _persistence.save(next)) throw StateError(persistenceError!);
+        applyData(next);
+      }
+      runtimeError = null;
+      showChatOnMobile = false;
     } finally {
       transferring = false;
       refresh();
@@ -254,6 +305,7 @@ class PreviewStore extends ChangeNotifier {
       ? c.avatar
       : roles.where((r) => c.members.contains(r.id)).firstOrNull?.avatar;
   Future<bool> saveProfiles() async {
+    if (transferring) return false;
     final saved = await _persistence.save(data);
     if (!saved) refresh();
     return saved;
