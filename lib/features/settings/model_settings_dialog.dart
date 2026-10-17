@@ -86,8 +86,6 @@ class _ModelSettingsDialogState extends State<ModelSettingsDialog> {
                 error!,
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
-            if (widget.settings?.toolsUnsupported == true)
-              const Text('保存后将重新尝试验证原生工具能力。'),
           ],
         ),
       ),
@@ -103,7 +101,6 @@ class _ModelSettingsDialogState extends State<ModelSettingsDialog> {
           final value = ModelSettings.fromJson({
             for (final e in fields.entries) e.key: int.parse(e.value.text),
             'protocol': protocol,
-            'toolsUnsupported': false,
           });
           try {
             value.validate();

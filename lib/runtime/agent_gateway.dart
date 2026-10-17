@@ -11,9 +11,10 @@ class ToolCall {
 }
 
 class ModelTurn {
-  const ModelTurn(this.calls, this.continuation);
+  const ModelTurn(this.calls, this.continuation, {this.finishReason});
   final List<ToolCall> calls;
   final List<Map<String, dynamic>> continuation;
+  final String? finishReason;
 }
 
 abstract interface class AgentGateway {
@@ -79,6 +80,8 @@ class SdkAgentGateway implements AgentGateway {
             )
             .toList(),
         output,
+        finishReason:
+            response.incompleteDetails?.reason ?? response.status.toString(),
       );
     }
     final client = http.Client();
@@ -110,6 +113,7 @@ class SdkAgentGateway implements AgentGateway {
             )
             .toList(),
         [message],
+        finishReason: response.choices.first.finishReason,
       );
     } finally {
       client.close();

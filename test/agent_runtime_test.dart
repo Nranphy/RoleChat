@@ -57,6 +57,47 @@ Future<PreviewStore> fixture() async {
 
 void main() {
   test(
+    'missing tools cool down temporarily without persisting model disablement',
+    () async {
+      final store = await fixture();
+      final role = store.roles.single;
+      role.defaultActivationProbability = 100;
+      final gateway = DeferredGateway();
+      final runtime = AgentRuntime(
+        store,
+        gateway: gateway,
+        random: ZeroRandom(),
+      );
+      final now = DateTime.now();
+      runtime.tick(now);
+      await settle();
+      gateway.requests.single.complete(
+        const ModelTurn([], [], finishReason: 'length'),
+      );
+      await settle();
+      expect(store.runtimeError, contains('输出 token 上限'));
+      expect(
+        store.apis.single
+            .settings(role.model)
+            .toJson()
+            .containsKey('toolsUnsupported'),
+        isFalse,
+      );
+      runtime.tick(now.add(const Duration(seconds: 10)));
+      await settle();
+      expect(gateway.requests, hasLength(1));
+      runtime.tick(now.add(const Duration(seconds: 70)));
+      await settle();
+      expect(gateway.requests, hasLength(2));
+      gateway.requests.last.complete(
+        const ModelTurn([ToolCall('done', 'finish', {})], []),
+      );
+      await settle();
+      runtime.dispose();
+    },
+  );
+
+  test(
     'cleanup prevents an in-flight model response from restoring cleared messages',
     () async {
       final store = await fixture();

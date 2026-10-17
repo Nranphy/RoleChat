@@ -143,7 +143,6 @@ class ModelSettings {
     this.concurrency = 2,
     this.timeoutSeconds = 60,
     this.protocol = 'chat',
-    this.toolsUnsupported = false,
   });
   int contextTokens,
       historyHigh,
@@ -152,7 +151,6 @@ class ModelSettings {
       concurrency,
       timeoutSeconds;
   String protocol;
-  bool toolsUnsupported;
   Map<String, dynamic> toJson() => {
     'contextTokens': contextTokens,
     'historyHigh': historyHigh,
@@ -161,7 +159,6 @@ class ModelSettings {
     'concurrency': concurrency,
     'timeoutSeconds': timeoutSeconds,
     'protocol': protocol,
-    'toolsUnsupported': toolsUnsupported,
   };
   factory ModelSettings.fromJson(Map<String, dynamic> j) => ModelSettings(
     contextTokens: j['contextTokens'] as int,
@@ -171,7 +168,6 @@ class ModelSettings {
     concurrency: j['concurrency'] as int,
     timeoutSeconds: j['timeoutSeconds'] as int,
     protocol: j['protocol'] as String,
-    toolsUnsupported: j['toolsUnsupported'] as bool,
   );
   void validate() {
     if (contextTokens < 1024 ||

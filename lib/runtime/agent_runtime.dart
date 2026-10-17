@@ -32,6 +32,7 @@ class AgentRuntime {
   final Random random;
   final _roles = <String, _RoleClock>{};
   final _requests = <String, int>{};
+  final _retryAfter = <String, DateTime>{};
   Timer? _timer;
   bool _closed = false;
   int? _epoch;
@@ -125,8 +126,9 @@ class AgentRuntime {
         continue;
       }
       final settings = api.settings(role.model);
-      if (settings.toolsUnsupported) {
-        _skip(role, '模型此前未返回原生工具调用，已停用；重新保存模型配置后重试');
+      final retryAfter = _retryAfter['${api.id}:${role.model}'];
+      if (retryAfter != null && now.isBefore(retryAfter)) {
+        _skip(role, '模型未返回工具调用，暂缓重试至 ${retryAfter.toIso8601String()}');
         continue;
       }
       if (_skipReasons.remove(role.id) != null) {
@@ -366,9 +368,22 @@ class AgentRuntime {
             break;
           }
           if (turn.calls.isEmpty) {
-            settings.toolsUnsupported = true;
-            store.changed();
-            throw const FormatException('模型未返回原生工具调用，请确认模型支持工具调用');
+            _retryAfter[limiter] = DateTime.now().add(
+              const Duration(seconds: 60),
+            );
+            _log('未返回工具调用', {
+              'role': role.name,
+              'model': role.model,
+              'finishReason': turn.finishReason,
+              'maxOutputTokens': settings.maxOutput,
+              'retrySeconds': 60,
+            });
+            throw FormatException(
+              turn.finishReason == 'length' ||
+                      turn.finishReason == 'max_output_tokens'
+                  ? '模型达到输出 token 上限，尚未产生工具调用。请提高模型配置的最大输出 tokens（推理模型的思考也可能占用此额度）。60 秒后允许重试。'
+                  : '模型本轮未返回原生工具调用（结束原因：${turn.finishReason ?? "未知"}），不能据此认定模型不支持工具。请检查接口和模型的工具支持；60 秒后允许重试。',
+            );
           }
           messages.addAll(turn.continuation);
           _log('模型返回工具', {
