@@ -60,6 +60,7 @@ abstract final class WorkspaceCodec {
         'checkMin': r.checkMin,
         'checkMax': r.checkMax,
         'maxToolRounds': r.maxToolRounds,
+        'defaultActivationProbability': r.defaultActivationProbability,
         'lockSoul': r.lockSoul,
         'lockMemory': r.lockMemory,
         'lockedSchedules': r.lockedSchedules,
@@ -238,6 +239,8 @@ abstract final class WorkspaceCodec {
           checkMin: j['checkMin'] as int,
           checkMax: j['checkMax'] as int,
           maxToolRounds: j['maxToolRounds'] as int,
+          defaultActivationProbability:
+              (j['defaultActivationProbability'] as num?)?.toDouble() ?? 50,
           lockSoul: j['lockSoul'] as bool,
           lockMemory: j['lockMemory'] as bool,
           lockedSchedules: List<String>.from(j['lockedSchedules'] as List),
@@ -259,7 +262,10 @@ abstract final class WorkspaceCodec {
         if (role.checkMin < 1 ||
             role.checkMax < role.checkMin ||
             role.maxToolRounds < 1 ||
-            role.maxToolRounds > 100) {
+            role.maxToolRounds > 100 ||
+            !role.defaultActivationProbability.isFinite ||
+            role.defaultActivationProbability < 0 ||
+            role.defaultActivationProbability > 100) {
           throw const FormatException('角色运行参数无效');
         }
         roles.add(role);

@@ -46,6 +46,9 @@ void main() {
           final maximum = find.widgetWithText(TextField, '最长');
           expect(tester.getTopLeft(minimum).dy, tester.getTopLeft(maximum).dy);
           expect(find.byType(CheckboxListTile), findsNothing);
+          final defaultProbability = find.widgetWithText(TextField, '默认激活概率');
+          await tester.ensureVisible(defaultProbability);
+          await tester.enterText(defaultProbability, '35.5');
           for (final tab in ['灵魂', '记忆']) {
             await tester.tap(find.widgetWithText(Tab, tab));
             await tester.pumpAndSettle();
@@ -64,6 +67,7 @@ void main() {
           await tester.pumpAndSettle();
           expect(role.lockSoul, isTrue);
           expect(role.timezone, 'Asia/Shanghai');
+          expect(role.defaultActivationProbability, 35.5);
           expect(role.lockMemory, isTrue);
           expect(role.lockedSchedules, contains(schedule.id));
           expect(tester.takeException(), isNull);

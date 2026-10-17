@@ -67,7 +67,11 @@ abstract final class SchedulePolicy {
         }
       }
     }
-    return const CurrentActivity('free', '自由活动', .5);
+    return CurrentActivity(
+      'free',
+      '自由活动',
+      role.defaultActivationProbability / 100,
+    );
   }
 
   static double probability(double base, int aiCount, bool mentioned) =>

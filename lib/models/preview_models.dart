@@ -13,6 +13,7 @@ class RoleProfile {
     this.checkMin = 5,
     this.checkMax = 30,
     this.maxToolRounds = 8,
+    this.defaultActivationProbability = 50,
     this.lockSoul = false,
     this.lockMemory = false,
     List<String>? lockedSchedules,
@@ -23,6 +24,7 @@ class RoleProfile {
   bool archived, lockSoul, lockMemory;
   String timezone;
   int checkMin, checkMax, maxToolRounds;
+  double defaultActivationProbability;
   List<String> lockedSchedules;
   String name, model, identity, soul, memory;
   String? apiId, avatar;

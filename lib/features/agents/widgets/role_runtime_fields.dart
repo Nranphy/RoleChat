@@ -30,19 +30,31 @@ class RoleRuntimeFields extends StatelessWidget {
         ),
       );
       final rounds = field('最大工具轮数');
+      final probability = Tooltip(
+        message: '未匹配行程时使用的基础激活概率，范围为 0～100%。',
+        child: field('默认激活概率', suffix: '%'),
+      );
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (narrow) ...[
             timezone,
             const SizedBox(height: 16),
-            rounds,
+            Row(
+              children: [
+                Expanded(child: rounds),
+                const SizedBox(width: 16),
+                Expanded(child: probability),
+              ],
+            ),
           ] else
             Row(
               children: [
                 Expanded(flex: 3, child: timezone),
                 const SizedBox(width: 16),
                 Expanded(flex: 2, child: rounds),
+                const SizedBox(width: 16),
+                Expanded(flex: 2, child: probability),
               ],
             ),
           const SizedBox(height: 16),

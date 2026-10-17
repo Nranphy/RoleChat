@@ -156,4 +156,30 @@ void main() {
     expect(SchedulePolicy.probability(.2, 100, false), closeTo(.01, .00001));
     expect(SchedulePolicy.probability(1, 10, false), .5);
   });
+  test(
+    'unmatched schedules use role probability while matched rules take precedence',
+    () async {
+      final store = await fixture();
+      final role = store.roles.single;
+      final now = DateTime.utc(2026, 10, 17, 12);
+      for (final probability in [0.0, 35.5, 100.0]) {
+        role.defaultActivationProbability = probability;
+        expect(
+          SchedulePolicy.match(role, [], now).probability,
+          probability / 100,
+        );
+      }
+      role.defaultActivationProbability = 0;
+      final schedule = ScheduleEntry(
+        id: store.newId(),
+        roleId: role.id,
+        activity: '聊天',
+        start: '09:00',
+        end: '18:00',
+        probability: 80,
+      );
+      expect(SchedulePolicy.match(role, [schedule], now).probability, .8);
+      store.dispose();
+    },
+  );
 }

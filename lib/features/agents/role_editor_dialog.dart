@@ -61,6 +61,7 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
       '检查最小间隔（秒）': text((r?.checkMin ?? 5).toString()),
       '检查最大间隔（秒）': text((r?.checkMax ?? 30).toString()),
       '最大工具轮数': text((r?.maxToolRounds ?? 8).toString()),
+      '默认激活概率': text((r?.defaultActivationProbability ?? 50).toString()),
     };
     lockSoul = r?.lockSoul ?? false;
     lockMemory = r?.lockMemory ?? false;
@@ -235,6 +236,15 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
     final min = int.tryParse(runtimeFields['检查最小间隔（秒）']!.text);
     final max = int.tryParse(runtimeFields['检查最大间隔（秒）']!.text);
     final rounds = int.tryParse(runtimeFields['最大工具轮数']!.text);
+    final probability = double.tryParse(runtimeFields['默认激活概率']!.text);
+    if (probability == null ||
+        !probability.isFinite ||
+        probability < 0 ||
+        probability > 100) {
+      setState(() => tab = 0);
+      toast(context, '默认激活概率需在 0～100% 之间');
+      return;
+    }
     if (min == null ||
         max == null ||
         rounds == null ||
@@ -261,6 +271,7 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
     r.checkMin = min;
     r.checkMax = max;
     r.maxToolRounds = rounds;
+    r.defaultActivationProbability = probability;
     r.lockSoul = lockSoul;
     r.lockMemory = lockMemory;
     r.lockedSchedules = lockedSchedules.toList();

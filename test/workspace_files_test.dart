@@ -18,6 +18,7 @@ void main() {
       final store = await create();
       store.apis.first.key = 'secret';
       store.roles.first.memory = '# 日记\n两行\n文字';
+      store.roles.first.defaultActivationProbability = 35.5;
       store.send('新消息\n第二行');
       expect(await store.saveProfiles(), isTrue);
       final files = await store.storage.read();
@@ -33,6 +34,7 @@ void main() {
       );
       await restored.initialize();
       expect(restored.apis.first.key, 'secret');
+      expect(restored.roles.first.defaultActivationProbability, 35.5);
       expect(restored.selected.messages.last.text, '新消息\n第二行');
     },
   );
