@@ -60,214 +60,207 @@ class _MessageBubbleState extends State<MessageBubble> {
             8,
             widget.nextSame ? 1 : 8,
           ),
-          child: IntrinsicHeight(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (mine || widget.previousSame)
-                  const SizedBox(width: 48)
-                else
-                  GestureDetector(
-                    onTap: widget.onAvatarTap,
-                    child: MouseRegion(
-                      cursor: SystemMouseCursors.click,
-                      child: RoleAvatar(
-                        widget.name,
-                        size: 48,
-                        imageData: widget.avatar,
-                      ),
-                    ),
-                  ),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 570),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: mine
-                          ? CrossAxisAlignment.end
-                          : CrossAxisAlignment.start,
-                      children: [
-                        if (!mine && !widget.previousSame)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8, bottom: 2),
-                            child: Text(
-                              widget.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: widget.showName
-                                    ? widget.nameColor ?? colors.primary
-                                    : Colors.transparent,
-                              ),
-                            ),
-                          ),
-                        GestureDetector(
-                          onSecondaryTap: widget.onReply == null
-                              ? null
-                              : () => menuKey.currentState?.showButtonMenu(),
-                          onLongPress: widget.onReply == null
-                              ? null
-                              : () => menuKey.currentState?.showButtonMenu(),
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              Padding(
-                                padding: EdgeInsets.only(
-                                  left: mine && widget.onReply != null ? 32 : 0,
-                                  right: !mine && widget.onReply != null
-                                      ? 32
-                                      : 0,
-                                ),
-                                child: AnimatedContainer(
-                                  key: ValueKey(widget.message.id),
-                                  duration: const Duration(milliseconds: 120),
-                                  decoration: BoxDecoration(
-                                    borderRadius: shape,
-                                    color: Color.alphaBlend(
-                                      foreground.withValues(
-                                        alpha: widget.highlighted
-                                            ? .18
-                                            : hovered
-                                            ? .06
-                                            : 0,
-                                      ),
-                                      mine
-                                          ? (dark
-                                                ? colors.primaryContainer
-                                                : colors.primary)
-                                          : colors.surfaceContainerHigh,
-                                    ),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
-                                  ),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      if (widget.message.reply != null)
-                                        Container(
-                                          padding: const EdgeInsets.all(8),
-                                          margin: const EdgeInsets.only(
-                                            bottom: 8,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            border: Border(
-                                              left: BorderSide(
-                                                width: 3,
-                                                color: mine
-                                                    ? foreground
-                                                    : colors.primary,
-                                              ),
-                                            ),
-                                          ),
-                                          child: MessageReferencePreview(
-                                            reference: widget.message.reply!,
-                                            textColor: foreground,
-                                            onTap: widget.onReferenceTap,
-                                          ),
-                                        ),
-                                      SelectableText(
-                                        widget.message.text,
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          color: foreground,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              if (widget.onReply != null)
-                                Positioned(
-                                  left: mine ? 0 : null,
-                                  right: mine ? null : 0,
-                                  bottom: 0,
-                                  child: IgnorePointer(
-                                    ignoring: !(hovered || menuOpen),
-                                    child: AnimatedOpacity(
-                                      opacity: hovered || menuOpen ? 1 : 0,
-                                      duration: const Duration(
-                                        milliseconds: 120,
-                                      ),
-                                      alwaysIncludeSemantics: true,
-                                      child: PopupMenuButton<String>(
-                                        key: menuKey,
-                                        onOpened: () =>
-                                            setState(() => menuOpen = true),
-                                        onCanceled: () =>
-                                            setState(() => menuOpen = false),
-                                        clipBehavior: Clip.antiAlias,
-                                        tooltip: '',
-                                        position: PopupMenuPosition.under,
-                                        offset: const Offset(0, 6),
-                                        padding: EdgeInsets.zero,
-                                        iconSize: 16,
-                                        style: IconButton.styleFrom(
-                                          minimumSize: const Size(32, 32),
-                                          maximumSize: const Size(32, 32),
-                                          padding: EdgeInsets.zero,
-                                        ),
-                                        icon: Icon(
-                                          Icons.more_horiz,
-                                          color: colors.onSurfaceVariant,
-                                        ),
-                                        onSelected: (v) {
-                                          setState(() => menuOpen = false);
-                                          if (v == 'reply') {
-                                            widget.onReply?.call();
-                                          }
-                                          if (v == 'copy') {
-                                            widget.onCopy?.call();
-                                          }
-                                          if (v == 'delete') {
-                                            widget.onDelete?.call();
-                                          }
-                                        },
-                                        itemBuilder: (_) => const [
-                                          PopupMenuItem(
-                                            value: 'reply',
-                                            child: Text('引用回复'),
-                                          ),
-                                          PopupMenuItem(
-                                            value: 'copy',
-                                            child: Text('复制'),
-                                          ),
-                                          PopupMenuItem(
-                                            value: 'delete',
-                                            child: Text('删除'),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                        if (!widget.nextSame)
-                          Padding(
-                            padding: EdgeInsets.fromLTRB(8, 2, 8, 2),
-                            child: Text(
-                              widget.message.time,
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: colors.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                      ],
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (mine || widget.previousSame)
+                const SizedBox(width: 48)
+              else
+                GestureDetector(
+                  onTap: widget.onAvatarTap,
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: RoleAvatar(
+                      widget.name,
+                      size: 48,
+                      imageData: widget.avatar,
                     ),
                   ),
                 ),
-                if (widget.onReply != null) const SizedBox(width: 32),
-              ],
-            ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 570),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: mine
+                        ? CrossAxisAlignment.end
+                        : CrossAxisAlignment.start,
+                    children: [
+                      if (!mine && !widget.previousSame)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8, bottom: 2),
+                          child: Text(
+                            widget.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: widget.showName
+                                  ? widget.nameColor ?? colors.primary
+                                  : Colors.transparent,
+                            ),
+                          ),
+                        ),
+                      GestureDetector(
+                        onSecondaryTap: widget.onReply == null
+                            ? null
+                            : () => menuKey.currentState?.showButtonMenu(),
+                        onLongPress: widget.onReply == null
+                            ? null
+                            : () => menuKey.currentState?.showButtonMenu(),
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.only(
+                                left: mine && widget.onReply != null ? 32 : 0,
+                                right: !mine && widget.onReply != null ? 32 : 0,
+                              ),
+                              child: AnimatedContainer(
+                                key: ValueKey(widget.message.id),
+                                duration: const Duration(milliseconds: 120),
+                                decoration: BoxDecoration(
+                                  borderRadius: shape,
+                                  color: Color.alphaBlend(
+                                    foreground.withValues(
+                                      alpha: widget.highlighted
+                                          ? .18
+                                          : hovered
+                                          ? .06
+                                          : 0,
+                                    ),
+                                    mine
+                                        ? (dark
+                                              ? colors.primaryContainer
+                                              : colors.primary)
+                                        : colors.surfaceContainerHigh,
+                                  ),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (widget.message.reply != null)
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        margin: const EdgeInsets.only(
+                                          bottom: 8,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          border: Border(
+                                            left: BorderSide(
+                                              width: 3,
+                                              color: mine
+                                                  ? foreground
+                                                  : colors.primary,
+                                            ),
+                                          ),
+                                        ),
+                                        child: MessageReferencePreview(
+                                          reference: widget.message.reply!,
+                                          textColor: foreground,
+                                          onTap: widget.onReferenceTap,
+                                        ),
+                                      ),
+                                    SelectableText(
+                                      widget.message.text,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: foreground,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            if (widget.onReply != null)
+                              Positioned(
+                                left: mine ? 0 : null,
+                                right: mine ? null : 0,
+                                bottom: 0,
+                                child: IgnorePointer(
+                                  ignoring: !(hovered || menuOpen),
+                                  child: AnimatedOpacity(
+                                    opacity: hovered || menuOpen ? 1 : 0,
+                                    duration: const Duration(milliseconds: 120),
+                                    alwaysIncludeSemantics: true,
+                                    child: PopupMenuButton<String>(
+                                      key: menuKey,
+                                      onOpened: () =>
+                                          setState(() => menuOpen = true),
+                                      onCanceled: () =>
+                                          setState(() => menuOpen = false),
+                                      clipBehavior: Clip.antiAlias,
+                                      tooltip: '',
+                                      position: PopupMenuPosition.under,
+                                      offset: const Offset(0, 6),
+                                      padding: EdgeInsets.zero,
+                                      iconSize: 16,
+                                      style: IconButton.styleFrom(
+                                        minimumSize: const Size(32, 32),
+                                        maximumSize: const Size(32, 32),
+                                        padding: EdgeInsets.zero,
+                                      ),
+                                      icon: Icon(
+                                        Icons.more_horiz,
+                                        color: colors.onSurfaceVariant,
+                                      ),
+                                      onSelected: (v) {
+                                        setState(() => menuOpen = false);
+                                        if (v == 'reply') {
+                                          widget.onReply?.call();
+                                        }
+                                        if (v == 'copy') {
+                                          widget.onCopy?.call();
+                                        }
+                                        if (v == 'delete') {
+                                          widget.onDelete?.call();
+                                        }
+                                      },
+                                      itemBuilder: (_) => const [
+                                        PopupMenuItem(
+                                          value: 'reply',
+                                          child: Text('引用回复'),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'copy',
+                                          child: Text('复制'),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'delete',
+                                          child: Text('删除'),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      if (!widget.nextSame)
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(8, 2, 8, 2),
+                          child: Text(
+                            widget.message.time,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: colors.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              if (widget.onReply != null) const SizedBox(width: 32),
+            ],
           ),
         ),
       ),
