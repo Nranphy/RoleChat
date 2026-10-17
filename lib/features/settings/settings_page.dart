@@ -2,6 +2,8 @@ import 'package:rolechat/features/data/archive_dialog.dart';
 import 'package:rolechat/features/data/data_transfer_dialog.dart';
 import 'settings_dialogs.dart';
 import 'widgets/runtime_settings.dart';
+import 'widgets/data_cleanup_settings.dart';
+import 'package:rolechat/models/workspace_cleanup.dart';
 import 'widgets/appearance_settings.dart';
 import 'widgets/api_settings.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +20,31 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  Future<void> clearData(WorkspaceCleanup scope) async {
+    if (widget.store.transferring) return;
+    final accepted = await confirm(
+      context,
+      title: '${scope.label}？',
+      body: '${scope.explanation}\n\n此操作无法撤销，请确认已保存需要的数据。',
+      action: '确认清除',
+      destructive: true,
+    );
+    if (!accepted || !mounted) return;
+    try {
+      await widget.store.clearData(scope);
+      if (mounted) {
+        toast(
+          context,
+          scope == WorkspaceCleanup.all
+              ? '已清空所有数据，刷新页面后重新初始化。'
+              : '已完成${scope.label}。',
+        );
+      }
+    } catch (_) {
+      if (mounted) toast(context, '清理失败，请检查本地存储后重试。');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final store = widget.store;
@@ -76,6 +103,10 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             onAbout: () => showRoleChatAbout(context),
           ),
+          const SizedBox(height: 26),
+          const Text('数据清理', style: TextStyle(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 12),
+          DataCleanupSettings(onSelected: clearData, busy: store.transferring),
         ],
       ),
     );

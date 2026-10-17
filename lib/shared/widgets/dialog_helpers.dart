@@ -9,6 +9,7 @@ Future<bool> confirm(
   required String title,
   required String body,
   String action = '删除',
+  bool destructive = false,
 }) async =>
     await showDialog<bool>(
       context: context,
@@ -21,6 +22,12 @@ Future<bool> confirm(
             child: const Text('取消'),
           ),
           FilledButton(
+            style: destructive
+                ? FilledButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                    foregroundColor: Theme.of(context).colorScheme.onError,
+                  )
+                : null,
             onPressed: () => Navigator.pop(context, true),
             child: Text(action),
           ),
