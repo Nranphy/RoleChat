@@ -76,11 +76,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 body:
                     '使用此配置的角色：${used.isEmpty ? '无' : used}\n移除后，这些角色的配置选择会清空。',
               )) {
-                for (final r in store.roles.where((r) => r.apiId == a.id)) {
-                  r.apiId = null;
-                }
-                store.apis.remove(a);
-                store.changed();
+                store.removeApi(a.id);
               }
             },
           ),

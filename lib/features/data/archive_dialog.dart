@@ -29,14 +29,7 @@ class ArchiveDialog extends StatelessWidget {
                       tooltip: '恢复角色',
                       icon: const Icon(Icons.unarchive_outlined),
                       onPressed: () {
-                        r.archived = false;
-                        for (final c in store.conversations.where(
-                          (c) => !c.group && c.members.contains(r.id),
-                        )) {
-                          c.archived = false;
-                        }
-                        store.ensureSelection();
-                        store.changed();
+                        store.restoreRole(r.id);
                       },
                     ),
                     IconButton(
@@ -100,9 +93,7 @@ class ArchiveDialog extends StatelessWidget {
                           toast(context, '请先恢复关联角色');
                           return;
                         }
-                        c.archived = false;
-                        store.ensureSelection();
-                        store.changed();
+                        store.restoreChat(c);
                       },
                     ),
                     IconButton(
@@ -116,9 +107,7 @@ class ArchiveDialog extends StatelessWidget {
                           body: '这会删除${c.group ? '群聊' : '私聊'}历史消息和相关配置，无法恢复。',
                           action: '永久删除',
                         )) {
-                          store.conversations.remove(c);
-                          store.ensureSelection();
-                          store.changed();
+                          store.deleteChat(c);
                         }
                       },
                     ),

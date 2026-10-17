@@ -3,6 +3,7 @@ import 'agent_workspace.dart';
 import '../data/schedule_codec.dart';
 import '../models/preview_models.dart';
 import 'context_builder.dart';
+import '../services/conversation_messages.dart';
 
 Map<String, dynamic> _tool(
   String name,
@@ -87,25 +88,16 @@ class AgentToolExecutor {
           throw const FormatException('消息内容为空或过长');
         }
         final now = DateTime.now();
-        chat.messages.add(
-          ChatMessage(
-            id: store.newId(),
-            roleId: role.id,
-            senderName: role.name,
-            sequence: chat.nextSequence++,
-            text: text,
-            createdAt: now,
-            mentions: [
-              for (final r in store.activeRoles)
-                if (chat.members.contains(r.id) && text.contains('@${r.name}'))
-                  r.id,
-            ],
-            time:
-                '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}',
-          ),
+        final message = ConversationMessages.append(
+          chat,
+          id: store.newId(),
+          sender: role,
+          text: text,
+          now: now,
+          roles: store.activeRoles,
         );
         store.changed();
-        return {'sent': true, 'message_id': chat.messages.last.id};
+        return {'sent': true, 'message_id': message.id};
       case 'search_history':
         final target = store.conversations
             .where((c) => c.id == args['conversation_id'])

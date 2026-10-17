@@ -95,25 +95,16 @@ class _GroupEditorDialogState extends State<GroupEditorDialog> {
     }
     setState(() => saving = true);
     final store = widget.store;
-    final group =
-        widget.group ??
-        store.conversations.where((c) => c.id == createdId).firstOrNull;
-    if (group == null) {
-      store.addGroup(
-        name.text.trim(),
-        members.toList(),
-        avatar: avatar,
-        background: background.text,
-      );
-      createdId = store.selected.id;
-    } else {
-      group.name = name.text.trim();
-      group.avatar = avatar;
-      group.background = background.text;
-      group.members = members.toList();
-      store.changed();
-    }
-    if (!await store.saveProfiles()) {
+    createdId ??= widget.group?.id ?? store.newId();
+    final draft = Conversation(
+      id: createdId!,
+      name: name.text.trim(),
+      members: members.toList(),
+      group: true,
+      avatar: avatar,
+      background: background.text,
+    );
+    if (!await store.saveGroup(draft)) {
       if (mounted) {
         setState(() => saving = false);
         toast(context, store.persistenceError!);

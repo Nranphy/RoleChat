@@ -90,8 +90,7 @@ class _ChatViewState extends State<ChatView> {
                   body: '清空当前会话的所有消息，无法恢复。',
                   action: '清空',
                 )) {
-              c.messages.clear();
-              store.changed();
+              store.clearMessages(c);
             }
           },
         ),
@@ -124,8 +123,7 @@ class _ChatViewState extends State<ChatView> {
                 title: '删除这条消息？',
                 body: '此操作将从本地文件中删除消息。',
               )) {
-                c.messages.remove(m);
-                store.changed();
+                store.deleteMessage(c, m);
               }
             },
             onCopy: (m) async {

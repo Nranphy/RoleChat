@@ -29,6 +29,7 @@ class _ApiEditorDialogState extends State<ApiEditorDialog> {
   final form = GlobalKey<FormState>();
   final check = ApiCheckController();
   bool hidden = true;
+  bool saving = false;
   late final List<ModelConfigurationDraft> models;
   final removedModels = <ModelConfigurationDraft>[];
   @override
@@ -140,13 +141,23 @@ class _ApiEditorDialogState extends State<ApiEditorDialog> {
         ),
         FilledButton(
           style: FormMetrics.dialogActionStyle,
-          onPressed: save,
+          onPressed: saving ? null : save,
           child: const Text('保存'),
         ),
       ],
     ),
   );
   Future<void> save() async {
+    if (saving) return;
+    setState(() => saving = true);
+    try {
+      await _save();
+    } finally {
+      if (mounted) setState(() => saving = false);
+    }
+  }
+
+  Future<void> _save() async {
     if (!form.currentState!.validate()) return;
     final configured = <String, ModelSettings>{};
     try {
@@ -165,16 +176,11 @@ class _ApiEditorDialogState extends State<ApiEditorDialog> {
       for (final model in models)
         if (model.original.isNotEmpty) model.original: model.name.text.trim(),
     };
-    final affected = widget.store.roles
-        .where(
-          (r) =>
-              widget.profile != null &&
-              r.apiId == widget.profile!.id &&
-              r.model.isNotEmpty &&
-              !renamed.containsKey(r.model) &&
-              !configured.containsKey(r.model),
-        )
-        .toList();
+    final affected = widget.store.profileActions.affectedByRemovedModels(
+      widget.profile?.id,
+      configured.keys.toSet(),
+      renamed,
+    );
     if (affected.isNotEmpty) {
       final accepted = await confirm(
         context,
@@ -184,20 +190,19 @@ class _ApiEditorDialogState extends State<ApiEditorDialog> {
       );
       if (!accepted || !mounted) return;
     }
-    final profile =
-        widget.profile ??
-        ApiProfile(id: widget.store.newId(), name: '', url: '');
-    profile.name = name.text.trim();
-    profile.url = url.text.trim();
-    profile.key = key.text;
-    profile.models = configured;
-    for (final role in widget.store.roles.where((r) => r.apiId == profile.id)) {
-      role.model =
-          renamed[role.model] ??
-          (configured.containsKey(role.model) ? role.model : '');
+    final draft = ApiProfile(
+      id: widget.profile?.id ?? widget.store.newId(),
+      name: name.text.trim(),
+      url: url.text.trim(),
+      key: key.text,
+      models: configured,
+    );
+    final saved = await widget.store.saveApi(draft, renamed: renamed);
+    if (!mounted) return;
+    if (saved) {
+      Navigator.pop(context);
+    } else {
+      toast(context, widget.store.persistenceError!);
     }
-    if (widget.profile == null) widget.store.apis.add(profile);
-    widget.store.changed();
-    Navigator.pop(context);
   }
 }

@@ -1,6 +1,4 @@
 import 'widgets/role_runtime_fields.dart';
-import 'dart:convert';
-import '../../data/schedule_codec.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:rolechat/services/api_check_controller.dart';
 import 'package:rolechat/services/model_availability_checker.dart';
@@ -220,13 +218,7 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
   void commitName(String value) {
     final role = widget.role;
     if (role != null) {
-      role.name = value.isEmpty ? '未命名' : value;
-      for (final c in widget.store.conversations.where(
-        (c) => !c.group && c.members.contains(role.id),
-      )) {
-        c.name = role.name;
-      }
-      widget.store.changed();
+      widget.store.renameRole(role.id, value.isEmpty ? '未命名' : value);
     }
     setState(() {});
   }
@@ -286,48 +278,29 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
     }
     setState(() => saving = true);
     final store = widget.store;
-    final r = widget.role ?? RoleProfile(id: id, name: name.text.trim());
-    r.name = name.text.trim();
-    r.avatar = avatar;
-    r.apiId = api;
-    r.model = model.text.trim();
-    r.timezone = runtimeFields['时区']!.text.trim();
-    r.checkMin = min;
-    r.checkMax = max;
-    r.maxToolRounds = rounds;
-    r.defaultActivationProbability = probability;
-    r.lockSoul = lockSoul;
-    r.lockMemory = lockMemory;
-    r.lockedSchedules = lockedSchedules.toList();
-    r.identity = identity.text;
-    r.soul = soul.text;
-    r.memory = memoryDocument.text;
-    r.examples = examples
-        .map((e) => {'question': e.$1.text, 'answer': e.$2.text})
-        .toList();
-    if (!store.roles.any((old) => old.id == id)) {
-      store.addRole(r);
-    } else {
-      for (final c in store.conversations.where(
-        (c) => !c.group && c.members.contains(id),
-      )) {
-        c.name = r.name;
-      }
-      store.changed();
-    }
-    final previous = {
-      for (final s in store.schedules.where((s) => s.roleId == id))
-        s.id: jsonEncode(ScheduleCodec.encode(s)),
-    };
+    final draft = RoleProfile(
+      id: id,
+      name: name.text.trim(),
+      avatar: avatar,
+      apiId: api,
+      model: model.text.trim(),
+      timezone: runtimeFields['时区']!.text.trim(),
+      checkMin: min,
+      checkMax: max,
+      maxToolRounds: rounds,
+      defaultActivationProbability: probability,
+      lockSoul: lockSoul,
+      lockMemory: lockMemory,
+      lockedSchedules: lockedSchedules.toList(),
+      identity: identity.text,
+      soul: soul.text,
+      memory: memoryDocument.text,
+      examples: examples
+          .map((e) => {'question': e.$1.text, 'answer': e.$2.text})
+          .toList(),
+    );
     final updated = schedules.map((s) => s.toEntry(id, store.newId())).toList();
-    bool unchanged(ScheduleEntry s) =>
-        previous[s.id] == jsonEncode(ScheduleCodec.encode(s));
-    store.schedules.removeWhere((s) => s.roleId == id);
-    store.schedules.addAll([
-      ...updated.where(unchanged),
-      ...updated.where((s) => !unchanged(s)),
-    ]);
-    if (!await store.saveProfiles()) {
+    if (!await store.saveRole(draft, schedules: updated)) {
       if (mounted) {
         setState(() => saving = false);
         toast(context, store.persistenceError!);

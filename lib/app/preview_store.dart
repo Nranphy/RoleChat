@@ -13,6 +13,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../design/app_theme.dart';
 import '../models/preview_models.dart';
 import '../models/workspace_cleanup.dart';
+import '../services/conversation_messages.dart';
+import '../services/profile_actions.dart';
 
 class PreviewStore extends ChangeNotifier implements AgentWorkspace {
   PreviewStore(this.preferences, {WorkspaceStorage? storage})
@@ -38,6 +40,71 @@ class PreviewStore extends ChangeNotifier implements AgentWorkspace {
   }
 
   WorkspaceStorage get storage => _persistence.storage;
+  ProfileActions get profileActions => ProfileActions(data, newId: newId);
+  Future<bool> saveRole(RoleProfile role, {List<ScheduleEntry>? schedules}) {
+    profileActions.saveRole(role, schedules: schedules);
+    refresh();
+    return saveProfiles();
+  }
+
+  Future<bool> saveApi(
+    ApiProfile api, {
+    Map<String, String> renamed = const {},
+  }) {
+    profileActions.saveApi(api, renamed: renamed);
+    refresh();
+    return saveProfiles();
+  }
+
+  void renameRole(String id, String name) {
+    profileActions.renameRole(id, name);
+    changed();
+  }
+
+  Future<bool> saveGroup(Conversation group) {
+    final isNew = !conversations.any((c) => c.id == group.id);
+    profileActions.saveGroup(group);
+    if (isNew) {
+      select(group.id);
+    } else {
+      refresh();
+    }
+    return saveProfiles();
+  }
+
+  void restoreRole(String id) {
+    profileActions.setRoleArchived(id, false);
+    ensureSelection();
+    changed();
+  }
+
+  void restoreChat(Conversation chat) {
+    chat.archived = false;
+    ensureSelection();
+    changed();
+  }
+
+  void deleteChat(Conversation chat) {
+    conversations.remove(chat);
+    ensureSelection();
+    changed();
+  }
+
+  void clearMessages(Conversation chat) {
+    chat.messages.clear();
+    changed();
+  }
+
+  void deleteMessage(Conversation chat, ChatMessage message) {
+    chat.messages.remove(message);
+    changed();
+  }
+
+  void removeApi(String id) {
+    profileActions.removeApi(id);
+    changed();
+  }
+
   @override
   final runtimeData = <String, dynamic>{};
   bool _disposed = false;
@@ -189,52 +256,30 @@ class PreviewStore extends ChangeNotifier implements AgentWorkspace {
 
   void send(String text, {MessageReference? reply}) {
     if (text.trim().isEmpty) return;
-    selected.messages.add(
-      ChatMessage(
-        sequence: selected.nextSequence++,
-        senderName: '你',
-        mentions: [
-          for (final r in activeRoles)
-            if (selected.members.contains(r.id) && text.contains('@${r.name}'))
-              r.id,
-        ],
-        id: newId(),
-        text: text.trim(),
-        time: TimeOfDay.now().format24,
-        reply: reply,
-      ),
+    ConversationMessages.append(
+      selected,
+      id: newId(),
+      text: text,
+      now: DateTime.now(),
+      roles: activeRoles,
+      reply: reply,
     );
     changed();
   }
 
   void addRole(RoleProfile profile) {
-    roles.add(profile);
-    conversations.add(
-      Conversation(id: newId(), name: profile.name, members: [profile.id]),
-    );
+    profileActions.saveRole(profile);
     changed();
   }
 
   void removeRole(String id) {
-    role(id).archived = true;
-    for (final c in conversations.where(
-      (c) => !c.group && c.members.contains(id),
-    )) {
-      c.archived = true;
-    }
+    profileActions.setRoleArchived(id, true);
     ensureSelection();
     changed();
   }
 
   void deleteRole(String id, {required bool keepHistory}) {
-    roles.removeWhere((r) => r.id == id);
-    schedules.removeWhere((s) => s.roleId == id);
-    conversations.removeWhere(
-      (c) => !c.group && c.members.contains(id) && !keepHistory,
-    );
-    for (final c in conversations) {
-      c.members.remove(id);
-    }
+    profileActions.deleteRole(id, keepHistory: keepHistory);
     changed();
   }
 
@@ -257,8 +302,7 @@ class PreviewStore extends ChangeNotifier implements AgentWorkspace {
     String background = '',
   }) {
     final id = newId();
-    conversations.insert(
-      0,
+    profileActions.saveGroup(
       Conversation(
         id: id,
         name: name,
@@ -291,9 +335,4 @@ class PreviewStore extends ChangeNotifier implements AgentWorkspace {
   final conversations = <Conversation>[];
   @override
   final schedules = <ScheduleEntry>[];
-}
-
-extension on TimeOfDay {
-  String get format24 =>
-      '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
 }
