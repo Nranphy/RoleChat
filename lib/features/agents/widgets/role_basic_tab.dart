@@ -1,6 +1,5 @@
 import 'package:rolechat/shared/widgets/check_result_note.dart';
 import 'package:flutter/material.dart';
-import 'package:rolechat/design/form_metrics.dart';
 import 'package:rolechat/shared/widgets/profile_identity_header.dart';
 import 'package:rolechat/shared/widgets/anchored_select.dart';
 
@@ -12,6 +11,7 @@ class RoleBasicTab extends StatelessWidget {
     required this.avatar,
     required this.api,
     required this.apiOptions,
+    required this.modelOptions,
     required this.onAvatarChanged,
     required this.onApiChanged,
     required this.onNameChanged,
@@ -23,10 +23,11 @@ class RoleBasicTab extends StatelessWidget {
     this.checkingModel = false,
     this.runtimeFields,
   });
-  final TextEditingController name, model;
+  final TextEditingController name;
+  final String model;
   final Widget? runtimeFields;
   final String? avatar, api;
-  final Map<String, String> apiOptions;
+  final Map<String, String> apiOptions, modelOptions;
   final ValueChanged<String?> onAvatarChanged;
   final ValueChanged<String> onApiChanged, onNameCommitted;
   final VoidCallback onNameChanged, onCheckModel;
@@ -57,14 +58,20 @@ class RoleBasicTab extends StatelessWidget {
         onChanged: onApiChanged,
       ),
       const SizedBox(height: 16),
-      TextField(
-        controller: model,
-        style: FormMetrics.textStyle,
-        onChanged: onModelChanged,
-        decoration: FormMetrics.decoration('模型').copyWith(
-          suffixIcon: IconButton(
+      Row(
+        children: [
+          Expanded(
+            child: AnchoredSelect<String>(
+              label: '模型',
+              value: model,
+              options: modelOptions,
+              onChanged: onModelChanged,
+            ),
+          ),
+          const SizedBox(width: 4),
+          IconButton(
             tooltip: '检测模型',
-            onPressed: checkingModel ? null : onCheckModel,
+            onPressed: checkingModel || model.isEmpty ? null : onCheckModel,
             icon: checkingModel
                 ? const SizedBox(
                     width: 18,
@@ -73,8 +80,13 @@ class RoleBasicTab extends StatelessWidget {
                   )
                 : const Icon(Icons.refresh),
           ),
-        ),
+        ],
       ),
+      if (api != null && modelOptions.length == 1)
+        const Padding(
+          padding: EdgeInsets.only(top: 6),
+          child: Text('此 API 尚未配置模型，请前往设置添加。'),
+        ),
       if (modelCheckMessage != null)
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),

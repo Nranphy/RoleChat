@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:rolechat/features/agents/role_editor_dialog.dart';
 import 'package:rolechat/services/model_availability_checker.dart';
+import 'package:rolechat/models/preview_models.dart';
+import 'package:rolechat/shared/widgets/anchored_select.dart';
 
 class ControlledChecker extends ModelAvailabilityChecker {
   final pending = <Completer<ModelCheckResult>>[];
@@ -29,6 +31,7 @@ void main() {
       final checker = ControlledChecker();
       final role = store.roles.first;
       role.apiId = store.apis.first.id;
+      store.apis.first.models['changed-model'] = ModelSettings();
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -46,8 +49,20 @@ void main() {
       await tester.tap(button);
       await tester.pump();
       expect(tester.widget<IconButton>(button).onPressed, isNull);
-      final field = find.widgetWithText(TextField, '模型');
-      await tester.enterText(field, 'changed-model');
+      final field = find.byWidgetPredicate(
+        (w) => w is AnchoredSelect<String> && w.label == '模型',
+      );
+      await tester.tap(field);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.tap(find.text('changed-model').last);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump();
+      expect(
+        tester.widget<AnchoredSelect<String>>(field).value,
+        'changed-model',
+      );
       checker.pending.last.complete(const ModelCheckResult(true, '旧结果'));
       await tester.pump();
       expect(find.text('旧结果'), findsNothing);

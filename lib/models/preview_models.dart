@@ -3,7 +3,7 @@ class RoleProfile {
     required this.id,
     required this.name,
     this.avatar,
-    this.model = 'gpt-4o',
+    this.model = '',
     this.apiId,
     this.identity = '',
     this.soul = '',
@@ -105,7 +105,7 @@ class ApiProfile {
   String name, url, key;
   Map<String, ModelSettings> models;
   ModelSettings settings(String model) =>
-      models.putIfAbsent(model, ModelSettings.new);
+      models[model] ?? (throw StateError('模型尚未在 API 配置中设置：$model'));
 }
 
 enum ScheduleRuleKind { daily, weekly, annual, date, range }

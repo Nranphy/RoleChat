@@ -125,6 +125,10 @@ class AgentRuntime {
         );
         continue;
       }
+      if (!api.models.containsKey(role.model)) {
+        _skip(role, '所选模型不在 API 配置中，请在角色基础页重新选择');
+        continue;
+      }
       final settings = api.settings(role.model);
       final retryAfter = _retryAfter['${api.id}:${role.model}'];
       if (retryAfter != null && now.isBefore(retryAfter)) {
@@ -268,7 +272,14 @@ class AgentRuntime {
     ModelSettings settings,
   ) async {
     final epoch = store.dataEpoch;
-    final limiter = '${api.id}:${role.model}';
+    final model = role.model;
+    final limiter = '${api.id}:$model';
+    bool valid() =>
+        _valid(role, chat, epoch) &&
+        role.apiId == api.id &&
+        role.model == model &&
+        store.apis.contains(api) &&
+        identical(api.models[model], settings);
     var acquired = false;
     var sentMessages = 0;
     try {
@@ -280,7 +291,7 @@ class AgentRuntime {
       }
       while ((_requests[limiter] ?? 0) >= settings.concurrency) {
         await Future<void>.delayed(const Duration(milliseconds: 100));
-        if (!_valid(role, chat, epoch)) return;
+        if (!valid()) return;
         if (SchedulePolicy.match(
               role,
               store.schedules,
@@ -290,7 +301,7 @@ class AgentRuntime {
           return;
         }
       }
-      if (!_valid(role, chat, epoch) ||
+      if (!valid() ||
           SchedulePolicy.match(
                 role,
                 store.schedules,
@@ -303,10 +314,9 @@ class AgentRuntime {
       _requests[limiter] = (_requests[limiter] ?? 0) + 1;
       acquired = true;
       _roles[role.id]?.processing = true;
-      while (_valid(role, chat, epoch)) {
+      while (valid()) {
         final generation = _generation(chat, role);
-        bool current() =>
-            _valid(role, chat, epoch) && generation == _generation(chat, role);
+        bool current() => valid() && generation == _generation(chat, role);
         store.runtimeData['view:${role.id}:${chat.id}'] = chat.nextSequence - 1;
         final messages = ContextBuilder().build(
           store,
@@ -350,7 +360,7 @@ class AgentRuntime {
             });
             turn = await gateway.complete(
               api,
-              role.model,
+              model,
               settings,
               messages,
               agentTools,
@@ -447,7 +457,7 @@ class AgentRuntime {
         'chatId': chat.id,
         'error': '$e'.replaceAll(api.key, '[REDACTED]'),
       });
-      if (_valid(role, chat, epoch)) {
+      if (valid()) {
         store.runtimeError = '${role.name}试图发消息但失败了：$e';
         store.refresh();
       }

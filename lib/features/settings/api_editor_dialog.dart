@@ -1,4 +1,5 @@
-import 'model_settings_dialog.dart';
+import 'widgets/model_configuration_fields.dart';
+import 'package:rolechat/shared/widgets/editor_section.dart';
 import 'package:rolechat/shared/widgets/dialog_helpers.dart';
 import 'package:rolechat/shared/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
@@ -28,15 +29,16 @@ class _ApiEditorDialogState extends State<ApiEditorDialog> {
   final form = GlobalKey<FormState>();
   final check = ApiCheckController();
   bool hidden = true;
-  late final Map<String, ModelSettings> models;
+  late final List<ModelConfigurationDraft> models;
+  final removedModels = <ModelConfigurationDraft>[];
   @override
   void initState() {
     super.initState();
-    models = {
+    models = [
       for (final e
           in (widget.profile?.models ?? <String, ModelSettings>{}).entries)
-        e.key: ModelSettings.fromJson(e.value.toJson()),
-    };
+        ModelConfigurationDraft(e.key, e.value),
+    ];
     name = TextEditingController(text: widget.profile?.name ?? '');
     url = TextEditingController(text: widget.profile?.url ?? '');
     key = TextEditingController(text: widget.profile?.key ?? '');
@@ -48,6 +50,9 @@ class _ApiEditorDialogState extends State<ApiEditorDialog> {
     name.dispose();
     url.dispose();
     key.dispose();
+    for (final model in [...models, ...removedModels]) {
+      model.dispose();
+    }
     super.dispose();
   }
 
@@ -57,7 +62,7 @@ class _ApiEditorDialogState extends State<ApiEditorDialog> {
     builder: (context, _) => AppDialog.content(
       title: Text(widget.profile == null ? '添加 API 配置' : '编辑 API 配置'),
       content: SizedBox(
-        width: 440,
+        width: 560,
         child: SingleChildScrollView(
           child: Form(
             key: form,
@@ -75,26 +80,39 @@ class _ApiEditorDialogState extends State<ApiEditorDialog> {
                   onConnectionChanged: (_) => check.invalidate(),
                 ),
                 const SizedBox(height: 16),
-                for (final e in models.entries)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(e.key),
-                    subtitle: Text(
-                      '并发 ${e.value.concurrency} · 超时 ${e.value.timeoutSeconds}s',
-                    ),
-                    onTap: () => editModel(e.key, e.value),
-                    trailing: IconButton(
-                      tooltip: '删除模型配置',
-                      icon: const Icon(Icons.delete_outline),
-                      onPressed: () => setState(() => models.remove(e.key)),
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '模型',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (models.isEmpty) const EditorEmptyState('暂无模型'),
+                for (final model in models)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: EditableEntryCard(
+                      key: ObjectKey(model),
+                      title: '模型 ${models.indexOf(model) + 1}',
+                      deleteTooltip: '删除模型配置',
+                      onDelete: () => setState(() {
+                        models.remove(model);
+                        removedModels.add(model);
+                      }),
+                      children: [
+                        ModelConfigurationFields(draft: model),
+                        const SizedBox(height: 8),
+                      ],
                     ),
                   ),
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton.icon(
-                    onPressed: () => editModel('', null),
+                    onPressed: () =>
+                        setState(() => models.add(ModelConfigurationDraft(''))),
                     icon: const Icon(Icons.add),
-                    label: const Text('添加模型配置'),
+                    label: const Text('添加模型'),
                   ),
                 ),
               ],
@@ -128,27 +146,56 @@ class _ApiEditorDialogState extends State<ApiEditorDialog> {
       ],
     ),
   );
-  Future<void> editModel(String original, ModelSettings? value) async {
-    final result = await managedDialog<(String, ModelSettings)>(
-      context: context,
-      builder: (_) => ModelSettingsDialog(model: original, settings: value),
-    );
-    if (result == null || !mounted) return;
-    setState(() {
-      models.remove(original);
-      models[result.$1] = result.$2;
-    });
-  }
-
-  void save() {
+  Future<void> save() async {
     if (!form.currentState!.validate()) return;
+    final configured = <String, ModelSettings>{};
+    try {
+      for (final model in models) {
+        final id = model.name.text.trim();
+        if (configured.containsKey(id)) {
+          throw const FormatException('同一 API 下的模型 ID 不能重复');
+        }
+        configured[id] = model.value();
+      }
+    } catch (e) {
+      toast(context, e is FormatException ? e.message.toString() : '请检查模型参数');
+      return;
+    }
+    final renamed = {
+      for (final model in models)
+        if (model.original.isNotEmpty) model.original: model.name.text.trim(),
+    };
+    final affected = widget.store.roles
+        .where(
+          (r) =>
+              widget.profile != null &&
+              r.apiId == widget.profile!.id &&
+              r.model.isNotEmpty &&
+              !renamed.containsKey(r.model) &&
+              !configured.containsKey(r.model),
+        )
+        .toList();
+    if (affected.isNotEmpty) {
+      final accepted = await confirm(
+        context,
+        title: '删除正在使用的模型？',
+        body:
+            '以下角色需要重新选择模型：${affected.map((r) => r.name).join('、')}。聊天记录和角色资料会保留。',
+      );
+      if (!accepted || !mounted) return;
+    }
     final profile =
         widget.profile ??
         ApiProfile(id: widget.store.newId(), name: '', url: '');
     profile.name = name.text.trim();
     profile.url = url.text.trim();
     profile.key = key.text;
-    profile.models = models;
+    profile.models = configured;
+    for (final role in widget.store.roles.where((r) => r.apiId == profile.id)) {
+      role.model =
+          renamed[role.model] ??
+          (configured.containsKey(role.model) ? role.model : '');
+    }
     if (widget.profile == null) widget.store.apis.add(profile);
     widget.store.changed();
     Navigator.pop(context);

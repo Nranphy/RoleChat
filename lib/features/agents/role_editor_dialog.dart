@@ -68,12 +68,17 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
     lockedSchedules = {...r?.lockedSchedules ?? []};
     id = r?.id ?? widget.store.newId();
     name = text(r?.name ?? '');
-    model = text(r?.model ?? 'gpt-4o');
+    model = text(r?.model ?? '');
     identity = text(r?.identity ?? '');
     soul = text(r?.soul ?? '');
     memoryDocument = text(r?.memory ?? '');
     avatar = r?.avatar;
     api = r?.apiId;
+    if (!widget.store.apis.any(
+      (a) => a.id == api && a.models.containsKey(model.text),
+    )) {
+      model.clear();
+    }
     for (final e in r?.examples ?? <Map<String, String>>[]) {
       examples.add((text(e['question']!), text(e['answer']!)));
     }
@@ -110,7 +115,12 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
         RoleBasicTab(
           runtimeFields: RoleRuntimeFields(fields: runtimeFields),
           name: name,
-          model: model,
+          model: model.text,
+          modelOptions: {
+            '': '暂不选择',
+            for (final a in widget.store.apis.where((a) => a.id == api))
+              for (final id in a.models.keys) id: id,
+          },
           avatar: avatar,
           api: api,
           apiOptions: {
@@ -119,11 +129,17 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
           },
           onAvatarChanged: (v) => setState(() => avatar = v),
           onApiChanged: (v) {
-            setState(() => api = v.isEmpty ? null : v);
+            setState(() {
+              api = v.isEmpty ? null : v;
+              model.clear();
+            });
             modelCheck.invalidate();
           },
           onCheckModel: checkModel,
-          onModelChanged: (_) => modelCheck.invalidate(),
+          onModelChanged: (v) {
+            setState(() => model.text = v);
+            modelCheck.invalidate();
+          },
           checkingModel: modelCheck.running,
           modelCheckMessage: modelCheck.result?.message,
           modelCheckSucceeded: modelCheck.result?.success ?? false,
@@ -216,6 +232,14 @@ class _RoleEditorDialogState extends State<RoleEditorDialog> {
   }
 
   Future<void> save() async {
+    if (model.text.isNotEmpty &&
+        !widget.store.apis.any(
+          (a) => a.id == api && a.models.containsKey(model.text),
+        )) {
+      setState(() => tab = 0);
+      toast(context, '所选模型已被移除，请重新选择');
+      return;
+    }
     if (name.text.trim().isEmpty) {
       setState(() => tab = 0);
       WidgetsBinding.instance.addPostFrameCallback((_) {

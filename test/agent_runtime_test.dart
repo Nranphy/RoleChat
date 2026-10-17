@@ -56,6 +56,25 @@ Future<PreviewStore> fixture() async {
 }
 
 void main() {
+  test('changing model configuration invalidates an in-flight reply', () async {
+    final store = await fixture();
+    final role = store.roles.single;
+    final gateway = DeferredGateway();
+    final runtime = AgentRuntime(store, gateway: gateway, random: ZeroRandom());
+    runtime.tick(DateTime.now());
+    await settle();
+    store.apis.single.models.remove(role.model);
+    gateway.requests.single.complete(
+      const ModelTurn([
+        ToolCall('send', 'send_message', {'text': '旧配置消息'}),
+        ToolCall('done', 'finish', {}),
+      ], []),
+    );
+    await settle();
+    expect(store.conversations.single.messages, isEmpty);
+    runtime.dispose();
+  });
+
   test(
     'missing tools cool down temporarily without persisting model disablement',
     () async {

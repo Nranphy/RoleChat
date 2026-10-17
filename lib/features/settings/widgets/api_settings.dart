@@ -40,13 +40,13 @@ class ApiSettings extends StatelessWidget {
             if (apis.isEmpty)
               const EmptyState(
                 title: '还没有接口配置',
-                subtitle: '添加配置后，可在角色基础页检测模型。',
+                subtitle: '添加 API 和模型后，可在角色基础页选择。',
               ),
             ...apis.map(
               (a) => SettingsRow(
                 icon: Icons.dns_outlined,
                 title: a.name,
-                subtitle: a.url,
+                subtitle: '${a.url}\n${a.models.length} 个模型',
                 onTap: () => onEdit(a),
                 trailing: IconButton(
                   tooltip: '删除 API 配置',
