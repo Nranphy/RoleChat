@@ -38,7 +38,7 @@ class RoleBasicTab extends StatelessWidget {
     mainAxisSize: MainAxisSize.min,
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      const SizedBox(height: 12),
+      const SizedBox(height: 8),
       ProfileIdentityHeader(
         name: name,
         avatar: avatar,
@@ -47,7 +47,7 @@ class RoleBasicTab extends StatelessWidget {
         onNameChanged: onNameChanged,
         onNameCommitted: onNameCommitted,
       ),
-      const SizedBox(height: 24),
+      const SizedBox(height: 16),
       _SectionHeading('模型连接'),
       const SizedBox(height: 14),
       AnchoredSelect<String>(
@@ -87,9 +87,9 @@ class RoleBasicTab extends StatelessWidget {
           ),
         ),
       if (runtimeFields != null) ...[
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
         const Divider(height: 1),
-        const SizedBox(height: 20),
+        const SizedBox(height: 12),
         _SectionHeading('运行设置'),
         const SizedBox(height: 16),
         runtimeFields!,

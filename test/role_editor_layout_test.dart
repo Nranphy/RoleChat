@@ -12,7 +12,11 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      for (final size in [const Size(390, 844), const Size(1280, 900)]) {
+      for (final size in [
+        const Size(390, 844),
+        const Size(1280, 900),
+        const Size(1280, 720),
+      ]) {
         for (final mode in [ThemeMode.light, ThemeMode.dark]) {
           tester.view.physicalSize = size;
           SharedPreferences.setMockInitialValues({});

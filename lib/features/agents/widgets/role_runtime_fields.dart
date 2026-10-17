@@ -35,9 +35,9 @@ class RoleRuntimeFields extends StatelessWidget {
                 Expanded(flex: 2, child: rounds),
               ],
             ),
-          const SizedBox(height: 20),
-          Text('检查间隔', style: Theme.of(context).textTheme.bodyMedium),
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
+          Text('检查间隔（随机）', style: Theme.of(context).textTheme.bodyMedium),
+          const SizedBox(height: 8),
           Row(
             children: [
               Expanded(
@@ -56,13 +56,6 @@ class RoleRuntimeFields extends StatelessWidget {
                 child: field('检查最大间隔（秒）', label: '最长', suffix: '秒'),
               ),
             ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '在此范围内随机检查消息。',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
           ),
         ],
       );
