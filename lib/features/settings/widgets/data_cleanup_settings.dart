@@ -23,7 +23,7 @@ extension CleanupDescription on WorkspaceCleanup {
     WorkspaceCleanup.messages =>
       '删除所有私聊和群聊（含归档）的消息、引用及运行游标。保留角色与群聊资料、身份、灵魂、记忆、行程、API 配置和初始化标记。清理后角色仍可继续发言。',
     WorkspaceCleanup.initialization =>
-      '仅删除 OPFS 根目录的 initialized.json，不删除角色、会话、配置或聊天记录。刷新时现有数据仍会原样加载并重新记录初始化状态，不会重置角色。',
+      '仅删除 OPFS 根目录的 initialized.json，保留当前数据。下次刷新按固定 UUID 补建缺失的预设角色、私聊和社团群聊，并确保五个预设角色入群；已有资料与聊天记录不覆盖。',
   };
   IconData get icon => switch (this) {
     WorkspaceCleanup.all => Icons.delete_forever_outlined,

@@ -5,6 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:rolechat/app/preview_store.dart';
 import 'package:rolechat/data/workspace_storage.dart';
+import 'package:rolechat/data/preset_workspace.dart';
+import 'package:rolechat/models/preview_models.dart';
+import 'package:rolechat/models/workspace_cleanup.dart';
 import 'fixtures/test_store.dart';
 
 class ObservedStorage extends MemoryWorkspaceStorage {
@@ -44,9 +47,17 @@ void main() {
       expect(storage.markers, 1);
       expect(await storage.isInitialized(), isTrue);
       expect(store.apis, isEmpty);
-      expect(store.conversations.length, 5);
+      expect(store.conversations.length, 6);
+      final group = store.conversations.singleWhere((c) => c.group);
+      expect(group.id, PresetIds.group);
+      expect(group.name, '回春女子校社团');
+      expect(group.members, store.roles.map((r) => r.id).toList());
+      expect(group.background, contains('朝雫'));
+      expect(group.messages, isEmpty);
       for (final role in store.roles) {
         expect(Uuid.isValidUUID(fromString: role.id), isTrue);
+        expect(role.id[14], '5');
+        expect(store.newId()[14], '4');
         expect(role.avatar, isNotEmpty);
         expect(role.identity, contains(role.name));
         expect(role.soul, isNotEmpty);
@@ -54,7 +65,7 @@ void main() {
         expect(role.examples.length, 5);
         expect(role.apiId, isNull);
         final chat = store.conversations.singleWhere(
-          (c) => c.members.contains(role.id),
+          (c) => !c.group && c.members.contains(role.id),
         );
         expect(chat.group, isFalse);
         expect(chat.messages, isEmpty);
@@ -84,20 +95,108 @@ void main() {
     },
   );
 
-  test('an existing unmarked workspace only receives its marker', () async {
-    final storage = ObservedStorage();
-    final original = createTestStore(preferences, storage: storage);
-    original.roles.first.name = '用户自建角色';
-    await original.saveProfiles();
-    final writes = storage.writes;
-    final restored = PreviewStore(preferences, storage: storage);
-    await restored.initialize();
-    expect(restored.roles.first.name, '用户自建角色');
-    expect(storage.writes, writes);
-    expect(storage.markers, 1);
-    original.dispose();
-    restored.dispose();
-  });
+  test(
+    'an unmarked workspace adds presets without overwriting user data',
+    () async {
+      final storage = ObservedStorage();
+      final original = createTestStore(preferences, storage: storage);
+      storage.initialized = false;
+      original.roles.first.name = '用户自建角色';
+      await original.saveProfiles();
+      final writes = storage.writes;
+      final restored = PreviewStore(preferences, storage: storage);
+      await restored.initialize();
+      expect(restored.roles.first.name, '用户自建角色');
+      expect(restored.roles.length, 8);
+      expect(restored.apis.single.id, original.apis.single.id);
+      expect(storage.writes, writes + 1);
+      expect(storage.markers, 1);
+      original.dispose();
+      restored.dispose();
+    },
+  );
+
+  test(
+    'clearing marker repairs preset IDs and membership without duplicates or overwrites',
+    () async {
+      final storage = ObservedStorage();
+      final store = PreviewStore(preferences, storage: storage);
+      await store.initialize();
+      final first = store.role(PresetIds.role('asashizuku'));
+      first.name = '用户改名';
+      first.identity = '修改后的身份';
+      first.memory = '用户保留的记忆';
+      final removedId = PresetIds.role('kaede');
+      final privateId = PresetIds.privateChat('kaede');
+      store.selectedId = privateId;
+      store.send('保留的私聊历史');
+      final user = RoleProfile(
+        id: store.newId(),
+        name: '朝雫',
+        identity: '用户自建同名角色',
+      );
+      store.addRole(user);
+      final group = store.conversations.singleWhere(
+        (c) => c.id == PresetIds.group,
+      );
+      group.name = '用户改过的群名';
+      group.background = '用户改过的背景';
+      group.members.add(user.id);
+      group.members.remove(first.id);
+      store.selectedId = group.id;
+      store.send('保留的群聊历史');
+      store.removeRole(PresetIds.role('nagitsu'));
+      store.deleteRole(removedId, keepHistory: true);
+      await store.saveProfiles();
+      await store.clearData(WorkspaceCleanup.initialization);
+      final restored = PreviewStore(preferences, storage: storage);
+      await restored.initialize();
+      expect(restored.roles.length, 6);
+      expect(restored.role(user.id).identity, '用户自建同名角色');
+      expect(restored.role(first.id).name, '用户改名');
+      expect(restored.role(first.id).identity, '修改后的身份');
+      expect(restored.role(first.id).memory, '用户保留的记忆');
+      expect(restored.role(PresetIds.role('nagitsu')).archived, isTrue);
+      expect(restored.role(removedId).name, '枫');
+      final private = restored.conversations.singleWhere(
+        (c) => c.id == privateId,
+      );
+      expect(private.members, [removedId]);
+      expect(private.messages.single.text, '保留的私聊历史');
+      final preserved = restored.conversations.singleWhere(
+        (c) => c.id == PresetIds.group,
+      );
+      expect(preserved.name, '用户改过的群名');
+      expect(preserved.background, '用户改过的背景');
+      expect(preserved.messages.single.text, '保留的群聊历史');
+      expect(
+        preserved.members.toSet(),
+        restored.roles.map((r) => r.id).toSet(),
+      );
+      await restored.clearData(WorkspaceCleanup.initialization);
+      final repeated = PreviewStore(preferences, storage: storage);
+      await repeated.initialize();
+      expect(repeated.roles.length, 6);
+      expect(repeated.conversations.length, 7);
+      expect(repeated.conversations.map((c) => c.id).toSet().length, 7);
+      repeated.conversations.removeWhere((c) => c.id == PresetIds.group);
+      await repeated.saveProfiles();
+      await repeated.clearData(WorkspaceCleanup.initialization);
+      final withGroup = PreviewStore(preferences, storage: storage);
+      await withGroup.initialize();
+      expect(withGroup.roles.length, 6);
+      final created = withGroup.conversations.singleWhere(
+        (c) => c.id == PresetIds.group,
+      );
+      expect(created.name, '回春女子校社团');
+      expect(created.members.length, 5);
+      expect(created.messages, isEmpty);
+      store.dispose();
+      restored.dispose();
+      repeated.dispose();
+      withGroup.dispose();
+    },
+  );
 
   test('missing initialized data is an error and never reseeds', () async {
     final storage = ObservedStorage()..initialized = true;

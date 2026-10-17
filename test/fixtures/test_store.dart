@@ -10,6 +10,10 @@ PreviewStore createTestStore(
   WorkspaceStorage? storage,
 }) {
   final store = PreviewStore(preferences, storage: storage);
+  // UI fixtures represent an already initialized workspace, without real presets.
+  if (store.storage case final MemoryWorkspaceStorage memory) {
+    memory.initialized = true;
+  }
   store.applyData(
     WorkspaceData(
       apis: PreviewData.apis(),

@@ -108,13 +108,11 @@ class PreviewStore extends ChangeNotifier {
     if (initialized) {
       if (saved == null) throw StateError('初始化标记存在，但数据文件缺失；不会重新注入预设');
       applyData(saved);
-    } else if (saved != null) {
-      // Preserve workspaces created before the explicit marker was introduced.
-      // Only write the marker; never merge or replace the user's entities.
-      await storage.markInitialized();
-      applyData(saved);
     } else {
-      final initial = await loadPresetWorkspace(timezone: localTimezone);
+      final initial = await loadPresetWorkspace(
+        timezone: localTimezone,
+        existing: saved,
+      );
       if (!await _persistence.save(initial)) {
         throw StateError(persistenceError!);
       }
